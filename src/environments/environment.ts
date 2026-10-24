@@ -4,5 +4,5 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'https://cristomorado-api.onrender.com/api',
+  apiUrl: 'https://colegiocristomoradobackend.onrender.com/api',
 };
