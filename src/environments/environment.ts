@@ -4,5 +4,7 @@
  */
 export const environment = {
   production: true,
+  /** WhatsApp de soporte (código de país + número, sin + ni espacios). */
+  soporteWhatsapp: '51983046253',
   apiUrl: 'https://colegiocristomoradobackend.onrender.com/api',
 };

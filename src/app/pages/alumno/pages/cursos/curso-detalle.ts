@@ -195,9 +195,14 @@ export class AlumnoCursoDetalle implements OnInit {
     return this.asistencia()?.cursos.find(x => x.seccionCursoId === c?.seccionCursoId)?.conteo ?? null;
   });
 
-  /** La fecha límite ya pasó (se muestra en rojo). */
+  /** La fecha límite ya pasó. */
   vencio(fecha: string | null | undefined): boolean {
     return !!fecha && new Date(fecha).getTime() <= Date.now();
+  }
+
+  /** "Vencida" (en rojo) solo si pasó la fecha límite y el alumno NO entregó la tarea. */
+  vencidaSinEntrega(a: Actividad | null | undefined): boolean {
+    return !!a && !a.miEntrega && this.vencio(a.fechaLimite);
   }
 
   ngOnInit(): void {

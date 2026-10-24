@@ -317,6 +317,9 @@ export class ListaComunicados implements OnInit {
       const [grupo, alcance] = this.fModoDocente().split('_');
       this.fGrupos.set([grupo as GrupoDestino]);
       this.fSecciones.set(alcance === 'UNA' ? [this.fClase()!] : this.seccionesDisponibles().map(x => x.id));
+    } else {
+      // Administración y Directiva: el comunicado va a todo el colegio (según los destinatarios elegidos).
+      this.fSecciones.set([]);
     }
 
     const datos: ComunicadoRequest = {

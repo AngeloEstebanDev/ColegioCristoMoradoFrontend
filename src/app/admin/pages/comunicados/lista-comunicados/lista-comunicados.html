@@ -291,27 +291,6 @@
           }
         </div>
 
-        <!-- Secciones (docente: obligatorio; administración: opcional) -->
-        @if (seccionesDisponibles().length) {
-          <div>
-            <label class="block text-[13px] font-medium text-[#241521] mb-1">{{ esAdmin ? 'Limitar a secciones (opcional)' : 'Secciones *' }}</label>
-            <p class="text-[11.5px] text-[#6B5A67] mb-2">
-              {{ esAdmin ? 'Si no eliges ninguna, el comunicado llega a todo el colegio.' : 'Solo lo verán los alumnos y/o padres de las secciones que elijas.' }}
-            </p>
-            <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
-              @for (s of seccionesDisponibles(); track s.id) {
-                <button type="button" (click)="alternarSeccion(s.id)"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition-colors"
-                        [ngClass]="claseChip(fSecciones().includes(s.id))">
-                  @if (fSecciones().includes(s.id)) {
-                    <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>
-                  }
-                  {{ s.nombre }}
-                </button>
-              }
-            </div>
-          </div>
-        }
 
         }
 
@@ -351,7 +330,7 @@
           <input type="checkbox" class="accent-[#4A1F52] w-4 h-4 mt-0.5" [ngModel]="fAnuncio()" (ngModelChange)="fAnuncio.set($event)" />
           <span>
             <span class="block text-[13.5px] font-medium text-[#241521]">📢 Mostrar como anuncio importante</span>
-            <span class="block text-[12px] text-[#6B5A67]">Aparecerá en grande a cada destinatario al entrar a Comunicados, hasta que lo marque como leído.</span>
+            <span class="block text-[12px] text-[#6B5A67]">Aparecerá en grande a cada destinatario al entrar a su cuenta, hasta que lo marque como leído.</span>
           </span>
         </label>
         }

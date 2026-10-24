@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth';
 import { ConfirmService } from '../../../core/services/confirm.service';
+import { enlaceSoporte } from '../../../core/utils/soporte';
 
 @Component({
   imports: [CommonModule, RouterLink],
@@ -38,6 +39,12 @@ export class Navbar {
       .slice(0, 2)
       .map(p => p[0]?.toUpperCase())
       .join('');
+  }
+
+  /** WhatsApp de soporte con el nombre del usuario en el mensaje. */
+  get enlaceSoporte(): string {
+    const u = this.authService.obtenerUsuario();
+    return enlaceSoporte('Hola, necesito ayuda con el Portal de la I.E. 2092 Cristo Morado.' + (u ? ` Soy ${u.nombre} (usuario ${u.usuario}).` : ''));
   }
 
   /** Segmento de ruta (/home/{rolPath}/...) según el rol logeado. */

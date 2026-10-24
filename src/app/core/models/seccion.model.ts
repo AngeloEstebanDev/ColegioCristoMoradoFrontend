@@ -18,22 +18,21 @@ export function infoGrado(valor: string | null | undefined): GradoInfo | undefin
 }
 
 /**
- * Horarios de la I.E. (iguales a Turnos.java).
- * Secciones predefinidas (la letra fija el turno):
- *   Primaria A (1° a 6°): Turno Mañana 7:45 a.m. a 12:35 p.m. — recreo 10:00 a 10:20 a.m.
- *   Primaria B (2° a 5°): Turno Tarde 1:00 p.m. a 5:50 p.m. — recreo 3:15 a 3:35 p.m.
- *   Secundaria A (1° a 5°): Turno Mañana 7:45 a.m. a 2:00 p.m. — recreo 10:45 a 11:00 a.m.
- * Secciones adicionales ("Otros"): se elige Mañana o Tarde y se usa el horario de ese turno.
- *   Secundaria, Turno Tarde: 1:00 p.m. a 7:15 p.m. — recreo 4:00 a 4:15 p.m.
+ * Horarios de la I.E. (iguales a Turnos.java), lunes a viernes, iguales en Primaria y Secundaria:
+ *   Turno Mañana: 7:30 a. m. a 1:15 p. m. — recreo 10:15 a 10:45 a. m.
+ *   Turno Tarde:  1:30 p. m. a 7:45 p. m. — recreo 4:15 a 4:45 p. m.
+ * Secciones predefinidas (la letra fija el turno): Primaria A (1° a 6°) y Secundaria A -> Mañana;
+ * Primaria B (2° a 5°) -> Tarde. Secciones adicionales ("Otros"): se elige Mañana o Tarde.
  */
 export interface SeccionTurno { letra: string; turno: string; horario: string; recreo: string; }
 export type TurnoNombre = 'Mañana' | 'Tarde';
 export const TURNOS: TurnoNombre[] = ['Mañana', 'Tarde'];
 
-const PRIMARIA_A: SeccionTurno = { letra: 'A', turno: 'Mañana', horario: '7:45 a.m. a 12:35 p.m.', recreo: '10:00 a 10:20 a.m.' };
-const PRIMARIA_B: SeccionTurno = { letra: 'B', turno: 'Tarde', horario: '1:00 p.m. a 5:50 p.m.', recreo: '3:15 a 3:35 p.m.' };
-const SECUNDARIA_A: SeccionTurno = { letra: 'A', turno: 'Mañana', horario: '7:45 a.m. a 2:00 p.m.', recreo: '10:45 a 11:00 a.m.' };
-const SECUNDARIA_TARDE = { horario: '1:00 p.m. a 7:15 p.m.', recreo: '4:00 a 4:15 p.m.' };
+const HORARIO_MANANA = { horario: '7:30 a. m. a 1:15 p. m.', recreo: '10:15 a 10:45 a. m.' };
+const HORARIO_TARDE = { horario: '1:30 p. m. a 7:45 p. m.', recreo: '4:15 a 4:45 p. m.' };
+const PRIMARIA_A: SeccionTurno = { letra: 'A', turno: 'Mañana', ...HORARIO_MANANA };
+const PRIMARIA_B: SeccionTurno = { letra: 'B', turno: 'Tarde', ...HORARIO_TARDE };
+const SECUNDARIA_A: SeccionTurno = { letra: 'A', turno: 'Mañana', ...HORARIO_MANANA };
 
 /** Secciones predefinidas de un grado: Primaria 2° a 5° -> A y B; Primaria 1° y 6° -> A; Secundaria -> A. */
 export function seccionesDelGrado(grado: string | null | undefined): SeccionTurno[] {
@@ -42,12 +41,11 @@ export function seccionesDelGrado(grado: string | null | undefined): SeccionTurn
   return g.startsWith('1°') || g.startsWith('6°') ? [PRIMARIA_A] : [PRIMARIA_A, PRIMARIA_B];
 }
 
-/** Horario de un turno elegido (secciones adicionales) según el nivel del grado. */
+/** Horario de un turno elegido (secciones adicionales). */
 export function horarioTurno(grado: string | null | undefined, turno: string | null | undefined): { horario: string; recreo: string } | undefined {
   const t = (turno ?? '').toLowerCase();
-  const sec = (grado ?? '').includes('Secundaria');
-  if (t === 'mañana' || t === 'manana') return sec ? SECUNDARIA_A : PRIMARIA_A;
-  if (t === 'tarde') return sec ? SECUNDARIA_TARDE : PRIMARIA_B;
+  if (t === 'mañana' || t === 'manana') return HORARIO_MANANA;
+  if (t === 'tarde') return HORARIO_TARDE;
   return undefined;
 }
 
@@ -63,12 +61,12 @@ export function turnoDe(grado: string | null | undefined, letra: string | null |
   return turnoInfo(grado, letra, guardado)?.turno ?? guardado;
 }
 
-/** "7:45 a.m. a 12:35 p.m." para Primaria A; '' si no corresponde. */
+/** "7:30 a. m. a 1:15 p. m." para el turno mañana; '' si no corresponde. */
 export function horarioDe(grado: string | null | undefined, letra: string | null | undefined, guardado = ''): string {
   return turnoInfo(grado, letra, guardado)?.horario ?? '';
 }
 
-/** "10:00 a 10:20 a.m." */
+/** "10:15 a 10:45 a. m." */
 export function recreoDe(grado: string | null | undefined, letra: string | null | undefined, guardado = ''): string {
   return turnoInfo(grado, letra, guardado)?.recreo ?? '';
 }

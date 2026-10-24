@@ -74,6 +74,12 @@ export class Dashboard implements OnInit {
       next: (s) => this.stats.set(s),
       error: () => this.error.set('No se pudo conectar con el servidor.'),
     });
+    this.cargarActividad();
+  }
+
+  /** Últimas acciones del sistema (inicios de sesión, registros, ediciones y eliminaciones). */
+  cargarActividad(): void {
+    this.cargando.set(true);
     this.dashboardService.obtenerActividadReciente().subscribe({
       next: (a) => { this.actividad.set(a); this.cargando.set(false); },
       error: () => { this.cargando.set(false); this.error.set('No se pudo conectar con el servidor.'); },
@@ -84,7 +90,8 @@ export class Dashboard implements OnInit {
     switch (estado) {
       case 'Exitoso': return 'bg-[#E7F3EA] text-[#1E7A3B]';
       case 'En proceso': return 'bg-[#FDF1DC] text-[#B08900]';
-      case 'Advertencia': return 'bg-[#FBE7E9] text-[#A62639]';
+      case 'Advertencia': return 'bg-[#FDF1DC] text-[#9A6B00]';
+      case 'Error': return 'bg-[#FBE7E9] text-[#A62639]';
       default: return 'bg-[#EFEAF3] text-[#4A1F52]';
     }
   }

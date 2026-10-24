@@ -21,7 +21,7 @@ interface FormBloque {
 
 /**
  * Editor de horario de una sección (se abre en una ventana nueva).
- * El cuadro depende del turno: Primaria A 07:45-12:35, Primaria B 13:00-17:50, Secundaria 07:45-14:00,
+ * El cuadro depende del turno: Mañana 07:30-13:15 (recreo 10:15-10:45), Tarde 13:30-19:45 (recreo 16:15-16:45),
  * en bloques de 15 minutos y con el receso marcado.
  */
 @Component({

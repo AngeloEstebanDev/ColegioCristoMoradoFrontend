@@ -2,7 +2,7 @@ import { SidebarEntry } from '../../shared/layout/siderbar/siderbar';
 
 /**
  * Menú lateral del rol Padre/Familiar: Dashboard, Comunicados (avisos y mensajes),
- * Mis Citas y Mis Hijos. Mi Perfil y Configuración están en el menú del usuario (arriba a la derecha).
+ * Mis Citas, Mis Hijos y Mi Cuenta (Mi Perfil y Configuración), igual que en los otros roles.
  * Mismo formato que admin-sidebar.config.ts.
  */
 export const PADRE_SIDEBAR_ITEMS: SidebarEntry[] = [
@@ -33,5 +33,15 @@ export const PADRE_SIDEBAR_ITEMS: SidebarEntry[] = [
     label: 'Mis Hijos',
     route: ['/home', 'padre', 'hijos'],
     icon: 'M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4',
+  },
+  {
+    type: 'group',
+    id: 'cuenta',
+    label: 'Mi Cuenta',
+    icon: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z',
+    children: [
+      { id: 'perfil', label: 'Mi Perfil', route: ['/home', 'padre', 'perfil'] },
+      { id: 'configuracion', label: 'Configuración', route: ['/home', 'padre', 'configuracion'] },
+    ],
   },
 ];

@@ -11,7 +11,7 @@ const PX = 28 / 15;
 
 /**
  * Dashboard del docente: bienvenida, resumen (cursos a cargo, secciones, clases de hoy)
- * y su horario de la semana (7:45 a 17:50, en filas de 15 minutos).
+ * y su horario de la semana (turno mañana 7:30-13:15 y/o tarde 13:30-19:45, en filas de 15 minutos).
  */
 @Component({
   imports: [CommonModule, RouterLink],
@@ -31,9 +31,20 @@ export class DocenteDashboard implements OnInit {
   error = signal<string | null>(null);
   seleccionado = signal<BloqueDocente | null>(null);
 
-  /** Rango de la grilla: la jornada del colegio (7:45 a 17:50), ampliado si alguna clase sale de él. */
-  inicio = computed(() => Math.min(aMinutos('07:45'), ...(this.datos()?.bloques ?? []).map(b => aMinutos(b.horaInicio))));
-  fin = computed(() => Math.max(aMinutos('17:50'), ...(this.datos()?.bloques ?? []).map(b => aMinutos(b.horaFin))));
+  /**
+   * Rango de la grilla: los turnos donde el docente tiene clases (mañana 7:30-13:15, tarde 13:30-19:45),
+   * ampliado si alguna clase sale de ellos. Sin clases se muestra el turno mañana.
+   */
+  inicio = computed(() => {
+    const b = this.datos()?.bloques ?? [];
+    const base = b.length && b.every(x => aMinutos(x.horaInicio) >= aMinutos('13:30')) ? aMinutos('13:30') : aMinutos('07:30');
+    return Math.min(base, ...b.map(x => aMinutos(x.horaInicio)));
+  });
+  fin = computed(() => {
+    const b = this.datos()?.bloques ?? [];
+    const base = b.some(x => aMinutos(x.horaFin) > aMinutos('13:15')) ? aMinutos('19:45') : aMinutos('13:15');
+    return Math.max(base, ...b.map(x => aMinutos(x.horaFin)));
+  });
   marcas = computed(() => {
     const l: number[] = [];
     for (let t = this.inicio(); t < this.fin(); t += 15) l.push(t);

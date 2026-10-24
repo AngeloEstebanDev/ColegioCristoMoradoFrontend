@@ -8,6 +8,7 @@ import { ToastService } from '../../core/services/toast.service';
 
 import { FiltroEntrada } from '../../shared/components/error-campo/filtro-entrada';
 import { Val, revisar } from '../../core/utils/validadores';
+import { SOPORTE_TELEFONO, enlaceSoporte } from '../../core/utils/soporte';
 type Modo = 'login' | 'recuperar';
 
 @Component({
@@ -44,6 +45,13 @@ export class Login implements OnInit {
   recConfirmar = signal('');
   recCorreo = signal('');
   recError = signal<string | null>(null);
+
+  /** Soporte por WhatsApp (el mensaje incluye el usuario escrito, si hay). */
+  readonly telefonoSoporte = SOPORTE_TELEFONO;
+  enlaceSoporte(): string {
+    const u = (this.usuario() || this.recUsuario() || '').trim();
+    return enlaceSoporte('Hola, necesito ayuda para acceder al Portal de la I.E. 2092 Cristo Morado.' + (u ? ` Mi usuario es ${u}.` : ''));
+  }
   recCargando = signal(false);
   segundosReenvio = signal(0);
   private temporizador?: ReturnType<typeof setInterval>;

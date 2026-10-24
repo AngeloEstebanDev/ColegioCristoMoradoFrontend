@@ -9,7 +9,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-/** Académico > Periodos: bimestres del año escolar (solo uno activo). */
+/** Académico > Periodos: bimestres del año escolar. El activo es el que contiene la fecha de hoy. */
 @Component({
   selector: 'app-periodos',
   standalone: true,
@@ -31,7 +31,6 @@ export class Periodos implements OnInit {
   cargando = signal(true);
   error = signal<string | null>(null);
   aviso = signal<string | null>(null);
-  activando = signal<number | null>(null);
 
   // Panel "Nuevo periodo" / "Editar periodo"
   panelAbierto = signal(false);
@@ -93,24 +92,6 @@ export class Periodos implements OnInit {
     if (this.hoy < p.fechaInicio) return 'Por iniciar';
     if (this.hoy > p.fechaFin) return 'Finalizado';
     return 'En progreso';
-  }
-
-  async activar(p: Periodo): Promise<void> {
-    if (p.activo || this.activando()) return;
-    const actual = this.periodos().find(x => x.activo);
-    if (actual && !await this.confirmar.pedir(`¿Activar ${p.nombre}? ${actual.nombre} dejará de ser el periodo activo.`)) return;
-    this.activando.set(p.id);
-    this.periodoService.activar(p.id).subscribe({
-      next: (act) => {
-        this.activando.set(null);
-        this.periodos.update(l => l.map(x => ({ ...x, activo: x.id === act.id })));
-        this.toast.exito(`${act.nombre} es ahora el periodo activo.`);
-      },
-      error: (err) => {
-        this.activando.set(null);
-        this.error.set(err?.error?.mensaje ?? 'No se pudo activar el periodo.');
-      },
-    });
   }
 
   // ---------------- Nuevo periodo ----------------

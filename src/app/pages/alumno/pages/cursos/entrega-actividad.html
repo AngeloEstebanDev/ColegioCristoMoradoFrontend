@@ -39,8 +39,12 @@
       <div class="flex items-center gap-3 px-5 py-3.5">
         <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-[#2563EB]" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
         <div>
-          <p class="text-[14px] font-semibold" [ngClass]="vencida() ? 'text-[#A62639]' : 'text-[#241521]'">Fecha de entrega: {{ dmyHora(a.fechaLimite) }}</p>
-          <p class="text-[12px]" [ngClass]="vencida() ? 'text-[#A62639]' : 'text-[#1E7A3B]'">{{ plazo(a.fechaLimite) }}</p>
+          <p class="text-[14px] font-semibold" [ngClass]="vencida() && !entrega() ? 'text-[#A62639]' : 'text-[#241521]'">Fecha de entrega: {{ dmyHora(a.fechaLimite) }}</p>
+          @if (entrega() && vencida()) {
+            <p class="text-[12px] text-[#1E7A3B]">Entregada · el plazo ya cerró</p>
+          } @else {
+            <p class="text-[12px]" [ngClass]="vencida() ? 'text-[#A62639]' : 'text-[#1E7A3B]'">{{ plazo(a.fechaLimite) }}</p>
+          }
         </div>
       </div>
       <div class="flex items-center gap-3 px-5 py-3.5">

@@ -4,7 +4,7 @@
   <div class="flex items-start justify-between flex-wrap gap-3">
     <div>
       <h2 class="font-serif font-bold text-2xl text-[#241521]">Periodos</h2>
-      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Bimestres del año escolar — solo un periodo puede estar activo</p>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Bimestres del año escolar — el periodo activo es el que está dentro de sus fechas (se activa y desactiva solo)</p>
     </div>
     <button type="button" (click)="abrirNuevo()"
             class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors">
@@ -83,11 +83,10 @@
                 <span class="w-2 h-2 rounded-full bg-[#4A1F52]"></span>Periodo activo
               </span>
             } @else {
-              <button type="button" (click)="activar(p)" [disabled]="activando() === p.id"
-                      class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3D5C4] bg-white text-[13px] font-medium text-[#241521] hover:bg-[#FAF6EF] disabled:opacity-60">
-                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"/></svg>
-                {{ activando() === p.id ? 'Activando...' : 'Activar' }}
-              </button>
+              <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#F5F0EA] text-[13px] font-medium text-[#6B5A67]"
+                    title="Se activa solo entre su fecha de inicio y su fecha de fin">
+                <span class="w-2 h-2 rounded-full bg-[#9A8E97]"></span>{{ situacion(p) }}
+              </span>
             }
           </div>
         </div>
@@ -132,7 +131,7 @@
                   <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-medium"
                         [ngClass]="p.activo ? 'bg-[#E7F3EA] text-[#1E7A3B]' : 'bg-[#F0E6D8] text-[#6B5A67]'">
                     <span class="w-1.5 h-1.5 rounded-full" [ngClass]="p.activo ? 'bg-[#1E7A3B]' : 'bg-[#9A8E97]'"></span>
-                    {{ p.activo ? 'Activo' : 'Inactivo' }}
+                    {{ p.activo ? 'Activo' : situacion(p) }}
                   </span>
                 </td>
                 <td class="px-5 py-3">
@@ -141,10 +140,6 @@
                             class="w-8 h-8 rounded-lg border border-[#E3D5C4] bg-white text-[#4A1F52] hover:bg-[#FAF6EF] flex items-center justify-center">
                       <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                     </button>
-                    @if (!p.activo) {
-                      <button type="button" (click)="activar(p)" [disabled]="activando() === p.id"
-                              class="px-3.5 py-1.5 rounded-lg border border-[#E3D5C4] bg-white text-[12.5px] font-medium text-[#241521] hover:bg-[#FAF6EF] disabled:opacity-60">Activar</button>
-                    }
                   </div>
                 </td>
               </tr>

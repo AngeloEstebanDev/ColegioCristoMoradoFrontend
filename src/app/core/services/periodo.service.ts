@@ -20,9 +20,4 @@ export class PeriodoService {
   actualizar(id: number, datos: PeriodoRequest): Observable<Periodo> {
     return this.http.put<Periodo>(`${this.apiUrl}/${id}`, datos);
   }
-
-  /** Solo un periodo puede estar activo: el anterior se desactiva. */
-  activar(id: number): Observable<Periodo> {
-    return this.http.patch<Periodo>(`${this.apiUrl}/${id}/activar`, {});
-  }
 }
