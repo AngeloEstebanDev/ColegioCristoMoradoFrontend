@@ -1,0 +1,608 @@
+<!-- Ícono de cada elemento del curso (documento, texto, enlace, tarea, cuestionario, actividad) -->
+<ng-template #iconoItem let-e>
+  <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" [style.background]="e.fondo" [style.color]="e.color">
+    @switch (e.icono) {
+      @case ('cuestionario') { <span class="font-bold text-[20px] leading-none">?</span> }
+      @case ('tarea') {
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2ZM9 12h6M9 16h4"/></svg>
+      }
+      @case ('actividad') {
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      }
+      @case ('enlace') {
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+      }
+      @default {
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h6"/></svg>
+      }
+    }
+  </span>
+</ng-template>
+
+<ng-template #carpeta>
+  <svg viewBox="0 0 24 24" class="w-8 h-8 shrink-0" fill="#F5B83D"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2l2 2.2h6.8A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
+</ng-template>
+
+<ng-template #flecha let-abierta>
+  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#4A1F52] transition-transform" [ngClass]="abierta ? 'rotate-90' : ''"
+       stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+</ng-template>
+
+<div class="space-y-4">
+
+  @if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+
+  @if (curso(); as c) {
+    <!-- Portada del curso -->
+    <div class="relative overflow-hidden rounded-2xl shadow-md text-white px-5 py-5"
+         [style.background]="'linear-gradient(120deg,' + c.color + ' 0%,' + c.color + ' 55%, #2E1233 140%)'">
+      <div class="absolute -right-2 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+        <app-icono-categoria [categoria]="c.categoria" [tam]="130" [sinFondo]="true" color="#FFFFFF" />
+      </div>
+      <div class="relative flex items-center gap-4">
+        <a [routerLink]="volver" [title]="esPadre ? 'Volver a Mis Hijos' : 'Volver a Mis Cursos'"
+           class="w-11 h-11 shrink-0 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        </a>
+        <div class="min-w-0">
+          <h2 class="font-serif font-bold text-[28px] leading-tight drop-shadow-sm">{{ c.curso }}</h2>
+          <div class="flex flex-wrap gap-2 mt-2 text-[12.5px]">
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M12 4 2 9l10 5 10-5-10-5ZM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+              {{ salon() }}
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              Año Lectivo {{ anio }}
+            </span>
+            @if (periodoActivo(); as p) {
+              <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+                {{ p.nombre }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (esPadre) {
+      <div class="flex items-center gap-3 bg-[#EFEAF3] border border-[#D9CDE0] text-[#4A1F52] text-[13px] rounded-xl px-4 py-3">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0" stroke="currentColor" stroke-width="1.9"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Estás viendo el curso de <b>{{ hijo()?.nombre ?? 'tu hijo(a)' }}</b> en modo de solo lectura: puedes revisar su contenido, tareas, asistencia y notas, pero no enviar ni editar nada.</span>
+      </div>
+    }
+
+    <!-- Pestañas -->
+    <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm px-2 flex gap-1 overflow-x-auto">
+      @for (t of pestanas; track t.id) {
+        <button type="button" (click)="cambiarPestana(t.id)"
+                class="flex items-center gap-2 px-4 py-3 text-[13.5px] font-medium border-b-2 -mb-px whitespace-nowrap transition-colors"
+                [ngClass]="pestana() === t.id ? 'text-[#4A1F52] border-[#4A1F52]' : 'text-[#6B5A67] border-transparent hover:text-[#241521]'">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="t.icono"/></svg>
+          {{ t.nombre }}
+        </button>
+      }
+    </div>
+
+    <!-- ===================== CONTENIDO ===================== -->
+    @if (pestana() === 'contenido') {
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
+        <div class="space-y-4 min-w-0">
+
+          <!-- Estructura curricular -->
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+            <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Estructura Curricular</h3>
+            <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
+              <button type="button" (click)="verEstructura.set(!verEstructura())"
+                      class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#FAF6EF] text-left">
+                <span class="text-[12.5px] font-bold tracking-wide text-[#241521] uppercase">{{ c.curso }} / General del curso</span>
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [class.rotate-180]="!verEstructura()" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+              </button>
+              @if (verEstructura()) {
+                <dl class="divide-y divide-[#F0E6D8] text-[13px]">
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Área curricular</dt><dd class="font-medium" [style.color]="c.color">{{ categoria().nombre }}</dd></div>
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Docente</dt><dd class="font-semibold text-[#241521] uppercase text-right">{{ c.docente ?? 'Por asignar' }}</dd></div>
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Nivel educativo</dt><dd class="font-medium text-[#4A1F52]">{{ salon() }} · {{ nivel() }}</dd></div>
+                  @if (c.descripcion) {
+                    <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Descripción</dt><dd class="text-[#241521] text-right">{{ c.descripcion }}</dd></div>
+                  }
+                </dl>
+              }
+            </div>
+          </section>
+
+          <!-- Contenido del curso -->
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+            <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Contenido del curso</h3>
+            @if (cargandoContenido()) {
+              <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando contenido...</p>
+            } @else if (!materiales().length && !actividades().length) {
+              <div class="text-center py-10">
+                <p class="font-serif font-bold text-[16px] text-[#241521]">Aún no hay contenido</p>
+                <p class="text-[13px] text-[#6B5A67] mt-1">Cuando el docente publique materiales o actividades, aparecerán aquí.</p>
+              </div>
+            } @else {
+              <div class="space-y-2">
+                @for (cp of carpetas(); track cp.clave) {
+                  <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
+                    <button type="button" (click)="abrir(cp.clave)" class="w-full flex items-center gap-3 px-4 py-3 bg-[#FAF6EF] hover:bg-[#F5EEE3] text-left">
+                      <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(cp.clave) }" />
+                      <ng-container *ngTemplateOutlet="carpeta" />
+                      <span class="flex-1 min-w-0">
+                        <span class="block text-[14px] font-bold text-[#241521]">{{ cp.nombre }}</span>
+                        @if (cp.desde) { <span class="block text-[12px] text-[#6B5A67]">Del {{ dmy(cp.desde) }} al {{ dmy(cp.hasta) }}</span> }
+                      </span>
+                      <span class="text-[11.5px] text-[#6B5A67]">{{ cp.items.length }} elemento{{ cp.items.length === 1 ? '' : 's' }}</span>
+                    </button>
+                    @if (estaAbierta(cp.clave)) {
+                      <div class="px-2 py-2 space-y-1">
+                        @if (!cp.items.length) {
+                          <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Sin contenido en este bimestre.</p>
+                        }
+                        @if (cp.semanas.length) {
+                          @for (s of cp.semanas; track s.clave) {
+                            @let claveS = cp.clave + '-' + s.clave;
+                            <button type="button" (click)="abrir(claveS)" class="w-full flex items-center gap-3 pl-5 pr-4 py-2.5 rounded-lg hover:bg-[#FAF6EF] text-left">
+                              <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(claveS) }" />
+                              <ng-container *ngTemplateOutlet="carpeta" />
+                              <span class="flex-1 min-w-0">
+                                <span class="block text-[13.5px] font-semibold text-[#241521]">{{ s.nombre }}</span>
+                                <span class="block text-[11.5px] text-[#6B5A67]">{{ s.detalle }}</span>
+                              </span>
+                            </button>
+                            @if (estaAbierta(claveS)) {
+                              <div class="ml-12 mr-1 mb-2 rounded-xl border border-[#F0E6D8] divide-y divide-[#F0E6D8] overflow-hidden">
+                                @for (i of s.items; track i.clave) {
+                                  <ng-container *ngTemplateOutlet="filaItem; context: { $implicit: i }" />
+                                }
+                              </div>
+                            }
+                          }
+                        } @else {
+                          <div class="mx-1 rounded-xl border border-[#F0E6D8] divide-y divide-[#F0E6D8] overflow-hidden">
+                            @for (i of cp.items; track i.clave) {
+                              <ng-container *ngTemplateOutlet="filaItem; context: { $implicit: i }" />
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </section>
+        </div>
+
+        <!-- Columna derecha: profesor y participantes -->
+        <aside class="space-y-4">
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+            <button type="button" (click)="verProfesor.set(!verProfesor())" class="w-full flex items-center gap-2 px-4 py-3 border-b border-[#F0E6D8] text-left">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-[#4A1F52]"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7H4Z"/></svg>
+              <span class="flex-1 text-[12px] font-bold tracking-wide text-[#4A1F52] uppercase">Profesor del curso</span>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [class.rotate-180]="!verProfesor()" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+            </button>
+            @if (verProfesor()) {
+              <div class="p-4">
+                @if (participantes()?.docente; as d) {
+                  <div class="flex items-center gap-3">
+                    <ng-container *ngTemplateOutlet="avatar; context: { $implicit: d, tam: 'w-12 h-12 text-[14px]' }" />
+                    <div class="min-w-0">
+                      <p class="text-[13.5px] font-bold text-[#241521] uppercase leading-tight">{{ d.nombre }}</p>
+                      <p class="text-[12px] text-[#6B5A67] mt-0.5">{{ d.detalle }}</p>
+                    </div>
+                  </div>
+                  @if (d.usuarioId) {
+                    <a [routerLink]="esPadre ? ['/home', 'padre', 'comunicados'] : ['/home', 'alumno', 'comunicados']"
+                       [queryParams]="esPadre ? { tab: 'mensajes', para: d.usuarioId } : { tab: 'mensajes', chat: d.usuarioId }"
+                       class="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#EFEAF3] hover:bg-[#E5DCEC] text-[12.5px] font-medium text-[#4A1F52]">
+                      <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z"/></svg>
+                      Enviar mensaje
+                    </a>
+                  }
+                } @else {
+                  <p class="text-[13px] text-[#6B5A67]">Docente por asignar.</p>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+            <button type="button" (click)="verParticipantes.set(!verParticipantes())" class="w-full flex items-center gap-2 px-4 py-3 border-b border-[#F0E6D8] text-left">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-[#4A1F52]"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7H4Z"/></svg>
+              <span class="flex-1 font-serif font-bold text-[15px] text-[#241521]">Participantes</span>
+              <span class="text-[11.5px] text-[#6B5A67]">{{ participantes()?.alumnos?.length ?? c.totalAlumnos }}</span>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [class.rotate-180]="!verParticipantes()" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+            </button>
+            @if (verParticipantes()) {
+              <ul class="max-h-[420px] overflow-y-auto py-1">
+                @for (p of participantes()?.alumnos ?? []; track $index) {
+                  <li class="flex items-center gap-3 px-4 py-2">
+                    <ng-container *ngTemplateOutlet="avatar; context: { $implicit: p, tam: 'w-10 h-10 text-[12.5px]' }" />
+                    <div class="min-w-0">
+                      <p class="text-[13.5px] font-semibold text-[#241521] truncate">{{ p.nombre }}</p>
+                      <p class="text-[11.5px] text-[#6B5A67]">Estudiante</p>
+                    </div>
+                  </li>
+                } @empty {
+                  <li class="px-4 py-3 text-[13px] text-[#6B5A67]">Cargando...</li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+      </div>
+    }
+
+    <!-- ===================== ACTIVIDADES ===================== -->
+    @if (pestana() === 'actividades') {
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+        <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Actividades del curso</h3>
+        @if (cargandoContenido()) {
+          <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando actividades...</p>
+        } @else if (!actividades().length) {
+          <div class="text-center py-10">
+            <p class="font-serif font-bold text-[16px] text-[#241521]">Sin actividades</p>
+            <p class="text-[13px] text-[#6B5A67] mt-1">El docente aún no publica tareas ni cuestionarios en este curso.</p>
+          </div>
+        } @else {
+          <div class="space-y-2">
+            @for (cp of carpetasActividades(); track cp.clave) {
+              <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
+                <button type="button" (click)="abrir(cp.clave)" class="w-full flex items-center gap-3 px-4 py-3 bg-[#FAF6EF] hover:bg-[#F5EEE3] text-left">
+                  <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(cp.clave) }" />
+                  <ng-container *ngTemplateOutlet="carpeta" />
+                  <span class="flex-1 min-w-0">
+                    <span class="block text-[14px] font-bold text-[#241521]">{{ cp.nombre }}</span>
+                    @if (cp.desde) { <span class="block text-[12px] text-[#6B5A67]">Del {{ dmy(cp.desde) }} al {{ dmy(cp.hasta) }}</span> }
+                  </span>
+                  <span class="text-[11.5px] text-[#6B5A67]">{{ cp.items.length }} actividad{{ cp.items.length === 1 ? '' : 'es' }}</span>
+                </button>
+                @if (estaAbierta(cp.clave)) {
+                  @if (cp.items.length) {
+                    <div class="divide-y divide-[#F0E6D8]">
+                      @for (i of cp.items; track i.clave) {
+                        @let a = i.actividad!;
+                        @let e = estilo(i);
+                        @let cl = colorPastilla(a);
+                        <button type="button" (click)="abrirActividad(a)" class="w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-[#FBF7F1] transition-colors">
+                          <ng-container *ngTemplateOutlet="iconoItem; context: { $implicit: e }" />
+                          <span class="flex-1 min-w-0">
+                            <span class="block text-[14px] font-semibold text-[#241521] truncate">{{ a.titulo }}</span>
+                            <span class="block text-[12px] text-[#6B5A67]">{{ e.etiqueta }}</span>
+                            <span class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[12px] text-[#6B5A67]">
+                              <span class="flex items-center gap-1" [ngClass]="vencio(a.fechaLimite) ? 'text-[#A62639] font-semibold' : ''"><svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Fecha de entrega: {{ dmyHora(a.fechaLimite) }}@if (vencio(a.fechaLimite)) { &nbsp;· Vencida }</span>
+                              <span class="flex items-center gap-1"><svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>{{ num(a.puntajeMaximo) }} pts</span>
+                              <span>{{ a.tipo === 'CUESTIONARIO' ? 'Cuestionario' : 'Archivo/Tarea' }}</span>
+                            </span>
+                          </span>
+                          <span class="px-4 py-1.5 rounded-full text-[14px] font-bold whitespace-nowrap" [style.color]="cl.color" [style.background]="cl.fondo">{{ textoPastilla(a) }}</span>
+                          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0 text-[#4A1F52]" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Sin actividades en este bimestre.</p>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ===================== ASISTENCIA ===================== -->
+    @if (pestana() === 'asistencia') {
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+          <h3 class="font-serif font-bold text-[18px] text-[#241521]">Registro de Asistencia</h3>
+          @if (resumenAsistencia(); as r) {
+            <div class="flex flex-wrap gap-2 text-[12px]">
+              <span class="px-2.5 py-1 rounded-md bg-[#E7F3EA] text-[#1E7A3B]">Asistió: <b>{{ r.presentes }}</b></span>
+              <span class="px-2.5 py-1 rounded-md bg-[#FDF1DC] text-[#9A6B00]">Tardanzas: <b>{{ r.tardanzas }}</b></span>
+              <span class="px-2.5 py-1 rounded-md bg-[#FBE7E9] text-[#A62639]">Faltas: <b>{{ r.faltas }}</b></span>
+              <span class="px-2.5 py-1 rounded-md bg-[#F0EAFD] text-[#6D28D9]">Justificadas: <b>{{ r.justificadas }}</b></span>
+              @if (r.porcentaje !== null) { <span class="px-2.5 py-1 rounded-md bg-[#EFEAF3] text-[#4A1F52] font-semibold">{{ num(r.porcentaje, 1) }}% asistencia</span> }
+            </div>
+          }
+        </div>
+        @if (cargandoAsistencia()) {
+          <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando asistencia...</p>
+        } @else {
+          <div class="space-y-3">
+            @for (g of asistenciaPorBimestre(); track g.clave) {
+              <div class="rounded-xl overflow-hidden">
+                <button type="button" (click)="abrir(g.clave)" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[#F3EEF6] hover:bg-[#ECE4F1] text-left">
+                  <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(g.clave) }" />
+                  <span class="flex-1 font-serif font-bold text-[16px] text-[#241521]">{{ g.nombre }}</span>
+                  <span class="text-[11.5px] text-[#6B5A67]">{{ g.filas.length }} registro{{ g.filas.length === 1 ? '' : 's' }}</span>
+                </button>
+                @if (estaAbierta(g.clave)) {
+                  @if (g.filas.length) {
+                    <div class="mt-2 rounded-xl border border-[#F0E6D8] overflow-hidden">
+                      <table class="w-full text-[13px]">
+                        <thead class="bg-[#FAF6EF] text-[#241521]">
+                          <tr>
+                            <th class="text-left font-semibold px-4 py-2.5">
+                              <button type="button" (click)="ordenAsc.set(!ordenAsc())" class="inline-flex items-center gap-1 hover:text-[#4A1F52]" title="Ordenar por fecha">
+                                Fecha
+                                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>
+                              </button>
+                            </th>
+                            <th class="text-left font-semibold px-4 py-2.5">Hora</th>
+                            <th class="text-left font-semibold px-4 py-2.5">Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#F0E6D8]">
+                          @for (f of g.filas; track $index) {
+                            @let est = estadosAsistencia[f.estado];
+                            <tr>
+                              <td class="px-4 py-3 text-[#241521]">{{ dmy(f.fecha) }}</td>
+                              <td class="px-4 py-3 text-[#241521]">{{ horaClase(f.fecha) }}</td>
+                              <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12.5px] font-medium" [style.color]="est.color" [style.background]="est.fondo"
+                                      [title]="f.observacion ?? ''">
+                                  <span class="w-2 h-2 rounded-full" [style.background]="est.color"></span>{{ est.etiqueta }}
+                                </span>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Sin registros de asistencia en este bimestre.</p>
+                  }
+                }
+              </div>
+            } @empty {
+              <p class="text-center text-[13px] text-[#6B5A67] py-8">El docente aún no registra asistencia en este curso.</p>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ===================== EXÁMENES ===================== -->
+    @if (pestana() === 'examenes') {
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+        <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Exámenes y evaluaciones</h3>
+        @if (cargandoNotas()) {
+          <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando notas...</p>
+        } @else if (!boleta()) {
+          <p class="text-center text-[13px] text-[#6B5A67] py-8">Aún no tienes notas registradas en este curso.</p>
+        } @else {
+          <div class="space-y-2">
+            @for (per of boleta()!.periodos; track per.periodoId) {
+              @let clave = 'ex' + per.periodoId;
+              <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
+                <button type="button" (click)="abrir(clave)" class="w-full flex items-center gap-3 px-4 py-3 bg-[#FAF6EF] hover:bg-[#F5EEE3] text-left">
+                  <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(clave) }" />
+                  <ng-container *ngTemplateOutlet="carpeta" />
+                  <span class="flex-1 min-w-0">
+                    <span class="block text-[14px] font-bold text-[#241521]">{{ nombrePeriodo(per.periodoId) }}</span>
+                    @if (rangoPeriodo(per.periodoId)) { <span class="block text-[12px] text-[#6B5A67]">{{ rangoPeriodo(per.periodoId) }}</span> }
+                  </span>
+                  @if (per.promedio.redondeado !== null) {
+                    @let cp = colorNota(per.promedio.valor);
+                    <span class="text-[12px] text-[#6B5A67] mr-1">Promedio</span>
+                    <span class="px-3 py-1 rounded-full text-[13px] font-bold" [style.color]="cp.color" [style.background]="cp.fondo">{{ per.promedio.redondeado }}/20</span>
+                  }
+                </button>
+                @if (estaAbierta(clave)) {
+                  @if (per.notas.length) {
+                    <div class="divide-y divide-[#F0E6D8]">
+                      @for (n of per.notas; track $index) {
+                        @let ce = colorEvaluacion(n.tipo);
+                        @let cn = colorNota(n.valor);
+                        <div class="flex items-center gap-4 px-4 py-3.5">
+                          <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" [style.background]="ce.fondo" [style.color]="ce.color">
+                            <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h6"/></svg>
+                          </span>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-[14px] font-semibold text-[#241521] truncate">{{ n.evaluacion }}</p>
+                            <p class="flex flex-wrap items-center gap-x-3 text-[12px] text-[#6B5A67] mt-0.5">
+                              <span>{{ etiquetaEvaluacion(n.tipo) }}</span>
+                              @if (n.fecha) { <span>Fecha: {{ dmy(n.fecha) }}</span> }
+                              <span>Peso: {{ num(n.peso) }}</span>
+                            </p>
+                            @if (n.comentario) { <p class="text-[12px] italic text-[#4A1F52] mt-0.5">“{{ n.comentario }}”</p> }
+                          </div>
+                          <span class="px-4 py-1.5 rounded-full text-[14px] font-bold whitespace-nowrap" [style.color]="cn.color" [style.background]="n.valor === null ? '#F0E6D8' : cn.fondo">
+                            {{ n.valor === null ? 'Sin nota' : num(n.valor, 1) + '/20' }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Sin evaluaciones en este bimestre.</p>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  } @else if (!error()) {
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando curso...</div>
+  }
+</div>
+
+<!-- Fila de un elemento en "Contenido del curso" -->
+<ng-template #filaItem let-i>
+  @let e = estilo(i);
+  <button type="button" (click)="abrirItem(i)" class="w-full flex items-center gap-4 px-4 py-3 text-left bg-white hover:bg-[#FBF7F1] transition-colors">
+    <ng-container *ngTemplateOutlet="iconoItem; context: { $implicit: e }" />
+    <span class="flex-1 min-w-0">
+      <span class="block text-[14px] font-semibold text-[#241521] truncate">{{ titulo(i) }}</span>
+      <span class="block text-[12px] text-[#6B5A67]">{{ e.etiqueta }}</span>
+      <span class="block text-[12px] text-[#6B5A67]">
+        @if (i.actividad) {
+          <span [ngClass]="vencio(i.actividad.fechaLimite) ? 'text-[#A62639] font-semibold' : ''">Fecha de entrega: {{ dmyHora(i.actividad.fechaLimite) }}@if (vencio(i.actividad.fechaLimite)) { &nbsp;· Vencida }</span>
+        } @else {
+          Publicado el {{ dmy(i.material.fechaPublicacion) }}@if (i.material.archivo && i.material.tipo !== 'TEXTO') { &nbsp;|&nbsp; 1 documento }
+        }
+      </span>
+    </span>
+    @if (i.actividad) {
+      @let cl = colorPastilla(i.actividad);
+      <span class="hidden sm:inline px-3 py-1 rounded-full text-[12px] font-semibold whitespace-nowrap" [style.color]="cl.color" [style.background]="cl.fondo">{{ textoPastilla(i.actividad) }}</span>
+    }
+    <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0 text-[#4A1F52]" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+  </button>
+</ng-template>
+
+<!-- Avatar (foto, avatar o iniciales) -->
+<ng-template #avatar let-p let-tam="tam">
+  <span class="rounded-full shrink-0 overflow-hidden flex items-center justify-center text-white font-semibold border-2 border-white shadow-sm"
+        [ngClass]="tam" style="background:radial-gradient(circle at 35% 30%, #6B3474, #2E1233 75%)">
+    @if (p.foto) { <img [src]="p.foto" alt="" class="w-full h-full object-cover bg-[#EFEAF3]" /> } @else { {{ iniciales(p.nombre) }} }
+  </span>
+</ng-template>
+
+<!-- ===================== Panel: actividad ===================== -->
+@if (actividad(); as a) {
+  @let e = estilo({ clave: '', fecha: '', actividad: a });
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarPanel()"></div>
+    <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-2xl flex flex-col">
+      <div class="flex items-start gap-4 px-6 pt-6 pb-4">
+        <ng-container *ngTemplateOutlet="iconoItem; context: { $implicit: e }" />
+        <div class="flex-1 min-w-0">
+          <p class="text-[11.5px] font-semibold uppercase tracking-wide" [style.color]="a.color">{{ a.curso }} · {{ e.etiqueta }}</p>
+          <h3 class="font-serif font-bold text-[22px] text-[#241521] leading-tight">{{ a.titulo }}</h3>
+        </div>
+        <button type="button" (click)="cerrarPanel()" class="w-9 h-9 rounded-full bg-white border border-[#E3D5C4] flex items-center justify-center text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
+        <section class="bg-white rounded-2xl border border-[#E3D5C4] overflow-hidden">
+          <h4 class="px-5 py-3 bg-[#FAF6EF] font-serif font-bold text-[16px] text-[#241521]">Detalles</h4>
+          <div class="px-5 py-4 flex items-center gap-4">
+            <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8 text-[#4A1F52]" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            <div>
+              <p class="text-[12.5px] text-[#6B5A67]">Fecha de entrega:</p>
+              <p class="text-[16px] font-bold" [ngClass]="vencio(a.fechaLimite) ? 'text-[#A62639]' : 'text-[#241521]'">{{ dmyHora(a.fechaLimite) }}</p>
+              <p class="text-[12px]" [ngClass]="abierta(a) || a.miEntrega ? 'text-[#1E7A3B]' : 'text-[#A62639]'">{{ plazo(a.fechaLimite) }}</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-[#E3D5C4] overflow-hidden">
+          <h4 class="px-5 py-3 bg-[#FAF6EF] font-serif font-bold text-[16px] text-[#241521]">Calificación / Intentos</h4>
+          <div class="px-5 py-4 flex items-center gap-4 border-b border-[#F0E6D8]">
+            <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8 text-[#4A1F52]" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
+            <div>
+              <p class="text-[12.5px] text-[#6B5A67]">Nota:</p>
+              <p class="text-[18px] font-bold text-[#241521]">
+                {{ a.miEntrega?.estado === 'CALIFICADA' ? num(a.miEntrega?.nota20, 1) : '—' }} <span class="text-[14px] text-[#6B5A67]">/20</span>
+              </p>
+              @if (a.miEntrega?.estado === 'CALIFICADA') {
+                <p class="text-[12px] text-[#6B5A67]">{{ num(a.miEntrega?.puntaje) }} de {{ num(a.puntajeMaximo) }} puntos</p>
+              }
+            </div>
+          </div>
+          <div class="px-5 py-4 flex items-center gap-4">
+            <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8 text-[#4A1F52]" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 20v-6M12 20V8M18 20V4"/></svg>
+            <div>
+              <p class="text-[12.5px] text-[#6B5A67]">Intentos:</p>
+              <p class="text-[16px] font-bold text-[#241521]">{{ intentos(a) }}</p>
+              @if (a.miEntrega) { <p class="text-[12px] text-[#6B5A67]">Enviado el {{ dmyHora(a.miEntrega.fechaEntrega) }}
+                @if (a.miEntrega.tardia) { · <b class="text-[#B45309]">enviado tarde</b> }</p> }
+              @if (tardiaAbierta(a)) { <p class="text-[12px] font-medium text-[#B45309]">Acepta entrega tardía</p> }
+            </div>
+          </div>
+        </section>
+
+        @if (a.miEntrega?.comentarioDocente) {
+          <p class="bg-white rounded-xl border border-[#E3D5C4] px-4 py-3 text-[13px] text-[#4A1F52] italic">“{{ a.miEntrega?.comentarioDocente }}”</p>
+        }
+        @if (!abierta(a) && !a.miEntrega) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+            La fecha de entrega ya venció. Solo se podía enviar hasta el {{ dmyHora(a.fechaLimite) }}.
+          </div>
+        }
+      </div>
+
+      <div class="px-6 py-5 border-t border-[#E3D5C4]">
+        @if (esPadre) {
+          <p class="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#FAF6EF] border border-[#E3D5C4] text-[13px] text-[#6B5A67] text-center">
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            {{ a.miEntrega ? 'Tu hijo(a) ya entregó esta actividad.' : (abierta(a) ? 'Tu hijo(a) aún no entrega esta actividad.' : 'Tu hijo(a) no entregó esta actividad.') }} Solo lectura.
+          </p>
+        } @else if (abierta(a)) {
+          <button type="button" (click)="irAEntrega(a)"
+                  class="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[15px] font-semibold shadow-md transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l18-7-7 18-2-8-9-3Z"/></svg>
+            {{ a.miEntrega ? (a.tipo === 'CUESTIONARIO' ? 'Nuevo intento' : 'Modificar mi entrega') : (a.tipo === 'CUESTIONARIO' ? 'Resolver cuestionario' : 'Continuar con la entrega') }}
+          </button>
+        } @else {
+          <button type="button" (click)="irAEntrega(a)"
+                  class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-[#4A1F52]/40 text-[#4A1F52] text-[14.5px] font-medium hover:bg-[#EFEAF3]">
+            {{ a.miEntrega ? 'Ver mi entrega' : 'Ver actividad' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Panel: material ===================== -->
+@if (material(); as m) {
+  @let e = estilo({ clave: '', fecha: '', material: m });
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarPanel()"></div>
+    <div class="relative w-full max-w-3xl bg-white h-full shadow-2xl flex flex-col">
+      <div class="flex items-start gap-4 px-7 pt-6 pb-4 border-b border-[#F0E6D8]">
+        <ng-container *ngTemplateOutlet="iconoItem; context: { $implicit: e }" />
+        <div class="flex-1 min-w-0">
+          <h3 class="font-serif font-bold text-[24px] text-[#241521] leading-tight">{{ m.titulo }}</h3>
+          <p class="text-[13px] text-[#6B5A67] mt-0.5">
+            {{ m.archivo && m.tipo !== 'TEXTO' ? 'Documento ' + extension(m.archivo.nombre) : e.etiqueta }}
+            &nbsp;|&nbsp; Publicado el {{ dmy(m.fechaPublicacion) }}
+            @if (m.autor) { &nbsp;|&nbsp; {{ m.autor }} }
+          </p>
+        </div>
+        <button type="button" (click)="cerrarPanel()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-7 py-5 space-y-5">
+        @if (m.descripcion) {
+          @if (m.tipo === 'TEXTO') {
+            <div class="contenido-rico text-[15px] leading-relaxed text-[#3A2A37]" [innerHTML]="m.descripcion"></div>
+          } @else {
+            <p class="text-[15px] leading-relaxed text-[#3A2A37] whitespace-pre-line">{{ m.descripcion }}</p>
+          }
+        }
+
+        @if (m.archivo; as f) {
+          <app-vista-previa [archivo]="f" alto="h-[70vh]" />
+        }
+
+        @if (m.enlace) {
+          <a [href]="m.enlace" target="_blank" rel="noopener"
+             class="flex items-center gap-3 rounded-xl border border-[#E3D5C4] bg-[#FBF7F1] px-4 py-3 hover:bg-[#F5EEE3]">
+            <span class="w-10 h-10 rounded-lg bg-[#E0F3F8] text-[#0891B2] flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+            </span>
+            <span class="flex-1 min-w-0 text-[13px] text-[#4A1F52] underline break-all">{{ m.enlace }}</span>
+            <span class="text-[12.5px] font-medium text-[#4A1F52]">Abrir</span>
+          </a>
+        }
+
+        @if (!m.descripcion && !m.archivo && !m.enlace) {
+          <p class="text-[13.5px] text-[#6B5A67]">Este material no tiene contenido adicional.</p>
+        }
+      </div>
+    </div>
+  </div>
+}

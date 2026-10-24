@@ -1,0 +1,93 @@
+@if (info(); as a) {
+  <div class="rounded-xl border border-[#E3D5C4] bg-white overflow-hidden">
+    @if (barra()) {
+      <div class="flex items-center gap-3 px-4 py-3 bg-[#FBF7F1] border-b border-[#E3D5C4]">
+        <span class="w-10 h-10 shrink-0 rounded-lg bg-white border border-[#E3D5C4] text-[#4A1F52] text-[10px] font-bold flex items-center justify-center">{{ ext(a.nombre) }}</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13.5px] font-medium text-[#4A1F52] truncate">{{ a.nombre }}</p>
+          <p class="text-[12px] text-[#6B5A67]">{{ ext(a.nombre) }} – {{ tam(a.tamanio) }}
+            @if (a.local) { · <span class="font-medium text-[#B45309]">vista previa, aún no enviado</span> }</p>
+        </div>
+        @if (url() && (clase() === 'pdf' || clase() === 'imagen')) {
+          <button type="button" (click)="abrirEnPestana()" class="hidden sm:inline-block px-3 py-1.5 rounded-lg bg-white border border-[#E3D5C4] text-[12.5px] font-medium text-[#4A1F52] hover:bg-[#EFEAF3]">Abrir en pestaña</button>
+        }
+        @if (a.local) {
+          <button type="button" (click)="quitar.emit()" class="px-3 py-1.5 rounded-lg bg-[#FBE7E9] text-[12.5px] font-medium text-[#A62639] hover:bg-[#F7D5DA]">Quitar</button>
+        } @else {
+          <button type="button" (click)="descargar()" class="px-3 py-1.5 rounded-lg bg-[#EFEAF3] text-[12.5px] font-medium text-[#4A1F52] hover:bg-[#E5DCEC]">Descargar</button>
+        }
+      </div>
+    }
+
+    @if (cargando()) {
+      <div class="p-8 text-center text-[13px] text-[#6B5A67] bg-[#F4EEE6]">Cargando vista previa...</div>
+    } @else if (error()) {
+      <div class="p-6 text-center text-[13px] text-[#A62639] bg-[#FBE7E9]">{{ error() }}</div>
+    } @else {
+      @switch (clase()) {
+        @case ('pdf') {
+          @if (urlSegura()) { <iframe [src]="urlSegura()" class="w-full block bg-[#F4EEE6]" [ngClass]="alto()" title="Vista previa del PDF"></iframe> }
+        }
+        @case ('imagen') {
+          @if (url()) { <div class="bg-[#F4EEE6] p-3 flex justify-center"><img [src]="url()" [alt]="a.nombre" class="max-w-full max-h-[600px] rounded-lg" /></div> }
+        }
+        @case ('video') {
+          @if (url()) { <video [src]="url()" controls class="w-full max-h-[560px] bg-black"></video> }
+        }
+        @case ('audio') {
+          @if (url()) { <div class="p-4 bg-[#F4EEE6]"><audio [src]="url()" controls class="w-full"></audio></div> }
+        }
+        @case ('texto') {
+          <pre class="m-0 p-4 overflow-auto text-[12.5px] leading-relaxed text-[#241521] whitespace-pre-wrap bg-[#FBF7F1]" [ngClass]="alto()">{{ texto() }}</pre>
+        }
+        @case ('docx') {
+          <div class="overflow-auto bg-[#F4EEE6] p-3 sm:p-5" [ngClass]="alto()">
+            <div class="vp-doc mx-auto max-w-[780px] bg-white rounded-lg shadow-sm px-6 sm:px-10 py-8" [innerHTML]="html()"></div>
+          </div>
+        }
+        @case ('hoja') {
+          @if (hojas().length > 1) {
+            <div class="flex gap-1 px-3 pt-2 bg-[#FBF7F1] border-b border-[#E3D5C4] overflow-x-auto">
+              @for (h of hojas(); track $index; let i = $index) {
+                <button type="button" (click)="hoja.set(i)" class="px-3 py-1.5 rounded-t-lg text-[12.5px] font-medium whitespace-nowrap"
+                        [ngClass]="hoja() === i ? 'bg-white text-[#4A1F52] border border-b-0 border-[#E3D5C4]' : 'text-[#6B5A67] hover:text-[#4A1F52]'">{{ h.nombre }}</button>
+              }
+            </div>
+          }
+          @if (hojas()[hoja()]; as h) {
+            <div class="vp-hoja overflow-auto p-3" [ngClass]="alto()" [innerHTML]="h.html"></div>
+          }
+        }
+        @case ('pptx') {
+          <div class="overflow-auto bg-[#F4EEE6] p-3 space-y-3" [ngClass]="alto()">
+            <p class="text-[12px] text-[#6B5A67] px-1">Vista del texto de cada diapositiva. Para verla con su diseño original, descárgala.</p>
+            @for (d of diapositivas(); track d.numero) {
+              <article class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm p-4 sm:p-5">
+                <p class="text-[11px] font-semibold text-[#9A8E97] uppercase tracking-wide">Diapositiva {{ d.numero }}</p>
+                <h5 class="mt-1 font-serif font-bold text-[17px] text-[#241521]">{{ d.titulo || '(sin título)' }}</h5>
+                @if (d.textos.length) {
+                  <ul class="mt-2 space-y-1 list-disc pl-5 text-[13px] text-[#3A2A37]">
+                    @for (t of d.textos; track $index) { <li>{{ t }}</li> }
+                  </ul>
+                }
+                @if (d.imagenes.length) {
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    @for (im of d.imagenes; track $index) { <img [src]="im" alt="Imagen de la diapositiva" class="max-h-40 rounded-lg border border-[#E3D5C4]" /> }
+                  </div>
+                }
+              </article>
+            } @empty {
+              <p class="text-center text-[13px] text-[#6B5A67] py-6">La presentación no tiene diapositivas con texto.</p>
+            }
+          </div>
+        }
+        @default {
+          <div class="p-6 text-center text-[13px] text-[#6B5A67] bg-[#FBF7F1]">
+            La vista previa no está disponible para archivos .{{ ext(a.nombre).toLowerCase() }} (formato antiguo).
+            <button type="button" (click)="descargar()" class="ml-1 font-semibold text-[#4A1F52] underline">Descárgalo</button> para abrirlo.
+          </div>
+        }
+      }
+    }
+  </div>
+}

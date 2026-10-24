@@ -1,0 +1,376 @@
+<div class="space-y-4">
+
+  <!-- Redactar (administración y docentes) -->
+  @if (puedeCrear) {
+    <button type="button" (click)="abrirCrear()"
+            class="w-full flex items-center justify-between gap-3 bg-[#FAF6EF] hover:bg-[#F0E6D8] border border-[#E3D5C4]
+                   rounded-xl px-4 py-3 text-left transition-colors">
+      <span class="flex items-center gap-3 text-[13.5px] text-[#6B5A67]">
+        <span class="w-8 h-8 rounded-full bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </span>
+        {{ esAdmin ? 'Redactar un nuevo comunicado ...' : 'Redactar un comunicado para tus secciones ...' }}
+      </span>
+      <span class="flex items-center gap-1.5 text-[13px] font-medium text-[#4A1F52]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Crear
+      </span>
+    </button>
+  }
+
+  @if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+
+  <!-- Buscar -->
+  <div class="relative">
+    <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+    <input type="text" placeholder="Buscar comunicados..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
+           class="w-full pl-9 pr-3 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+  </div>
+
+  <!-- Año + filtros -->
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="relative">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v4M17 3v4M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
+      <select [ngModel]="anio()" (ngModelChange)="anio.set(+$event)"
+              class="pl-9 pr-8 py-2 text-[14px] font-medium rounded-lg border border-[#E3D5C4] bg-white focus:outline-none min-w-[140px]">
+        @for (a of anios(); track a) { <option [value]="a">{{ a }}</option> }
+      </select>
+    </div>
+    <button type="button" (click)="filtro.set('todos')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition-colors" [ngClass]="claseChip(filtro() === 'todos')">
+      <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      Todos
+    </button>
+    <button type="button" (click)="filtro.set('leidos')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition-colors" [ngClass]="claseChip(filtro() === 'leidos')">
+      <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg>
+      Leídos
+    </button>
+    <button type="button" (click)="filtro.set('no-leidos')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition-colors" [ngClass]="claseChip(filtro() === 'no-leidos')">
+      <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+      No leídos
+      @if (noLeidos() > 0) {
+        <span class="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-[#A62639] text-white text-[10px] flex items-center justify-center">{{ noLeidos() }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Lista -->
+  @if (cargando()) {
+    <p class="text-center text-[13px] text-[#6B5A67] py-10">Cargando comunicados...</p>
+  } @else if (filtrados().length === 0) {
+    <div class="flex flex-col items-center justify-center text-center py-14">
+      <div class="relative w-28 h-28 rounded-full bg-[#EFEAF3] flex items-center justify-center mb-4">
+        <svg viewBox="0 0 64 64" fill="none" class="w-16 h-16" stroke="#4A1F52" stroke-width="2.5" stroke-linejoin="round"><rect x="6" y="14" width="52" height="36" rx="4" fill="#fff"/><path d="m6 18 26 18 26-18"/></svg>
+        <span class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7" stroke="#4A1F52" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
+        </span>
+      </div>
+      <p class="font-serif font-bold text-[16px] text-[#241521]">Sin comunicados</p>
+      <p class="text-[13px] text-[#6B5A67]">No hay comunicados que mostrar en este periodo.</p>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (c of filtrados(); track c.id) {
+        <article (click)="abrirDetalle(c)"
+                 class="group cursor-pointer rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all"
+                 [ngClass]="c.leido ? 'bg-white border-[#E3D5C4]' : 'bg-[#F6F0F8] border-[#4A1F52]/25'">
+          <div class="flex items-start gap-4">
+            <div class="overflow-hidden w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-white text-[15px] font-semibold"
+                 style="background:radial-gradient(circle at 35% 30%, #6B3474, #2E1233 75%)">
+              <app-foto [usuarioId]="c.autorId">{{ iniciales(c.autorNombre) }}</app-foto>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="font-serif font-bold text-[17px] text-[#241521] leading-tight">{{ c.titulo }}</h3>
+                @if (c.anuncio) {
+                  <span class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#FDF1DC] text-[#B08900]">📢 Anuncio</span>
+                }
+                @if (!c.leido) {
+                  <span class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#4A1F52] text-white">Nuevo</span>
+                }
+              </div>
+              <p class="text-[12.5px] text-[#6B5A67] mt-0.5">Enviado por: {{ c.autorNombre }} • {{ haceCuanto(c.fechaCreacion) }}</p>
+              <p class="text-[13.5px] text-[#241521] mt-2.5 line-clamp-3">{{ textoPlano(c.contenido) }}</p>
+
+              <div class="flex flex-wrap items-center justify-between gap-2 mt-3">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  @for (g of c.destinatarios; track g) {
+                    <span class="px-2 py-0.5 rounded-full text-[11px] bg-[#EFEAF3] text-[#4A1F52]">{{ etiquetaGrupo(g) }}</span>
+                  }
+                  @for (s of c.secciones; track s) {
+                    <span class="px-2 py-0.5 rounded-full text-[11px] bg-[#FAF6EF] border border-[#E3D5C4] text-[#6B5A67]">{{ s }}</span>
+                  }
+                  @if (c.editable) {
+                    <span class="text-[11px] text-[#6B5A67] ml-1">· Leído por {{ c.totalLecturas }}</span>
+                  }
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" title="Ver" (click)="$event.stopPropagation(); abrirDetalle(c)"
+                          class="w-9 h-9 rounded-full bg-[#EFEAF3] text-[#4A1F52] hover:bg-[#E2D5EA] flex items-center justify-center transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-4.5 h-4.5" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  @if (c.editable) {
+                    <button type="button" title="Editar" (click)="abrirEditar(c, $event)"
+                            class="w-9 h-9 rounded-full bg-[#EFEAF3] text-[#4A1F52] hover:bg-[#E2D5EA] flex items-center justify-center transition-colors">
+                      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                    <button type="button" title="Eliminar" (click)="eliminar(c, $event)"
+                            class="w-9 h-9 rounded-full bg-[#EFEAF3] text-[#4A1F52] hover:bg-[#FBE7E9] hover:text-[#A62639] flex items-center justify-center transition-colors">
+                      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/></svg>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<!-- ===================== Panel lateral: detalle ===================== -->
+@if (detalle(); as d) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarDetalle()"></div>
+    <div class="relative w-full max-w-2xl bg-white h-full shadow-2xl overflow-y-auto flex flex-col">
+      <div class="flex items-start gap-4 px-7 pt-7 pb-4">
+        <div class="overflow-hidden w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-white text-[18px] font-semibold"
+             style="background:radial-gradient(circle at 35% 30%, #6B3474, #2E1233 75%)">
+          <app-foto [usuarioId]="d.autorId">{{ iniciales(d.autorNombre) }}</app-foto>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-serif font-bold text-[22px] text-[#241521] leading-tight">{{ d.titulo }}</h3>
+          <p class="text-[13px] text-[#6B5A67] mt-1">Enviado por: {{ d.autorNombre }} • {{ haceCuanto(d.fechaCreacion) }}</p>
+        </div>
+        <button type="button" (click)="cerrarDetalle()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="px-7 pb-6 flex-1 space-y-5">
+        @if (d.imagen) {
+          <div class="rounded-xl border border-[#E3D5C4] p-1.5 shadow-sm">
+            <img [src]="d.imagen" alt="Imagen del comunicado" class="w-full max-h-[340px] object-cover rounded-lg" />
+          </div>
+        }
+        <div class="contenido-rico text-[14.5px] leading-relaxed text-[#241521]" [innerHTML]="d.contenido"></div>
+
+        <div class="text-[13.5px] text-[#241521] space-y-1 pt-4 border-t border-[#F0E6D8]">
+          <p><span class="font-medium">Fecha de envío:</span>&nbsp;{{ fechaLarga(d.fechaCreacion) }}</p>
+          @if (d.fechaActualizacion) {
+            <p><span class="font-medium">Última edición:</span>&nbsp;{{ fechaLarga(d.fechaActualizacion) }}</p>
+          }
+          <p><span class="font-medium">Tipo:</span>&nbsp;{{ d.anuncio ? 'Anuncio importante' : 'Comunicado institucional' }}</p>
+          <p><span class="font-medium">Dirigido a:</span>&nbsp;{{ listaGrupos(d) }}</p>
+          @if (d.editable) {
+            <p><span class="font-medium">Leído por:</span>&nbsp;{{ d.totalLecturas }} usuario(s)</p>
+          }
+        </div>
+      </div>
+
+      <div class="px-7 py-4 border-t border-[#F0E6D8] flex justify-end gap-2">
+        @if (d.editable) {
+          <button type="button" (click)="abrirEditar(d)" class="px-4 py-2 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#4A1F52] hover:bg-[#EFEAF3]">Editar</button>
+        }
+        <button type="button" (click)="cerrarDetalle()" class="px-5 py-2 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8]">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Anuncio grande ===================== -->
+@if (anuncioActual(); as a) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/60 backdrop-blur-[2px]"></div>
+    <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl anuncio-entrada">
+      <div class="px-7 pt-6 pb-5 text-white rounded-t-2xl" style="background:linear-gradient(135deg, #4A1F52, #2E1233)">
+        <p class="text-[12px] font-semibold tracking-[0.15em] uppercase text-[#E4C766]">📢 Anuncio importante</p>
+        <h2 class="font-serif font-bold text-[26px] leading-tight mt-1.5">{{ a.titulo }}</h2>
+        <p class="text-[13px] text-white/75 mt-1.5">{{ a.autorNombre }} • {{ haceCuanto(a.fechaCreacion) }}</p>
+      </div>
+      <div class="px-7 py-6 space-y-5">
+        @if (a.imagen) {
+          <img [src]="a.imagen" alt="Imagen del anuncio" class="w-full max-h-[320px] object-cover rounded-xl" />
+        }
+        <div class="contenido-rico text-[15.5px] leading-relaxed text-[#241521]" [innerHTML]="a.contenido"></div>
+      </div>
+      <div class="px-7 pb-6 flex justify-end">
+        <button type="button" (click)="cerrarAnuncio()"
+                class="px-6 py-2.5 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[14px] font-medium transition-colors">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Modal crear / editar ===================== -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarModal()"></div>
+    <div class="relative w-full max-w-xl max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+        <h3 class="font-serif font-bold text-[19px] text-[#241521]">{{ editandoId() ? 'Editar Comunicado' : 'Crear Nuevo Comunicado' }}</h3>
+        <button type="button" (click)="cerrarModal()" class="text-[#6B5A67] hover:text-[#241521]">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="px-6 py-5 space-y-4">
+        <div>
+          <input type="text" [(ngModel)]="fTitulo" (ngModelChange)="limpiarError('titulo')" placeholder="Título del Comunicado *" maxlength="200"
+                 class="w-full px-3 py-2.5 text-[14px] rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                 [ngClass]="errores()['titulo'] ? 'border-[#A62639] bg-[#FFF7F8]' : 'border-[#E3D5C4]'" />
+          <div class="flex justify-between gap-2">
+            <span>@if (errores()['titulo']) { <p class="mt-1 text-[12px] text-[#A62639]">{{ errores()['titulo'] }}</p> }</span>
+            <span class="mt-1 text-[11px] text-[#9A8E97]">{{ fTitulo.length }}/200</span>
+          </div>
+        </div>
+
+        @if (esDocente && !esAdmin) {
+          <!-- Docente: destinatario y clase -->
+          @if (seccionesDisponibles().length) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="block">
+                <span class="block text-[13px] font-medium text-[#241521] mb-1.5">Destinatario *</span>
+                <select [ngModel]="fModoDocente()" (ngModelChange)="fModoDocente.set($event); limpiarError('destino')"
+                        class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                        [ngClass]="errores()['destino'] ? 'border-[#A62639]' : 'border-[#E3D5C4]'">
+                  <option value="">Seleccionar destinatario...</option>
+                  @for (o of opcionesDocente; track o.valor) { <option [value]="o.valor">{{ o.etiqueta }}</option> }
+                </select>
+                @if (errores()['destino']) { <span class="block mt-1 text-[12px] text-[#A62639]">{{ errores()['destino'] }}</span> }
+              </label>
+              @if (fModoDocente().endsWith('_UNA')) {
+                <label class="block">
+                  <span class="block text-[13px] font-medium text-[#241521] mb-1.5">Clase *</span>
+                  <select [ngModel]="fClase()" (ngModelChange)="fClase.set($event); limpiarError('clase')" [ngClass]="errores()['clase'] ? 'border-[#A62639]' : ''"
+                          class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+                    <option [ngValue]="null">Seleccionar clase...</option>
+                    @for (s of seccionesDisponibles(); track s.id) { <option [ngValue]="s.id">{{ s.nombre }}</option> }
+                  </select>
+                @if (errores()['clase']) { <span class="block mt-1 text-[12px] text-[#A62639]">{{ errores()['clase'] }}</span> }
+                </label>
+              }
+            </div>
+            @if (fModoDocente().endsWith('_TODAS')) {
+              <p class="text-[11.5px] text-[#6B5A67] -mt-2">Llegará a: {{ nombresSecciones() }}</p>
+            }
+          } @else {
+            <div class="bg-[#FDF1DC] border border-[#B08900]/30 text-[#7A5B00] text-[12.5px] rounded-lg px-3 py-2.5">
+              Aún no tienes cursos asignados en una sección activa, por eso no puedes enviar comunicados.
+            </div>
+          }
+        } @else {
+        <!-- Destinatarios (selección múltiple) -->
+        <div class="relative">
+          <label class="block text-[13px] font-medium text-[#241521] mb-1.5">Destinatarios</label>
+          <button type="button" (click)="selectorGruposAbierto.set(!selectorGruposAbierto())"
+                  class="w-full sm:w-80 flex items-center justify-between gap-2 px-3 py-2.5 text-[13.5px] rounded-lg border bg-white text-left"
+                  [ngClass]="selectorGruposAbierto() ? 'border-[#4A1F52] ring-2 ring-[#4A1F52]/20' : errores()['destino'] ? 'border-[#A62639]' : 'border-[#E3D5C4]'">
+            <span class="truncate" [ngClass]="fGrupos().length ? 'text-[#241521]' : 'text-[#6B5A67]'">{{ resumenGrupos() }}</span>
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          @if (errores()['destino']) { <p class="mt-1 text-[12px] text-[#A62639]">{{ errores()['destino'] }}</p> }
+          @if (selectorGruposAbierto()) {
+            <div class="absolute z-10 mt-1 w-full sm:w-80 bg-white border border-[#E3D5C4] rounded-lg shadow-lg py-1">
+              @for (g of gruposDisponibles; track g.valor) {
+                <label class="flex items-center gap-2.5 px-3 py-2 text-[13.5px] text-[#241521] hover:bg-[#FAF6EF] cursor-pointer"
+                       [ngClass]="{ 'border-b border-[#F0E6D8]': g.valor === 'TODOS' }">
+                  <input type="checkbox" class="accent-[#4A1F52] w-4 h-4" [checked]="fGrupos().includes(g.valor)" (change)="alternarGrupo(g.valor)" />
+                  <span class="w-5 text-center">{{ g.icono }}</span>
+                  {{ g.etiqueta }}
+                </label>
+              }
+              <div class="px-3 pt-1.5 pb-1 flex justify-end">
+                <button type="button" (click)="selectorGruposAbierto.set(false)" class="text-[12.5px] font-medium text-[#4A1F52] hover:underline">Listo</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Secciones (docente: obligatorio; administración: opcional) -->
+        @if (seccionesDisponibles().length) {
+          <div>
+            <label class="block text-[13px] font-medium text-[#241521] mb-1">{{ esAdmin ? 'Limitar a secciones (opcional)' : 'Secciones *' }}</label>
+            <p class="text-[11.5px] text-[#6B5A67] mb-2">
+              {{ esAdmin ? 'Si no eliges ninguna, el comunicado llega a todo el colegio.' : 'Solo lo verán los alumnos y/o padres de las secciones que elijas.' }}
+            </p>
+            <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+              @for (s of seccionesDisponibles(); track s.id) {
+                <button type="button" (click)="alternarSeccion(s.id)"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition-colors"
+                        [ngClass]="claseChip(fSecciones().includes(s.id))">
+                  @if (fSecciones().includes(s.id)) {
+                    <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>
+                  }
+                  {{ s.nombre }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        }
+
+        <!-- Imagen opcional -->
+        <div>
+          <label class="block text-[13px] font-medium text-[#241521] mb-1.5">Imagen (opcional)</label>
+          @if (fImagen(); as img) {
+            <div class="relative rounded-lg border border-[#E3D5C4] p-1.5">
+              <img [src]="img" alt="Vista previa" class="w-full max-h-48 object-cover rounded-md" />
+              <button type="button" (click)="fImagen.set(null)" title="Quitar imagen"
+                      class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-[#A62639] shadow flex items-center justify-center hover:bg-white">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          } @else {
+            <label class="flex items-center gap-2 w-full px-3 py-3 rounded-lg border border-dashed border-[#C9B8A6] text-[13px] text-[#6B5A67] cursor-pointer hover:bg-[#FAF6EF]">
+              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5L5 20"/></svg>
+              Subir una imagen (JPG o PNG, máx. 2 MB)
+              <input type="file" accept="image/*" class="hidden" (change)="elegirImagen($event)" />
+            </label>
+          }
+        </div>
+
+        <!-- Mensaje -->
+        <div>
+          <label class="block text-[15px] font-medium text-[#241521] mb-1.5">Mensaje *</label>
+          <div [ngClass]="errores()['mensaje'] ? 'rounded-lg ring-2 ring-[#A62639]/60' : ''">
+            <app-editor-texto [contenido]="fContenido" (contenidoChange)="fContenido = $event; limpiarError('mensaje')" placeholder="Escriba un mensaje..." />
+          </div>
+          @if (errores()['mensaje']) { <p class="mt-1 text-[12px] text-[#A62639]">{{ errores()['mensaje'] }}</p> }
+        </div>
+
+        <!-- Anuncio grande (solo administración) -->
+        @if (esAdmin) {
+        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+               [ngClass]="fAnuncio() ? 'border-[#B08900]/40 bg-[#FDF1DC]' : 'border-[#E3D5C4] hover:bg-[#FAF6EF]'">
+          <input type="checkbox" class="accent-[#4A1F52] w-4 h-4 mt-0.5" [ngModel]="fAnuncio()" (ngModelChange)="fAnuncio.set($event)" />
+          <span>
+            <span class="block text-[13.5px] font-medium text-[#241521]">📢 Mostrar como anuncio importante</span>
+            <span class="block text-[12px] text-[#6B5A67]">Aparecerá en grande a cada destinatario al entrar a Comunicados, hasta que lo marque como leído.</span>
+          </span>
+        </label>
+        }
+
+        @if (errorModal()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorModal() }}</div>
+        }
+      </div>
+
+      <div class="flex justify-end gap-2 px-6 py-4 border-t border-[#E3D5C4]">
+        <button type="button" (click)="guardar()" [disabled]="guardando()"
+                class="px-5 py-2.5 rounded-lg bg-[#6B2C63] hover:bg-[#4A1F52] text-white text-[14px] font-medium disabled:opacity-60 transition-colors">
+          {{ guardando() ? 'Enviando...' : (editandoId() ? 'Guardar cambios' : 'Enviar') }}
+        </button>
+        <button type="button" (click)="cerrarModal()"
+                class="px-5 py-2.5 rounded-lg border border-[#4A1F52]/40 text-[14px] font-medium text-[#4A1F52] hover:bg-[#EFEAF3]">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}

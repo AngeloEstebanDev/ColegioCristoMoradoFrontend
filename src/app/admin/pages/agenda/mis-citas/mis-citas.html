@@ -1,0 +1,609 @@
+<div class="space-y-4">
+  <!-- Resumen -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="flex items-center gap-3 bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-4 py-3">
+      <span class="min-w-9 h-9 px-1.5 rounded-lg bg-[#E6EEFB] text-[#2563EB] text-[13px] font-bold flex items-center justify-center">{{ totales().total }}</span>
+      <div><p class="text-[11.5px] font-semibold tracking-wide uppercase text-[#6B5A67]">Citas totales</p><p class="font-serif font-bold text-[22px] text-[#241521] leading-none">{{ totales().total }}</p></div>
+    </div>
+    <div class="flex items-center gap-3 bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-4 py-3">
+      <span class="w-9 h-9 rounded-lg bg-[#FDF1DC] flex items-center justify-center"><span class="w-4 h-4 rounded-full bg-[#F5B800]"></span></span>
+      <div><p class="text-[11.5px] font-semibold tracking-wide uppercase text-[#6B5A67]">Pendientes</p><p class="font-serif font-bold text-[22px] text-[#241521] leading-none">{{ totales().pendientes }}</p></div>
+    </div>
+    <div class="flex items-center gap-3 bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-4 py-3">
+      <span class="w-9 h-9 rounded-lg bg-[#E7F3EA] text-[#1E7A3B] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4-7 7Z"/></svg>
+      </span>
+      <div><p class="text-[11.5px] font-semibold tracking-wide uppercase text-[#6B5A67]">Confirmadas</p><p class="font-serif font-bold text-[22px] text-[#241521] leading-none">{{ totales().confirmadas }}</p></div>
+    </div>
+    <div class="flex items-center gap-3 bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-4 py-3">
+      <span class="w-9 h-9 rounded-lg bg-[#FBE7E9] text-[#A62639] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </span>
+      <div><p class="text-[11.5px] font-semibold tracking-wide uppercase text-[#6B5A67]">Canceladas</p><p class="font-serif font-bold text-[22px] text-[#241521] leading-none">{{ totales().canceladas }}</p></div>
+    </div>
+  </div>
+
+  @if (aviso()) {
+    <div class="flex justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ aviso() }}</span><button type="button" (click)="aviso.set(null)">✕</button>
+    </div>
+  }
+  @if (error()) {
+    <div class="flex justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ error() }}</span><button type="button" (click)="error.set(null)">✕</button>
+    </div>
+  }
+
+  <!-- Agenda de citas -->
+  <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm">
+    <div class="flex items-center gap-4 flex-wrap px-5 py-4 border-b border-[#F0E6D8]">
+      <span class="w-12 h-12 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M10 13.5l4 4M14 13.5l-4 4"/></svg>
+      </span>
+      <div class="flex-1 min-w-[200px]">
+        <h3 class="font-serif font-bold text-[18px] text-[#241521] uppercase tracking-wide">Agenda de citas</h3>
+        <p class="text-[12.5px] text-[#6B5A67]">
+          {{ esPadre ? 'Reuniones con docentes y la administración del colegio' : esAdmin ? 'Reuniones con padres de familia, docentes y alumnos' : 'Reuniones con padres de familia / tutores' }}
+        </p>
+      </div>
+      <select [ngModel]="filtro()" (ngModelChange)="filtro.set($event)"
+              class="px-3 py-2 text-[13px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+        <option value="TODOS">Todos los estados</option>
+        <option value="PENDIENTE">Pendientes</option>
+        <option value="CONFIRMADA">Confirmadas</option>
+        <option value="CANCELADA">Canceladas</option>
+        <option value="REALIZADA">Realizadas</option>
+      </select>
+      @if (esPadre) {
+        <button type="button" (click)="abrirSolicitar()" class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13px] font-semibold px-4 py-2.5 rounded-lg">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva cita
+        </button>
+      } @else {
+        <button type="button" (click)="abrirNueva()" class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13px] font-semibold px-4 py-2.5 rounded-lg">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva cita
+        </button>
+      }
+    </div>
+
+    @if (cargando()) {
+      <p class="p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando citas...</p>
+    } @else if (!lista().length) {
+      <div class="text-center px-6 py-12">
+        <p class="font-serif font-bold text-[18px] text-[#241521]">{{ citas().length ? 'No hay citas con ese estado' : 'Aún no tienes citas' }}</p>
+        <p class="text-[13px] text-[#6B5A67] mt-1">
+          {{ esPadre ? 'Pulsa "Nueva cita" para convocar a un profesor o al personal administrativo en un horario disponible.' : 'Pulsa "Nueva cita" para convocar una reunión. Registra tu disponibilidad para que los padres también puedan solicitarte citas.' }}
+        </p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[920px] text-[13px]">
+          <thead class="bg-[#FAF6EF] text-[#241521]">
+            <tr class="text-[12px] uppercase tracking-wide">
+              <th class="text-left font-semibold px-4 py-3">Tipo</th>
+              <th class="text-left font-semibold px-4 py-3">{{ esPadre ? 'Docente / Personal' : esAdmin ? 'Persona' : 'Padre / Tutor' }}</th>
+              <th class="text-left font-semibold px-4 py-3">Motivo</th>
+              <th class="text-left font-semibold px-4 py-3">Fecha y hora</th>
+              <th class="text-left font-semibold px-4 py-3">Motivo de cancelación</th>
+              <th class="text-left font-semibold px-4 py-3">Estado</th>
+              <th class="text-center font-semibold px-4 py-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#F0E6D8]">
+            @for (c of lista(); track c.id) {
+              @let o = otra(c);
+              @let est = estados[c.estado];
+              <tr class="hover:bg-[#FBF7F1]" [ngClass]="c.pasada ? 'opacity-70' : ''">
+                <td class="px-4 py-3 font-semibold" [ngClass]="c.tipo === 'ENVIADA' ? 'text-[#2563EB]' : 'text-[#241521]'">{{ c.tipo }}</td>
+                <td class="px-4 py-3">
+                  <p class="font-medium text-[#241521]">{{ o.nombre }}</p>
+                  <p class="text-[11.5px] text-[#6B5A67]">({{ o.detalle }})</p>
+                </td>
+                <td class="px-4 py-3 text-[#241521] max-w-[220px]"><span class="line-clamp-2">{{ c.motivo }}</span></td>
+                <td class="px-4 py-3 text-[#241521] whitespace-nowrap">{{ fechaHora(c) }}</td>
+                <td class="px-4 py-3 max-w-[200px]">
+                  @if (esCancelada(c) && c.observacion) { <span class="text-[#2563EB] line-clamp-2" [title]="c.observacion">{{ c.observacion }}</span> } @else { <span class="text-[#6B5A67]">-</span> }
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2.5 py-1 rounded-md text-[12px] font-semibold uppercase whitespace-nowrap" [style.color]="est.color" [style.background]="est.fondo">{{ est.etiqueta }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-center gap-1">
+                    @if (c.puedeConfirmar) {
+                      <button type="button" (click)="aceptar(c)" class="p-1.5 rounded-lg text-[#1E7A3B] hover:bg-[#E7F3EA]" title="Aceptar">
+                        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg>
+                      </button>
+                    }
+                    <button type="button" (click)="detalle.set(c)" class="p-1.5 rounded-lg text-[#4A1F52] hover:bg-[#EFEAF3]" title="Ver detalle">
+                      <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    @if (c.puedeEliminar) {
+                      <button type="button" (click)="eliminar(c)" class="p-1.5 rounded-lg text-[#A62639] hover:bg-[#FBE7E9]" title="Eliminar solicitud">
+                        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+                      </button>
+                    }
+                    @if (c.puedeCancelar) {
+                      <button type="button" (click)="abrirCancelar(c)" class="p-1.5 rounded-lg text-[#A62639] hover:bg-[#FBE7E9]" title="Cancelar cita">
+                        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- ===================== Ver detalle ===================== -->
+@if (detalle(); as c) {
+  @let est = estados[c.estado];
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/45" (click)="detalle.set(null)"></div>
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-start gap-3 px-6 pt-5 pb-3 border-b border-[#F0E6D8]">
+        <div class="flex-1">
+          <p class="text-[11.5px] font-semibold tracking-wide uppercase" [ngClass]="c.tipo === 'ENVIADA' ? 'text-[#2563EB]' : 'text-[#6B5A67]'">Cita {{ c.tipo === 'ENVIADA' ? 'enviada' : 'recibida' }}</p>
+          <h3 class="font-serif font-bold text-[20px] text-[#241521]">{{ c.motivo }}</h3>
+        </div>
+        <span class="px-2.5 py-1 rounded-md text-[12px] font-semibold uppercase" [style.color]="est.color" [style.background]="est.fondo">{{ est.etiqueta }}</span>
+        <button type="button" (click)="detalle.set(null)" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <dl class="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[13px]">
+        <div><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Solicitante</dt><dd class="font-medium text-[#241521]">{{ solicitante(c).nombre }}</dd><dd class="text-[12px] text-[#6B5A67]">{{ solicitante(c).rol }}</dd></div>
+        <div><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Con</dt><dd class="font-medium text-[#241521]">{{ otra(c).nombre }}</dd><dd class="text-[12px] text-[#6B5A67]">{{ otra(c).detalle }}</dd></div>
+        <div><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Fecha</dt><dd class="font-medium text-[#241521]">{{ fechaCorta(c.fecha, true) }}</dd></div>
+        <div><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Hora</dt><dd class="font-medium text-[#241521]">{{ c.horaInicio }} - {{ c.horaFin }}</dd></div>
+        <div><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Modalidad</dt><dd class="font-medium text-[#241521]">{{ c.modalidad === 'VIRTUAL' ? 'Virtual' : 'Presencial' }}{{ c.lugar ? ' · ' + c.lugar : '' }}</dd></div>
+        @if (c.estudiante) {
+          <div><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Estudiante</dt><dd class="font-medium text-[#241521]">{{ c.estudiante.nombre }}</dd><dd class="text-[12px] text-[#6B5A67]">{{ c.estudiante.salon }}</dd></div>
+        }
+        @if (c.detalle) {
+          <div class="sm:col-span-2"><dt class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Descripción adicional</dt><dd class="text-[#241521] whitespace-pre-line">{{ c.detalle }}</dd></div>
+        }
+        @if (c.observacion) {
+          <div class="sm:col-span-2 rounded-xl px-3 py-2" [ngClass]="esCancelada(c) ? 'bg-[#FBE7E9]' : 'bg-[#F6F0F8]'">
+            <dt class="text-[11.5px] uppercase tracking-wide" [ngClass]="esCancelada(c) ? 'text-[#A62639]' : 'text-[#4A1F52]'">{{ esCancelada(c) ? 'Motivo de cancelación' : 'Comentario' }}</dt>
+            <dd class="text-[#241521] whitespace-pre-line">{{ c.observacion }}</dd>
+          </div>
+        }
+      </dl>
+      <div class="flex justify-end gap-2 px-6 py-4 border-t border-[#F0E6D8]">
+        @if (c.puedeConfirmar) {
+          <button type="button" (click)="detalle.set(null); aceptar(c)" class="px-4 py-2 rounded-lg bg-[#1E7A3B] hover:bg-[#17632F] text-white text-[13px] font-semibold">Aceptar</button>
+        }
+        @if (c.puedeCancelar) {
+          <button type="button" (click)="detalle.set(null); abrirCancelar(c)" class="px-4 py-2 rounded-lg border border-[#A62639]/40 text-[#A62639] text-[13px] font-semibold hover:bg-[#FBE7E9]">Cancelar cita</button>
+        }
+        <button type="button" (click)="detalle.set(null)" class="px-4 py-2 rounded-lg border border-[#E3D5C4] text-[13px] font-medium hover:bg-[#F5EEE3]">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Cancelar cita ===================== -->
+@if (cancelando(); as c) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/45" (click)="cancelando.set(null)"></div>
+    <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <svg viewBox="0 0 24 24" fill="none" class="w-9 h-9 text-[#241521]" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="16" height="15" rx="2"/><path d="M3 10h16M7 3v4M15 3v4"/><circle cx="18" cy="18" r="4" fill="#241521" stroke="none"/><path d="m16.6 16.6 2.8 2.8M19.4 16.6l-2.8 2.8" stroke="#fff" stroke-width="1.6"/></svg>
+        <h3 class="flex-1 font-serif font-bold text-[24px] text-[#241521] uppercase tracking-wide">Cancelar cita</h3>
+        <button type="button" (click)="cancelando.set(null)" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="rounded-2xl bg-[#F5F2F6] border border-[#E3D5C4] shadow-sm px-5 py-4">
+        <p class="font-serif font-bold text-[17px] text-[#241521] mb-3">Resumen de la Cita</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[13.5px]">
+          @if (esPadre) {
+            <div><p class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Atenderá</p><p class="font-medium text-[#241521]">{{ c.responsable.rol === 'Docente' ? 'Prof. ' : '' }}{{ c.responsable.nombre }}</p></div>
+            <div><p class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Tipo de cita</p><p class="font-medium text-[#241521]">{{ c.responsable.rol === 'Docente' ? 'Reunión con docente' : 'Reunión con la administración' }}</p></div>
+          } @else {
+            <div><p class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Solicitante</p><p class="font-medium text-[#241521]">{{ solicitante(c).nombre }}</p></div>
+            <div><p class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Tipo de solicitante</p><p class="font-medium text-[#241521]">{{ solicitante(c).rol }}</p></div>
+          }
+          <div><p class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Motivo</p><p class="font-medium text-[#241521]">{{ c.motivo }}</p></div>
+          <div><p class="text-[11.5px] uppercase tracking-wide text-[#6B5A67]">Fecha y hora</p><p class="font-medium text-[#241521]">{{ fechaHora(c) }}</p></div>
+        </div>
+      </div>
+      <div>
+        <p class="flex items-center gap-2 font-bold text-[14px] text-[#241521] uppercase tracking-wide mb-2">
+          <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] flex items-center justify-center">1</span>
+          Detalles de la cancelación
+        </p>
+        <label class="block">
+          <span class="block text-[12.5px] font-medium text-[#4A1F52] mb-1">Motivo detallado *</span>
+          <textarea rows="3" maxlength="500" [(ngModel)]="motivoCancelacion"
+                    placeholder="Por favor, escriba el motivo detallado de la cancelación, indicando por qué es necesario cancelar esta cita..."
+                    class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border-2 border-[#4A1F52]/40 focus:outline-none focus:border-[#4A1F52]"></textarea>
+        </label>
+        <p class="text-[12px] text-[#6B5A67] mt-1">Nota: la cancelación se enviará {{ esPadre ? (c.responsable.rol === 'Docente' ? 'al docente' : 'a la administración') : 'al solicitante' }} de inmediato y quedará registrada.</p>
+      </div>
+      @if (errorAccion()) {
+        <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorAccion() }}</div>
+      }
+      <div class="flex justify-end gap-3">
+        <button type="button" (click)="cancelar()" [disabled]="procesando()"
+                class="px-6 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[14px] font-semibold uppercase tracking-wide disabled:opacity-60">
+          {{ procesando() ? 'Enviando...' : 'Aceptar' }}
+        </button>
+        <button type="button" (click)="cancelando.set(null)" class="px-6 py-2.5 rounded-xl border border-[#E3D5C4] text-[14px] font-medium uppercase tracking-wide text-[#241521] hover:bg-[#F5EEE3]">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Nueva cita (docente / administración) ===================== -->
+@if (panelNueva()) {
+  <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="absolute inset-0 bg-[#241521]/50" (click)="panelNueva.set(false)"></div>
+    <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-24px)]">
+      <div class="flex items-start gap-4 px-6 pt-5 pb-4 border-b border-[#F0E6D8]">
+        <span class="w-12 h-12 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2M14 17.5h2"/></svg>
+        </span>
+        <div class="flex-1">
+          <h3 class="font-serif font-bold text-[20px] text-[#241521]">{{ esAdmin ? 'Nueva cita' : 'Nueva Cita con Padres/Tutores' }}</h3>
+          <p class="text-[12.5px] text-[#6B5A67]">
+            @if (esAdmin) { Programa una reunión con un padre de familia, docente o alumno, en cualquier horario. }
+            @else { Programa una reunión con los padres o tutores de tus estudiantes. Solo puedes agendar citas con padres o tutores, no con estudiantes. }
+          </p>
+        </div>
+        <button type="button" (click)="panelNueva.set(false)" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+        @if (!esAdmin) {
+          <!-- 1. Aula -->
+          <div class="flex gap-3">
+            <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">1</span>
+            <div class="flex-1">
+              <p class="font-bold text-[14.5px] text-[#241521]">Selecciona el aula</p>
+              <p class="text-[12.5px] text-[#6B5A67] mb-2">Elige el aula de la cual deseas agendar una cita con padres o tutores.</p>
+              <select [ngModel]="aulaElegida()" (ngModelChange)="elegirAula($event)"
+                      class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+                <option value="">Seleccionar aula...</option>
+                @for (a of aulas(); track a) { <option [value]="a">{{ a }}</option> }
+              </select>
+              @if (!aulas().length) { <p class="text-[12px] text-[#9A6B00] mt-1">Tus aulas aún no tienen padres o tutores con cuenta.</p> }
+            </div>
+          </div>
+        }
+
+        <!-- 2. Padre / persona -->
+        <div class="flex gap-3">
+          <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 1 : 2 }}</span>
+          <div class="flex-1">
+            <p class="font-bold text-[14.5px] text-[#241521]">{{ esAdmin ? 'Selecciona a la persona' : 'Selecciona al padre o tutor' }}</p>
+            <p class="text-[12.5px] text-[#6B5A67] mb-2">{{ esAdmin ? 'Busca por nombre, rol o salón.' : 'Busca y selecciona el padre o tutor de un estudiante del aula seleccionada.' }}</p>
+            @if (padreElegido(); as p) {
+              <div class="flex items-center gap-3 rounded-xl border border-[#4A1F52]/40 bg-[#F7F2FA] px-3.5 py-2.5">
+                <span class="overflow-hidden w-9 h-9 rounded-full bg-[#4A1F52] text-white text-[12px] font-semibold flex items-center justify-center"><app-foto [usuarioId]="p.id">{{ iniciales(p.nombre) }}</app-foto></span>
+                <span class="flex-1 min-w-0"><span class="block text-[13.5px] font-semibold text-[#241521]">{{ p.nombre }}</span><span class="block text-[12px] text-[#6B5A67]">{{ p.detalle }}</span></span>
+                <button type="button" (click)="padreElegido.set(null)" class="text-[12.5px] font-medium text-[#4A1F52] hover:underline">Cambiar</button>
+              </div>
+            } @else {
+              <div class="relative">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+                <input type="text" [ngModel]="buscar()" (ngModelChange)="buscar.set($event)" [disabled]="!esAdmin && !aulaElegida()"
+                       [placeholder]="esAdmin ? 'Buscar persona...' : 'Buscar padre o tutor...'"
+                       class="w-full pl-3.5 pr-9 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30 disabled:bg-[#F5F0E8]" />
+              </div>
+              @if (!esAdmin) { <p class="text-[12px] italic text-[#6B5A67] mt-1">Solo se mostrarán padres o tutores de los estudiantes del aula seleccionada.</p> }
+              @if (esAdmin || aulaElegida()) {
+                <ul class="mt-2 max-h-48 overflow-y-auto rounded-xl border border-[#F0E6D8] divide-y divide-[#F0E6D8]">
+                  @for (p of candidatos(); track $index) {
+                    <li>
+                      <button type="button" (click)="padreElegido.set(p)" class="w-full flex items-center gap-3 px-3.5 py-2 text-left hover:bg-[#FAF6EF]">
+                        <span class="overflow-hidden w-8 h-8 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[11.5px] font-semibold flex items-center justify-center"><app-foto [usuarioId]="p.id">{{ iniciales(p.nombre) }}</app-foto></span>
+                        <span class="min-w-0"><span class="block text-[13px] font-medium text-[#241521]">{{ p.nombre }}</span><span class="block text-[11.5px] text-[#6B5A67]">{{ p.detalle }}</span></span>
+                      </button>
+                    </li>
+                  } @empty {
+                    <li class="px-3.5 py-3 text-[12.5px] text-[#6B5A67]">Sin resultados.</li>
+                  }
+                </ul>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- 3. Detalles -->
+        <div class="flex gap-3">
+          <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 2 : 3 }}</span>
+          <div class="flex-1">
+            <p class="font-bold text-[14.5px] text-[#241521] mb-2">Detalles de la cita</p>
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_200px] gap-3">
+              <label class="block">
+                <span class="block text-[12.5px] text-[#6B5A67] mb-1">Motivo *</span>
+                <input type="text" [(ngModel)]="nMotivo" maxlength="500" placeholder="Ej. Rendimiento académico, comportamiento, etc."
+                       class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+              </label>
+              <label class="block">
+                <span class="block text-[12.5px] text-[#6B5A67] mb-1">Duración *</span>
+                <select [(ngModel)]="nDuracion" (ngModelChange)="cambiarDuracion()"
+                        class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+                  @for (d of duraciones; track d) { <option [ngValue]="d">{{ d }} minutos</option> }
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Fecha y hora -->
+        <div class="flex gap-3">
+          <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 3 : 4 }}</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-[14.5px] text-[#241521]">Selecciona fecha y hora</p>
+            <p class="text-[12.5px] text-[#6B5A67] mb-2">{{ esAdmin ? 'Elige el día y la hora de la cita.' : 'Elige el día y la hora para la cita (según tu disponibilidad).' }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-[1.15fr_1fr] gap-3">
+              <div class="rounded-xl border border-[#E3D5C4] p-3">
+                <p class="font-semibold text-[13px] text-[#4A1F52] mb-1">Fecha de la cita</p>
+                <div class="flex items-center justify-between mb-2">
+                  <button type="button" (click)="moverMes(-1)" class="w-8 h-8 rounded-lg hover:bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center" title="Mes anterior">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4"><path d="m15 6-6 6 6 6"/></svg>
+                  </button>
+                  <span class="font-serif font-bold text-[16px] text-[#241521]">{{ tituloMes() }}</span>
+                  <button type="button" (click)="moverMes(1)" class="w-8 h-8 rounded-lg hover:bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center" title="Mes siguiente">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg>
+                  </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[11.5px] font-semibold text-[#6B5A67] mb-1">
+                  @for (d of diasSemana; track d) { <span>{{ d }}</span> }
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center">
+                  @for (d of calendario(); track d.fecha) {
+                    <button type="button" (click)="elegirFecha(d)" [disabled]="!d.habil"
+                            class="h-8 rounded-full text-[12.5px] transition-colors disabled:cursor-not-allowed"
+                            [ngClass]="nFecha() === d.fecha ? 'bg-[#4A1F52] text-white font-bold'
+                              : d.habil ? (d.delMes ? 'text-[#241521] font-medium hover:bg-[#EFEAF3]' : 'text-[#9A8E97] hover:bg-[#EFEAF3]')
+                              : 'text-[#D3C9D0]'">
+                      {{ d.numero }}
+                    </button>
+                  }
+                </div>
+                @if (!esAdmin && !diasDisponibles().size) {
+                  <p class="text-[11.5px] text-[#9A6B00] mt-2">Aún no registras tu disponibilidad. Hazlo en Mi Agenda &gt; Disponibilidad.</p>
+                }
+              </div>
+              <div class="rounded-xl border border-[#E3D5C4] p-3">
+                <p class="font-semibold text-[13px] text-[#4A1F52]">Hora de la cita</p>
+                <p class="text-[12px] text-[#6B5A67] mb-2">{{ esAdmin ? 'Escribe la hora de inicio.' : 'Selecciona la hora disponible.' }}</p>
+                @if (esAdmin) {
+                  <input type="time" [(ngModel)]="nHoraLibre" [disabled]="!nFecha()"
+                         class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+                } @else if (!nFecha()) {
+                  <p class="text-[12.5px] text-[#6B5A67] rounded-lg bg-[#FAF6EF] px-3 py-3">Primero elige una fecha.</p>
+                } @else if (cargandoHoras()) {
+                  <p class="text-[12.5px] text-[#6B5A67]">Buscando horas...</p>
+                } @else if (!horasLibres().length) {
+                  <p class="text-[12.5px] text-[#9A6B00] rounded-lg bg-[#FDF1DC] px-3 py-3">No hay horas libres ese día para {{ nDuracion }} minutos.</p>
+                } @else {
+                  <div class="grid grid-cols-3 gap-1.5 max-h-56 overflow-y-auto">
+                    @for (h of horasLibres(); track h) {
+                      <button type="button" (click)="nHora.set(h)" class="py-1.5 rounded-lg border text-[12.5px] font-medium"
+                              [ngClass]="nHora() === h ? 'bg-[#4A1F52] border-[#4A1F52] text-white' : 'border-[#E3D5C4] text-[#241521] hover:bg-[#EFEAF3]'">{{ h }}</button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Descripción -->
+        <div class="flex gap-3">
+          <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 4 : 5 }}</span>
+          <div class="flex-1">
+            <p class="font-bold text-[14.5px] text-[#241521]">Descripción adicional <span class="font-normal text-[#6B5A67]">(opcional)</span></p>
+            <p class="text-[12.5px] text-[#6B5A67] mb-2">Puedes agregar más información sobre la cita.</p>
+            <textarea rows="2" maxlength="2000" [(ngModel)]="nDetalle" placeholder="Escribe un mensaje adicional..."
+                      class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30 resize-y"></textarea>
+          </div>
+        </div>
+
+        @if (errorPanel()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorPanel() }}</div>
+        }
+      </div>
+
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#F0E6D8]">
+        <button type="button" (click)="panelNueva.set(false)" class="px-5 py-2.5 rounded-xl border border-[#E3D5C4] text-[13.5px] font-medium hover:bg-[#F5EEE3]">Cancelar</button>
+        <button type="button" (click)="enviarConvocatoria()" [disabled]="enviando()"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#4A1F52] hover:bg-[#2E1233] text-white text-[13.5px] font-semibold disabled:opacity-60">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l18-7-7 18-2-8-9-3Z"/></svg>
+          {{ enviando() ? 'Enviando...' : 'Enviar convocatoria' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Padre: nueva cita (convocar a profesor / administrativo) ===================== -->
+@if (panelSolicitar()) {
+  <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="fixed inset-0 bg-[#241521]/45" (click)="panelSolicitar.set(false)"></div>
+    <div class="relative w-full max-w-3xl max-h-[94vh] bg-white rounded-2xl shadow-2xl flex flex-col" role="dialog" aria-modal="true" aria-label="Nueva cita">
+      <div class="flex items-start gap-3 px-6 pt-5 pb-4 border-b-2 border-[#E6DCEC]">
+        <span class="w-11 h-11 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5.5 h-5.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4V5ZM8 9h8M8 12.5h5"/></svg>
+        </span>
+        <div class="flex-1 min-w-0">
+          <span class="inline-block px-2 py-0.5 rounded-md bg-[#EFEAF3] text-[10.5px] font-bold tracking-wide uppercase text-[#4A1F52]">Cita pendiente</span>
+          <h3 class="font-serif font-bold text-[20px] text-[#241521] leading-tight mt-1">Convocar a profesor/administrativo</h3>
+          <p class="text-[12.5px] text-[#6B5A67]">Busca al profesor o personal administrativo y elige un horario libre dentro de su disponibilidad. La cita se enviará en estado pendiente al destinatario.</p>
+        </div>
+        <button type="button" (click)="panelSolicitar.set(false)" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <!-- 1. Profesor / administrativo -->
+        <section>
+          <div class="flex items-start gap-3 mb-2">
+            <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+            <div><p class="font-semibold text-[15px] text-[#241521]">Profesor / Administrativo</p>
+              <p class="text-[12.5px] text-[#6B5A67]">Selecciona un profesor o personal administrativo. Busca por nombre o apellido.</p></div>
+          </div>
+          <div class="relative">
+            <span class="absolute -top-2 left-3 px-1 bg-white text-[11px] text-[#6B5A67]">Nombre del participante*</span>
+            <input type="text" [ngModel]="buscarResponsable()" (ngModelChange)="alEscribirResponsable($event)"
+                   (focus)="verSugerencias.set(true)" placeholder="Ej. Prof. Carlos Mendoza (Profesor) o Ana Díaz (Administrativo)" aria-label="Nombre del participante"
+                   class="w-full pl-3.5 pr-10 py-3 text-[14px] rounded-lg border-2 border-[#4A1F52]/50 focus:outline-none focus:border-[#4A1F52]" />
+            <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-[#241521]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            @if (verSugerencias() && !responsable()) {
+              <ul class="absolute z-20 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white rounded-xl border border-[#E3D5C4] shadow-lg divide-y divide-[#F0E6D8]">
+                @for (r of responsablesFiltrados(); track r.usuarioId) {
+                  <li>
+                    <button type="button" (click)="elegirResponsable(r)" class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#FAF6EF]">
+                      <span class="overflow-hidden w-9 h-9 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-semibold flex items-center justify-center shrink-0"><app-foto [usuarioId]="r.usuarioId">{{ iniciales(r.nombre) }}</app-foto></span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-[13.5px] font-semibold text-[#241521] truncate">{{ r.rol === 'Docente' ? 'Prof. ' : '' }}{{ r.nombre }}</span>
+                        <span class="block text-[11.5px] text-[#6B5A67] truncate">{{ r.relacion.join(', ') || r.detalle }}</span>
+                      </span>
+                      <span class="px-2.5 py-0.5 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[11.5px] font-medium shrink-0">{{ r.rol === 'Docente' ? 'Profesor' : 'Administrativo' }}</span>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="px-4 py-5 text-center text-[13px] text-[#6B5A67]">
+                    {{ responsables().length ? 'Nadie coincide con la búsqueda.' : 'Aún no hay profesores ni personal con horarios de atención disponibles.' }}
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          @if (responsable(); as r) {
+            <p class="mt-2 text-[12.5px] text-[#4A1F52]">{{ r.rol === 'Docente' ? 'Profesor' : 'Administrativo' }} · {{ r.relacion.join(', ') || r.detalle }}</p>
+          }
+        </section>
+
+        <!-- 2. Detalles -->
+        <section>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0">2</span>
+            <p class="font-semibold text-[15px] text-[#241521]">Detalles de la cita</p>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="relative block">
+              <span class="absolute -top-2 left-3 px-1 bg-white text-[11px] text-[#6B5A67]">Motivo*</span>
+              <input type="text" maxlength="200" [(ngModel)]="motivo" placeholder="Ej. Rendimiento académico"
+                     class="w-full px-3.5 py-3 text-[14px] rounded-lg border border-[#D9CDE0] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+            </label>
+            <div class="relative">
+              <span class="absolute -top-2 left-3 px-1 bg-white text-[11px] text-[#6B5A67]">Duración</span>
+              <p class="w-full px-3.5 py-3 text-[14px] rounded-lg border border-[#D9CDE0] bg-[#FAF6EF] text-[#241521]">{{ duracion() }} min (fijo)</p>
+            </div>
+            @if (hijos().length > 1) {
+              <label class="relative block sm:col-span-2">
+                <span class="absolute -top-2 left-3 px-1 bg-white text-[11px] text-[#6B5A67]">¿Sobre cuál de tus hijos?</span>
+                <select [(ngModel)]="hijoElegido" class="w-full px-3 py-3 text-[14px] rounded-lg border border-[#D9CDE0] bg-white">
+                  @for (h of hijos(); track h.id) { <option [ngValue]="h.id">{{ h.nombre }} ({{ h.salon }})</option> }
+                </select>
+              </label>
+            }
+          </div>
+        </section>
+
+        <!-- 3. Horario libre -->
+        <section>
+          <div class="flex items-start gap-3 mb-3">
+            <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+            <div><p class="font-semibold text-[15px] text-[#241521]">Selecciona un horario libre</p>
+              <p class="text-[12.5px] text-[#6B5A67]">Toca un espacio verde para reservar ese horario.</p></div>
+          </div>
+          <div class="rounded-xl border border-[#E3D5C4] p-3">
+            <div class="flex items-center gap-2 mb-3">
+              <button type="button" (click)="moverSemana(-1)" class="w-8 h-8 rounded-lg hover:bg-[#F5EEE3] flex items-center justify-center" title="Semana anterior" aria-label="Semana anterior">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4"><path d="m15 6-6 6 6 6"/></svg>
+              </button>
+              <button type="button" (click)="moverSemana(1)" class="w-8 h-8 rounded-lg hover:bg-[#F5EEE3] flex items-center justify-center" title="Semana siguiente" aria-label="Semana siguiente">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
+              <button type="button" (click)="semanaHoy()" class="px-3 py-1.5 rounded-lg border border-[#E3D5C4] text-[13px] hover:bg-[#F5EEE3]">Hoy</button>
+              <span class="ml-auto text-[13px] font-semibold text-[#241521]">{{ mesSemana() }}</span>
+            </div>
+            @if (!responsable()) {
+              <p class="py-8 text-center text-[13px] text-[#6B5A67]">Primero elige al profesor o personal administrativo (paso 1).</p>
+            } @else if (cargandoHorarios()) {
+              <p class="py-8 text-center text-[13px] text-[#6B5A67]">Buscando horarios libres...</p>
+            } @else if (!horarios().length) {
+              <p class="py-6 text-center text-[13px] text-[#9A6B00] bg-[#FDF1DC] rounded-lg">No hay horarios libres en las próximas 4 semanas.</p>
+            } @else {
+              <div class="overflow-auto max-h-72 rounded-lg border border-[#F0E6D8]">
+                <div class="grid min-w-[560px]" style="grid-template-columns: 96px repeat(5, minmax(90px, 1fr));"
+                     [style.grid-template-rows]="'36px repeat(' + filasCal().length + ', 22px)'">
+                  <div class="sticky top-0 z-10 bg-[#FAF6EF] border-b border-r border-[#E3D5C4]" style="grid-row: 1; grid-column: 1;"></div>
+                  @for (f of diasSemana5(); track f; let di = $index) {
+                    <div class="sticky top-0 z-10 flex items-center justify-center border-b border-[#E3D5C4] bg-[#FAF6EF] text-[12.5px] font-semibold text-[#241521]"
+                         [class.border-r]="di < 4" [style.grid-row]="1" [style.grid-column]="di + 2">
+                      <span class="mr-1 text-[11px] uppercase text-[#6B5A67]">{{ diaSemana(f) }}</span>
+                      <span [ngClass]="esHoy(f) ? 'w-6 h-6 rounded-full bg-[#4A1F52] text-white flex items-center justify-center' : ''">{{ f.substring(8, 10) }}</span>
+                    </div>
+                  }
+                  @for (t of filasCal(); track t; let fi = $index) {
+                    <div class="px-2 border-r border-b border-[#F5EEE3] text-[10.5px] text-[#241521] flex items-center" [style.grid-row]="fi + 2" [style.grid-column]="1">{{ horaTexto(t) }} - {{ horaTexto(t + 15) }}</div>
+                    @for (f of diasSemana5(); track f; let di = $index) {
+                      <div class="border-b border-[#F5EEE3]" [class.border-r]="di < 4" [style.grid-row]="fi + 2" [style.grid-column]="di + 2"></div>
+                    }
+                  }
+                  @for (h of libresSemana(); track h.fecha + h.horaInicio) {
+                    <button type="button" (click)="horarioElegido.set(h)"
+                            class="relative z-[1] m-[2px] rounded-md border text-[11px] font-medium leading-tight transition-colors"
+                            [ngClass]="horarioElegido() === h ? 'bg-[#4A1F52] border-[#4A1F52] text-white' : 'bg-[#DDF3E3] border-[#9ED3AE] text-[#1E7A3B] hover:bg-[#C8EBD2]'"
+                            [style.grid-row]="filaCal(h) + ' / span ' + altoCal(h)" [style.grid-column]="columnaCal(h)"
+                            [title]="h.horaInicio + ' - ' + h.horaFin + (h.lugar ? ' · ' + h.lugar : '')">
+                      {{ horarioElegido() === h ? 'Elegido' : 'Disponible' }}
+                      @if (altoCal(h) >= 2) { <span class="block text-[10px] opacity-80">{{ h.horaInicio }}</span> }
+                    </button>
+                  }
+                </div>
+              </div>
+              @if (!libresSemana().length) {
+                <p class="mt-2 text-[12.5px] text-[#6B5A67]">No hay horarios libres esta semana.
+                  @if (hayDespues()) { <button type="button" (click)="moverSemana(1)" class="text-[#4A1F52] underline">Ver la siguiente</button> }
+                </p>
+              }
+              @if (horarioElegido(); as h) {
+                <p class="mt-2 text-[12.5px] text-[#4A1F52] font-medium">Elegiste: {{ fechaCorta(h.fecha, true) }}, {{ h.horaInicio }} - {{ h.horaFin }} · {{ h.modalidad === 'VIRTUAL' ? 'Virtual' : 'Presencial' }}{{ h.lugar ? ' · ' + h.lugar : '' }}</p>
+              }
+            }
+          </div>
+        </section>
+
+        <!-- 4. Descripción -->
+        <section>
+          <div class="flex items-start gap-3 mb-3">
+            <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5">4</span>
+            <div><p class="font-semibold text-[15px] text-[#241521]">Descripción del caso</p>
+              <p class="text-[12.5px] text-[#6B5A67]">Explica brevemente el motivo de la convocatoria.</p></div>
+          </div>
+          <textarea rows="3" maxlength="2000" [(ngModel)]="detalleCaso" placeholder="Motivo de la reunión*" aria-label="Descripción del caso"
+                    class="w-full px-3.5 py-3 text-[14px] rounded-lg border border-[#D9CDE0] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"></textarea>
+        </section>
+
+        @if (errorPanel()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorPanel() }}</div>
+        }
+      </div>
+
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#E3D5C4]">
+        <button type="button" (click)="panelSolicitar.set(false)" class="px-5 py-2.5 rounded-lg border border-[#E3D5C4] text-[14px] font-medium hover:bg-[#F5EEE3]">Cancelar</button>
+        <button type="button" (click)="solicitar()" [disabled]="enviando() || !responsable() || !horarioElegido() || !motivo.trim() || !detalleCaso.trim()"
+                class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg disabled:bg-[#E3D5C4] disabled:text-[#8B7A87]">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>
+          {{ enviando() ? 'Enviando...' : 'Enviar convocatoria' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

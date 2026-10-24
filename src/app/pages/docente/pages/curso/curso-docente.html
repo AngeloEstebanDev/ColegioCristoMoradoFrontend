@@ -1,0 +1,478 @@
+<ng-template #carpetaIcono let-oculta>
+  <svg viewBox="0 0 24 24" class="w-8 h-8 shrink-0" [attr.fill]="oculta ? '#D9CDBD' : '#F5B83D'"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2l2 2.2h6.8A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
+</ng-template>
+
+<ng-template #flecha let-abierta>
+  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#4A1F52] transition-transform" [ngClass]="abierta ? 'rotate-90' : ''"
+       stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+</ng-template>
+
+<ng-template #puntos>
+  <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+</ng-template>
+
+<!-- Menú de un elemento: Ocultar / Editar / Eliminar -->
+<ng-template #menuItem let-i>
+  <div class="absolute right-0 top-full mt-1 z-30 w-40 bg-white rounded-xl border border-[#E3D5C4] shadow-lg py-1 text-[13px]" (click)="$event.stopPropagation()">
+    <button type="button" (click)="alternarVisible(i)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">
+      @if (visible(i)) {
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10 10 0 0 1 12 5c5 0 9 4.5 10 7a12 12 0 0 1-2.7 3.8M6.3 6.3C3.9 7.8 2.5 10 2 12c1 2.5 5 7 10 7a9.6 9.6 0 0 0 4.2-.9"/></svg>
+        Ocultar
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+        Mostrar
+      }
+    </button>
+    <button type="button" (click)="editar(i)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      Editar
+    </button>
+    <button type="button" (click)="eliminar(i)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FBE7E9] text-[#A62639]">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+      Eliminar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Fila de un elemento (contenido y actividades) -->
+<ng-template #filaItem let-i let-modo="modo">
+  @let e = estilo(i);
+  <div class="relative flex items-center gap-4 px-4 py-3 bg-white hover:bg-[#FBF7F1] transition-colors" [ngClass]="visible(i) ? '' : 'opacity-75'">
+    <button type="button" (click)="abrirItem(i)" class="flex flex-1 min-w-0 items-center gap-4 text-left">
+      <app-icono-item [e]="e" />
+      <span class="flex-1 min-w-0">
+        <span class="block text-[14px] font-semibold text-[#241521] truncate">{{ titulo(i) }}</span>
+        <span class="block text-[12px] text-[#6B5A67]">{{ e.etiqueta }}</span>
+        <span class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[12px] text-[#6B5A67]">
+          <span class="flex items-center gap-1">
+            <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            @if (i.actividad) { <span [ngClass]="vencio(i.actividad.fechaLimite) ? 'text-[#A62639] font-semibold' : ''">Fecha de finalización: {{ dmyHora(i.actividad.fechaLimite) }}@if (vencio(i.actividad.fechaLimite)) { &nbsp;· Vencida }</span> } @else { Fecha de publicación: {{ dmy(i.material.fechaPublicacion) }} }
+          </span>
+          @if (i.actividad) {
+            <span class="text-[#D9CDBD]">|</span>
+            <span class="flex items-center gap-1"><svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>{{ num(i.actividad.puntajeMaximo) }} pts.</span>
+          }
+          <span class="text-[#D9CDBD]">|</span>
+          <span class="flex items-center gap-1"><svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5"/></svg>{{ detalleItem(i) }}</span>
+          @if (i.actividad) {
+            <span class="text-[#D9CDBD]">|</span>
+            <span>{{ i.actividad.entregadas }} de {{ i.actividad.totalAlumnos }} enviados</span>
+          }
+        </span>
+      </span>
+    </button>
+    <app-chip-visible [visible]="visible(i)" />
+    <div class="relative">
+      <button type="button" (click)="alternarMenu(modo + i.clave, $event)" class="p-1.5 rounded-lg text-[#4A1F52] hover:bg-[#EFEAF3]" title="Opciones">
+        <ng-container *ngTemplateOutlet="puntos" />
+      </button>
+      @if (menu() === modo + i.clave) { <ng-container *ngTemplateOutlet="menuItem; context: { $implicit: i }" /> }
+    </div>
+    <button type="button" (click)="abrirItem(i)" class="text-[#4A1F52]" title="Abrir">
+      <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+    </button>
+  </div>
+</ng-template>
+
+<div class="space-y-4">
+
+  @if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+
+  @if (curso(); as c) {
+    <!-- Portada del curso -->
+    <div class="relative overflow-hidden rounded-2xl shadow-md text-white px-5 py-5"
+         [style.background]="'linear-gradient(120deg,' + c.color + ' 0%,' + c.color + ' 55%, #2E1233 140%)'">
+      <div class="absolute -right-2 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+        <app-icono-categoria [categoria]="c.categoria" [tam]="130" [sinFondo]="true" color="#FFFFFF" />
+      </div>
+      <div class="relative flex items-center gap-4">
+        <a routerLink="/home/docente/cursos" title="Volver a Mis Cursos"
+           class="w-11 h-11 shrink-0 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        </a>
+        <div class="min-w-0">
+          <h2 class="font-serif font-bold text-[28px] leading-tight drop-shadow-sm">{{ c.curso }}</h2>
+          <div class="flex flex-wrap gap-2 mt-2 text-[12.5px]">
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M12 4 2 9l10 5 10-5-10-5ZM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+              {{ salon() }}
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4"/></svg>
+              {{ c.totalAlumnos }} Estudiante{{ c.totalAlumnos === 1 ? '' : 's' }}
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              Año Escolar {{ anio }}
+            </span>
+            @if (periodoActivo(); as p) {
+              <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20">
+                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+                {{ p.nombre }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestañas -->
+    <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm px-2 flex gap-1 overflow-x-auto">
+      @for (t of pestanas; track t.id) {
+        <button type="button" (click)="cambiarPestana(t.id)"
+                class="flex items-center gap-2 px-4 py-3 text-[13.5px] font-medium border-b-2 -mb-px whitespace-nowrap transition-colors"
+                [ngClass]="pestana() === t.id ? 'text-[#4A1F52] border-[#4A1F52]' : 'text-[#6B5A67] border-transparent hover:text-[#241521]'">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="t.icono"/></svg>
+          {{ t.nombre }}
+        </button>
+      }
+    </div>
+
+    @if (aviso()) {
+      <div class="flex items-start gap-2 bg-[#FDF1DC] border border-[#9A6B00]/30 text-[#7A5500] text-[13px] rounded-xl px-4 py-3">
+        <span class="flex-1">{{ aviso() }}</span>
+        <button type="button" (click)="aviso.set(null)" class="text-[#7A5500]/70 hover:text-[#7A5500]">✕</button>
+      </div>
+    }
+
+    <!-- ===================== CONTENIDO ===================== -->
+    @if (pestana() === 'contenido') {
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
+        <div class="space-y-4 min-w-0">
+
+          <!-- Estructura curricular -->
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+            <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Estructura Curricular</h3>
+            <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
+              <button type="button" (click)="verEstructura.set(!verEstructura())"
+                      class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#FAF6EF] text-left">
+                <span class="text-[12.5px] font-bold tracking-wide text-[#241521] uppercase">Información general del curso</span>
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [ngClass]="verEstructura() ? '' : 'rotate-180'" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+              </button>
+              @if (verEstructura()) {
+                <dl class="divide-y divide-[#F0E6D8] text-[13px]">
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Asignatura</dt><dd class="font-medium" [style.color]="c.color">{{ c.curso }}</dd></div>
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Área curricular</dt><dd class="font-medium text-[#241521]">{{ categoria().nombre }}</dd></div>
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Docente</dt><dd class="font-semibold text-[#241521] uppercase text-right">{{ c.docente ?? 'Por asignar' }}</dd></div>
+                  <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Sección académica</dt><dd class="font-medium text-[#4A1F52]">{{ salon() }} · {{ nivel() }} · Turno {{ c.turno }}</dd></div>
+                  @if (c.descripcion) {
+                    <div class="flex justify-between gap-4 px-4 py-2.5"><dt class="text-[#6B5A67]">Descripción</dt><dd class="text-[#241521] text-right">{{ c.descripcion }}</dd></div>
+                  }
+                </dl>
+              }
+            </div>
+          </section>
+
+          <!-- Contenido del curso -->
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+            <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Contenido del curso</h3>
+            @if (cargando()) {
+              <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando contenido...</p>
+            } @else {
+              <div class="space-y-2">
+                @for (b of bimestres(); track b.clave) {
+                  @if (b.carpetas.length || b.periodo?.activo) {
+                    <div class="rounded-xl border border-[#F0E6D8]">
+                      <div class="flex items-center gap-3 px-4 py-3 bg-[#FAF6EF] rounded-t-xl" [ngClass]="estaAbierta(b.clave) ? '' : 'rounded-b-xl'">
+                        <button type="button" (click)="abrir(b.clave)" class="flex flex-1 min-w-0 items-center gap-3 text-left">
+                          <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(b.clave) }" />
+                          <ng-container *ngTemplateOutlet="carpetaIcono; context: { $implicit: false }" />
+                          <span class="flex-1 min-w-0">
+                            <span class="block text-[14.5px] font-bold text-[#241521]">{{ b.nombre }}</span>
+                            @if (b.desde) { <span class="block text-[12px] text-[#6B5A67]">{{ dmy(b.desde) }} - {{ dmy(b.hasta) }}</span> }
+                          </span>
+                        </button>
+                        @if (b.periodo?.activo) {
+                          <app-chip-visible [visible]="true" />
+                        } @else if (b.periodo) {
+                          <span class="px-3 py-1 rounded-full bg-[#F0E6D8] text-[12px] font-medium text-[#6B5A67]">Cerrado</span>
+                        }
+                      </div>
+                      @if (estaAbierta(b.clave)) {
+                        <div class="px-2 py-2 space-y-1">
+                          @for (cv of b.carpetas; track cv.clave) {
+                            @let cp = cv.carpeta;
+                            <div class="rounded-lg">
+                              <div class="flex items-center gap-3 pl-3 pr-2 py-2 rounded-lg hover:bg-[#FAF6EF]">
+                                <button type="button" (click)="abrir(cv.clave)" class="flex flex-1 min-w-0 items-center gap-3 text-left">
+                                  <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(cv.clave) }" />
+                                  <ng-container *ngTemplateOutlet="carpetaIcono; context: { $implicit: cp && !cp.visible }" />
+                                  <span class="flex-1 min-w-0">
+                                    <span class="block text-[13.5px] font-semibold text-[#241521] truncate">{{ cv.nombre }}</span>
+                                    <span class="block text-[11.5px] text-[#6B5A67]">
+                                      @if (cp) { Fecha de registro: {{ dmy(cp.fechaCreacion) }} · } {{ cv.items.length }} elemento{{ cv.items.length === 1 ? '' : 's' }}
+                                    </span>
+                                  </span>
+                                </button>
+                                @if (cp) {
+                                  @if (!cp.visible) { <app-chip-visible [visible]="false" /> }
+                                  <button type="button" (click)="agregarEn(cp, $event)" title="Agregar contenido a esta carpeta"
+                                          class="w-8 h-8 rounded-lg bg-[#EFEAF3] hover:bg-[#E5DCEC] text-[#4A1F52] flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                                  </button>
+                                  <div class="relative">
+                                    <button type="button" (click)="alternarMenu('c' + cp.id, $event)" class="p-1.5 rounded-lg text-[#4A1F52] hover:bg-[#EFEAF3]" title="Opciones de la carpeta">
+                                      <ng-container *ngTemplateOutlet="puntos" />
+                                    </button>
+                                    @if (menu() === 'c' + cp.id) {
+                                      <div class="absolute right-0 top-full mt-1 z-30 w-44 bg-white rounded-xl border border-[#E3D5C4] shadow-lg py-1 text-[13px]" (click)="$event.stopPropagation()">
+                                        <button type="button" (click)="renombrar(cp)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">
+                                          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                          Renombrar
+                                        </button>
+                                        <button type="button" (click)="visibleCarpeta(cp)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">
+                                          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                          {{ cp.visible ? 'Ocultar carpeta' : 'Mostrar carpeta' }}
+                                        </button>
+                                        <button type="button" (click)="eliminarCarpeta(cp)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FBE7E9] text-[#A62639]">
+                                          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+                                          Eliminar
+                                        </button>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                              @if (estaAbierta(cv.clave)) {
+                                @if (cv.items.length) {
+                                  <div class="ml-10 mr-1 mb-2 rounded-xl border border-[#F0E6D8] divide-y divide-[#F0E6D8]">
+                                    @for (i of cv.items; track i.clave) {
+                                      <ng-container *ngTemplateOutlet="filaItem; context: { $implicit: i, modo: 'c' }" />
+                                    }
+                                  </div>
+                                } @else {
+                                  <p class="ml-12 mb-2 text-[12.5px] text-[#6B5A67]">Carpeta vacía. Usa <b>+</b> para agregar textos, archivos, actividades o cuestionarios.</p>
+                                }
+                              }
+                            </div>
+                          } @empty {
+                            <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Aún no hay carpetas en este bimestre.</p>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                }
+                <button type="button" (click)="nuevaCarpeta()"
+                        class="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl border-2 border-dashed border-[#D9CCE0] hover:bg-[#F7F2FA] text-[15px] font-semibold text-[#241521]">
+                  <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#7C3AED] flex items-center justify-center text-[18px] leading-none">+</span>
+                  Agregar Carpeta
+                </button>
+                @if (periodoActivo(); as p) {
+                  <p class="text-center text-[11.5px] text-[#6B5A67]">Las carpetas nuevas se crean en el {{ p.nombre }}.</p>
+                }
+              </div>
+            }
+          </section>
+        </div>
+
+        <!-- Columna derecha: profesor y participantes -->
+        <aside class="space-y-4">
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+            <button type="button" (click)="verProfesor.set(!verProfesor())" class="w-full flex items-center gap-2 px-4 py-3 border-b border-[#F0E6D8] text-left">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-[#4A1F52]"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7H4Z"/></svg>
+              <span class="flex-1 text-[12px] font-bold tracking-wide text-[#4A1F52] uppercase">Profesor del curso</span>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [ngClass]="verProfesor() ? '' : 'rotate-180'" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+            </button>
+            @if (verProfesor()) {
+              <div class="p-4">
+                @if (participantes()?.docente; as d) {
+                  <div class="flex items-center gap-3">
+                    <app-avatar-persona [nombre]="d.nombre" [foto]="d.foto" tam="w-12 h-12 text-[14px]" />
+                    <div class="min-w-0">
+                      <p class="text-[13.5px] font-bold text-[#241521] uppercase leading-tight">{{ d.nombre }}</p>
+                      <p class="text-[11.5px] font-medium tracking-wide text-[#6B5A67] uppercase mt-0.5">Docente titular</p>
+                    </div>
+                  </div>
+                  <span class="mt-3 inline-block px-3 py-1 rounded-lg bg-[#EFEAF3] text-[12.5px] font-medium text-[#4A1F52]">{{ c.curso }}</span>
+                } @else {
+                  <p class="text-[13px] text-[#6B5A67]">Cargando...</p>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+            <button type="button" (click)="verParticipantes.set(!verParticipantes())" class="w-full flex items-center gap-2 px-4 py-3 border-b border-[#F0E6D8] text-left">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-[#4A1F52]"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7H4Z"/></svg>
+              <span class="flex-1 font-serif font-bold text-[15px] text-[#241521]">Participantes</span>
+              <span class="text-[11.5px] text-[#6B5A67]">{{ participantes()?.alumnos?.length ?? c.totalAlumnos }}</span>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [ngClass]="verParticipantes() ? '' : 'rotate-180'" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+            </button>
+            @if (verParticipantes()) {
+              <ul class="max-h-[480px] overflow-y-auto py-1">
+                @for (p of participantes()?.alumnos ?? []; track $index) {
+                  <li class="flex items-center gap-3 px-4 py-2">
+                    <app-avatar-persona [nombre]="p.nombre" [foto]="p.foto" />
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[13.5px] font-semibold text-[#241521] truncate">{{ p.nombre }}</p>
+                      <p class="text-[11.5px] text-[#6B5A67]">Estudiante</p>
+                    </div>
+                    @if (p.usuarioId) {
+                      <a [routerLink]="['/home', 'docente', 'comunicados']" [queryParams]="{ tab: 'mensajes', chat: p.usuarioId }"
+                         class="p-1.5 rounded-lg text-[#4A1F52] hover:bg-[#EFEAF3]" title="Enviar mensaje">
+                        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z"/></svg>
+                      </a>
+                    }
+                  </li>
+                } @empty {
+                  <li class="px-4 py-3 text-[13px] text-[#6B5A67]">Sin alumnos matriculados.</li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+      </div>
+    }
+
+    <!-- ===================== ACTIVIDADES ===================== -->
+    @if (pestana() === 'actividades') {
+      @if (actividadDetalle(); as a) {
+        <app-entregas-actividad [actividad]="a" (volver)="actividadDetalle.set(null)" (cambio)="recargar()"
+                                (editar)="editar({ clave: 'a' + a.id, fecha: a.fechaPublicacion, actividad: a })"
+                                (alternarVisible)="alternarVisible({ clave: 'a' + a.id, fecha: a.fechaPublicacion, actividad: a })"
+                                (eliminar)="eliminar({ clave: 'a' + a.id, fecha: a.fechaPublicacion, actividad: a })" />
+      } @else {
+        <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+          <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Actividades del curso</h3>
+          @if (cargando()) {
+            <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando actividades...</p>
+          } @else if (!actividades().length) {
+            <div class="text-center py-10">
+              <p class="font-serif font-bold text-[16px] text-[#241521]">Sin actividades</p>
+              <p class="text-[13px] text-[#6B5A67] mt-1">Crea tareas o cuestionarios desde <b>Contenido</b> con el botón <b>+</b> de una carpeta.</p>
+            </div>
+          } @else {
+            <div class="space-y-2">
+              @for (b of bimestresActividades(); track b.clave) {
+                @let items = itemsDe(b);
+                @if (items.length || b.periodo?.activo) {
+                  <div class="rounded-xl border border-[#F0E6D8]">
+                    <button type="button" (click)="abrir(b.clave)" class="w-full flex items-center gap-3 px-4 py-3 bg-[#FAF6EF] hover:bg-[#F5EEE3] text-left rounded-t-xl"
+                            [ngClass]="estaAbierta(b.clave) ? '' : 'rounded-b-xl'">
+                      <ng-container *ngTemplateOutlet="flecha; context: { $implicit: estaAbierta(b.clave) }" />
+                      <ng-container *ngTemplateOutlet="carpetaIcono; context: { $implicit: false }" />
+                      <span class="flex-1 min-w-0">
+                        <span class="block text-[14.5px] font-bold text-[#241521]">{{ b.nombre }}</span>
+                        @if (b.desde) { <span class="block text-[12px] text-[#6B5A67]">{{ dmy(b.desde) }} - {{ dmy(b.hasta) }}</span> }
+                      </span>
+                      <span class="text-[11.5px] text-[#6B5A67]">{{ items.length }} actividad{{ items.length === 1 ? '' : 'es' }}</span>
+                    </button>
+                    @if (estaAbierta(b.clave)) {
+                      @if (items.length) {
+                        <div class="divide-y divide-[#F0E6D8]">
+                          @for (i of items; track i.clave) {
+                            <ng-container *ngTemplateOutlet="filaItem; context: { $implicit: i, modo: 'a' }" />
+                          }
+                        </div>
+                      } @else {
+                        <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Sin actividades en este bimestre.</p>
+                      }
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+
+    <!-- ===================== ASISTENCIA ===================== -->
+    @if (pestana() === 'asistencia') {
+      @if (periodosListos()) { <app-asistencia-curso [curso]="c" [periodos]="periodos()" /> }
+    }
+
+    <!-- ===================== EXÁMENES ===================== -->
+    @if (pestana() === 'examenes') {
+      @if (periodosListos()) { <app-examenes-curso [curso]="c" [periodos]="periodos()" /> }
+    }
+  } @else if (!error()) {
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando curso...</div>
+  }
+</div>
+
+<!-- ===================== Modal: carpeta ===================== -->
+@if (carpetaModal(); as m) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/50" (click)="carpetaModal.set(null)"></div>
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6">
+      <div class="flex items-start gap-4">
+        <span class="w-14 h-14 rounded-xl bg-[#F0EAFD] text-[#7C3AED] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2l2 2.2h6.8A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11ZM3 10h18"/></svg>
+        </span>
+        <div class="flex-1">
+          <h3 class="font-serif font-bold text-[22px] text-[#241521]">{{ m.id ? 'Renombrar carpeta' : 'Agregar Carpeta' }}</h3>
+          <p class="text-[13px] text-[#6B5A67] mt-0.5">{{ m.id ? 'Escribe el nuevo nombre de la carpeta.' : 'Ingresa el nombre de la carpeta que deseas crear.' }}</p>
+        </div>
+        <button type="button" (click)="carpetaModal.set(null)" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <label class="block mt-5">
+        <span class="block text-[13px] font-semibold text-[#241521] mb-1.5">Nombre de la carpeta</span>
+        <input type="text" [(ngModel)]="m.nombre" maxlength="120" placeholder="Ej. Semana 1, Unidades, Recursos, Tareas..." (keydown.enter)="guardarCarpeta()"
+               class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+      </label>
+      @if (!m.id && periodoActivo(); as p) { <p class="text-[12px] text-[#6B5A67] mt-1.5">Se creará en el {{ p.nombre }}.</p> }
+      @if (errorCarpeta()) {
+        <div class="mt-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ errorCarpeta() }}</div>
+      }
+      <div class="flex justify-end gap-3 mt-5">
+        <button type="button" (click)="carpetaModal.set(null)" class="px-5 py-2.5 rounded-xl border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F5EEE3]">Cancelar</button>
+        <button type="button" (click)="guardarCarpeta()" [disabled]="guardandoCarpeta()"
+                class="px-5 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-semibold disabled:opacity-60">
+          {{ guardandoCarpeta() ? 'Guardando...' : (m.id ? 'Guardar' : 'Crear Carpeta') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Modal: agregar / editar contenido ===================== -->
+@if (formulario(); as f) {
+  <app-contenido-form [cursoId]="id" [carpetaId]="f.carpetaId" [carpetaNombre]="f.carpetaNombre"
+                      [material]="f.material" [actividad]="f.actividad" [tipoInicial]="f.tipo"
+                      (guardado)="alGuardar()" (cerrar)="formulario.set(null)" />
+}
+
+<!-- ===================== Panel: material ===================== -->
+@if (material(); as m) {
+  @let e = estiloMaterial(m);
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarPanel()"></div>
+    <div class="relative w-full max-w-3xl bg-white h-full shadow-2xl flex flex-col">
+      <div class="flex items-start gap-4 px-7 pt-6 pb-4 border-b border-[#F0E6D8]">
+        <app-icono-item [e]="e" />
+        <div class="flex-1 min-w-0">
+          <h3 class="font-serif font-bold text-[24px] text-[#241521] leading-tight">{{ m.titulo }}</h3>
+          <p class="text-[13px] text-[#6B5A67] mt-0.5">
+            {{ m.archivo && m.tipo !== 'TEXTO' ? 'Documento ' + extension(m.archivo.nombre) : e.etiqueta }}
+            &nbsp;|&nbsp; Publicado el {{ dmy(m.fechaPublicacion) }}
+            @if (!m.visible) { &nbsp;|&nbsp; <span class="text-[#A62639]">Oculto para los alumnos</span> }
+          </p>
+        </div>
+        <button type="button" (click)="cerrarPanel()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-7 py-5 space-y-5">
+        @if (m.descripcion) {
+          @if (m.tipo === 'TEXTO') {
+            <div class="contenido-rico text-[15px] leading-relaxed text-[#3A2A37]" [innerHTML]="m.descripcion"></div>
+          } @else {
+            <p class="text-[15px] leading-relaxed text-[#3A2A37] whitespace-pre-line">{{ m.descripcion }}</p>
+          }
+        }
+        @if (m.archivo; as f) {
+          <app-vista-previa [archivo]="f" alto="h-[70vh]" />
+        }
+        @if (m.enlace) {
+          <a [href]="m.enlace" target="_blank" rel="noopener" class="block rounded-xl border border-[#E3D5C4] bg-[#FBF7F1] px-4 py-3 text-[13px] text-[#4A1F52] underline break-all">{{ m.enlace }}</a>
+        }
+      </div>
+    </div>
+  </div>
+}

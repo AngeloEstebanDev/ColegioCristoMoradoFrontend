@@ -1,0 +1,110 @@
+<!-- Fijo a la altura de la pantalla: al bajar en páginas largas el menú no se corta
+     (antes terminaba a media pantalla). Si el menú es largo, solo él hace scroll. -->
+<aside class="sticky top-0 self-start h-screen flex flex-col w-64 shrink-0
+              bg-[linear-gradient(180deg,#2E1233_0%,#200D24_100%)]
+              border-r border-[#C9A227]/20 text-[#FBF7F1]">
+
+  <!-- Escudo / marca -->
+  <div class="shrink-0 flex flex-col items-center gap-2 px-5 pt-6 pb-5 border-b border-[#C9A227]/15">
+    <img src="logo-cristo-morado.png" alt="Escudo I.E. N.º 2092 Cristo Morado"
+         class="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)]" />
+    <div class="text-center leading-tight">
+      <p class="text-[11px] tracking-[0.08em] text-[#B79EB8]">I.E. N.º 2092</p>
+      <p class="font-serif font-semibold text-[15px] text-[#E4C766] tracking-[0.02em]">CRISTO MORADO</p>
+      <p class="text-[10px] text-[#B79EB8] tracking-[0.05em] mt-0.5">Fe &middot; Disciplina &middot; Excelencia</p>
+    </div>
+  </div>
+
+  <!-- Navegación -->
+  <nav class="sidebar-scroll flex-1 min-h-0 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+    <p class="px-3 pb-2 text-[10.5px] font-semibold tracking-[0.12em] text-[#B79EB8]">MENÚ PRINCIPAL</p>
+
+    @for (item of items; track item.id) {
+
+      @if (esGrupo(item)) {
+        <!-- ===== Grupo desplegable ===== -->
+        <button
+          type="button"
+          (click)="toggleGrupo(item.id)"
+          class="sidebar-item justify-between"
+        >
+          <span class="flex items-center gap-3">
+            <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] shrink-0 sidebar-icon"
+                 stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path [attr.d]="item.icon"/>
+            </svg>
+            <span>{{ item.label }}</span>
+          </span>
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 shrink-0 transition-transform"
+               [class.rotate-180]="grupoAbierto(item.id)"
+               stroke="#B79EB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+
+        @if (grupoAbierto(item.id)) {
+          <div class="flex flex-col gap-0.5 pl-[34px] mb-1">
+            @for (child of item.children; track child.id) {
+              <a
+                [routerLink]="child.route"
+                routerLinkActive="sidebar-subitem--active"
+                class="sidebar-subitem"
+              >
+                {{ child.label }}
+              </a>
+            }
+          </div>
+        }
+
+      } @else {
+        <!-- ===== Enlace simple ===== -->
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="sidebar-item--active"
+          class="sidebar-item"
+        >
+          <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] shrink-0 sidebar-icon"
+               stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path [attr.d]="item.icon"/>
+          </svg>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    }
+  </nav>
+
+  <!-- Badge de rol -->
+  <div class="shrink-0 mx-4 mt-2 mb-2 px-4 py-3 rounded-lg border border-[#C9A227]/50
+              bg-[#C9A227]/10 flex items-center gap-3">
+    <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0" stroke="#E4C766" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 8l4 3 5-6 5 6 4-3-1.8 10H4.8L3 8Z"/>
+    </svg>
+    <div class="leading-tight">
+      <p class="text-[10.5px] text-[#B79EB8]">Rol:</p>
+      <p class="text-[13px] font-medium text-[#FBF7F1]">{{ rolVisible }}</p>
+    </div>
+  </div>
+
+  <!-- Pie -->
+  <div class="shrink-0 px-5 pb-3 flex items-center justify-center gap-2">
+    <span class="text-[#C9A227] text-[11px]">&#10013;</span>
+    <p class="text-center text-[10.5px] italic text-[#B79EB8] tracking-[0.02em]">
+      Educar es un acto de amor
+    </p>
+    <span class="text-[#C9A227] text-[11px]">&#10013;</span>
+  </div>
+
+  <!-- Cerrar sesión (todos los roles) -->
+  <div class="shrink-0 px-4 pb-5">
+    <button type="button" (click)="cerrarSesion()"
+            class="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg
+                   bg-[linear-gradient(90deg,#A62639,#8A1F45)] hover:brightness-110
+                   text-[13.5px] font-medium text-[#FBF7F1] shadow-[0_4px_12px_rgba(166,38,57,0.35)] transition">
+      <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px]" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 17l5-5-5-5M20 12H9M12 19H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>
+      </svg>
+      Cerrar sesión
+    </button>
+  </div>
+</aside>

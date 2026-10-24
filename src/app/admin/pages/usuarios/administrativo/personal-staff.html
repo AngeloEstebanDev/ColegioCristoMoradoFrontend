@@ -1,0 +1,475 @@
+<div class="space-y-5">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Gestión de Personal Staff</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Administra al personal de apoyo y directivo de la institución.</p>
+    </div>
+    @if (pestana() === 'staff') {
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          <input type="text" placeholder="Buscar colaborador" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); pagina.set(1)"
+                 class="w-56 pl-9 pr-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+        </div>
+        <button type="button" (click)="abrirNuevo()"
+                class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6"/></svg>
+          Nuevo Staff
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Pestañas: "Cuentas del sistema" solo para el administrador -->
+  @if (esAdmin) {
+    <div class="flex gap-1 border-b border-[#E3D5C4]">
+      <button type="button" (click)="pestana.set('staff')" class="px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px"
+              [ngClass]="pestana() === 'staff' ? 'border-[#4A1F52] text-[#4A1F52]' : 'border-transparent text-[#6B5A67] hover:text-[#241521]'">
+        Personal Staff
+      </button>
+      <button type="button" (click)="pestana.set('cuentas')" class="px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px"
+              [ngClass]="pestana() === 'cuentas' ? 'border-[#4A1F52] text-[#4A1F52]' : 'border-transparent text-[#6B5A67] hover:text-[#241521]'">
+        Cuentas del sistema
+      </button>
+    </div>
+  }
+
+  @if (pestana() === 'cuentas') {
+    <app-users-and-roles />
+  } @else {
+
+    @if (aviso()) {
+      <div class="flex items-start justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+        <span>{{ aviso() }}</span>
+        <button type="button" (click)="aviso.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+      </div>
+    }
+    @if (error()) {
+      <div class="flex items-start justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+        <span>{{ error() }}</span>
+        <button type="button" (click)="error.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+      </div>
+    }
+
+    <p class="text-[13px] text-[#241521]">Se encontraron {{ filtrados().length }} miembros de staff</p>
+
+    <!-- Tabla -->
+    <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm">
+      <!-- En pantallas grandes no se recorta, para que el menú ⋮ se vea completo -->
+      <div class="overflow-x-auto lg:overflow-visible">
+        <table class="w-full text-[13px]">
+          <thead>
+            <tr class="text-left text-[#241521] bg-[#FAF6EF] border-b border-[#E3D5C4] text-[12px] uppercase tracking-wide">
+              <th class="px-5 py-3.5 font-semibold">Documento</th>
+              <th class="px-5 py-3.5 font-semibold">Personal</th>
+              <th class="px-5 py-3.5 font-semibold">Cargo asignado</th>
+              <th class="px-5 py-3.5 font-semibold">Usuario</th>
+              <th class="px-5 py-3.5 font-semibold">Estado</th>
+              <th class="px-3 py-3.5"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of paginaDatos(); track p.id) {
+              <tr class="border-b border-[#F0E6D8] last:border-0 hover:bg-[#FAF6EF]/70">
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <span class="px-1.5 py-0.5 rounded bg-[#EFEAF3] text-[11px] font-semibold text-[#4A1F52] mr-1.5">{{ infoDocumento(p.tipoDocumento).corto }}</span>
+                  <span class="text-[#241521]">{{ p.numeroDocumento }}</span>
+                </td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <div class="overflow-hidden w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-white text-[12px] font-semibold"
+                         [style.background]="p.estado === 'Inactivo' ? '#9A8E97' : '#13807A'"><app-foto [usuarioId]="p.usuarioId">{{ iniciales(p.nombres + ' ' + p.apellidoPaterno) }}</app-foto></div>
+                    <div class="min-w-0">
+                      <p class="font-medium text-[#241521] flex items-center gap-2">
+                        {{ nombreTabla(p) }}
+                        @if (esYo(p)) { <span class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FDF1DC] text-[#8A6A00]">Tú</span> }
+                      </p>
+                      <p class="text-[12px] text-[#6B5A67] truncate">{{ p.correo || p.correoCuenta || 'Sin correo' }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3">
+                  <span class="px-2.5 py-1 rounded-full border border-[#E3D5C4] bg-[#FAF6EF] text-[12px] text-[#241521] whitespace-nowrap">{{ p.cargo || '—' }}</span>
+                </td>
+                <td class="px-5 py-3 font-medium text-[#241521] tracking-wide whitespace-nowrap">{{ p.usuario }}</td>
+                <td class="px-5 py-3">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11.5px] font-medium"
+                        [ngClass]="p.estado === 'Inactivo' ? 'bg-[#FBE7E9] text-[#A62639]' : 'bg-[#E7F3EA] text-[#1E7A3B]'">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="p.estado === 'Inactivo' ? 'bg-[#A62639]' : 'bg-[#1E7A3B]'"></span>
+                    {{ p.estado }}
+                  </span>
+                </td>
+                <td class="px-3 py-3 text-right relative">
+                  <button type="button" (click)="alternarMenu(p, $event)" title="Acciones"
+                          class="w-8 h-8 rounded-full inline-flex items-center justify-center text-[#241521] hover:bg-[#EFEAF3]">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+                  </button>
+                  @if (menuAbierto() === p.id) {
+                    <div (click)="$event.stopPropagation()"
+                         class="absolute right-10 top-9 z-20 w-56 bg-white rounded-lg border border-[#E3D5C4] shadow-xl py-1.5 text-left">
+                      <button type="button" (click)="abrirDetalle(p)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] text-[#241521] hover:bg-[#FAF6EF]">
+                        <svg viewBox="0 0 24 24" fill="currentColor" class="w-4.5 h-4.5"><path d="M12 5C5.5 5 2 12 2 12s3.5 7 10 7 10-7 10-7-3.5-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg>
+                        Ver Detalle
+                      </button>
+                      @if (!esYo(p)) {
+                        <button type="button" (click)="abrirEditar(p)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] text-[#241521] hover:bg-[#FAF6EF]">
+                          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4.5 h-4.5"><path d="M3 17.3V21h3.7L17.8 9.9l-3.7-3.7L3 17.3ZM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7L20.7 7Z"/></svg>
+                          Editar Información
+                        </button>
+                        @if (puedeGestionarPermisos) {
+                          <button type="button" (click)="abrirPermisos(p)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] text-[#241521] hover:bg-[#FAF6EF] bg-[#FAF6EF]/60">
+                            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4.5 h-4.5"><path d="M12 2 4 5v6c0 5.5 3.4 10.2 8 11 4.6-.8 8-5.5 8-11V5l-8-3Z"/></svg>
+                            Gestionar Permisos
+                          </button>
+                        }
+                        <button type="button" (click)="alternarEstado(p)" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] hover:bg-[#FAF6EF]"
+                                [ngClass]="p.estado === 'Inactivo' ? 'text-[#1E7A3B]' : 'text-[#A62639]'">
+                          <svg viewBox="0 0 24 24" fill="none" class="w-4.5 h-4.5" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+                            @if (p.estado !== 'Inactivo') { <path d="m17 8 5 5M22 8l-5 5"/> } @else { <path d="m16 11 2 2 4-4"/> }</svg>
+                          {{ p.estado === 'Inactivo' ? 'Activar Cuenta' : 'Desactivar Cuenta' }}
+                        </button>
+                      } @else {
+                        <p class="px-4 py-2 text-[11.5px] text-[#6B5A67]">Tus datos se editan en "Mi perfil".</p>
+                      }
+                    </div>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="px-5 py-12 text-center text-[#6B5A67]">
+                {{ cargando() ? 'Cargando personal...' : 'No hay personal registrado con ese criterio.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="flex items-center justify-end gap-5 flex-wrap px-5 py-3 border-t border-[#E3D5C4] text-[12.5px] text-[#241521]">
+        <label class="flex items-center gap-2">Por página
+          <span class="relative">
+            <select [ngModel]="porPagina()" (ngModelChange)="porPagina.set(+$event); pagina.set(1)"
+                    class="appearance-none pl-2.5 pr-7 py-1.5 rounded-md border border-[#E3D5C4] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+              <option [value]="10">10</option><option [value]="20">20</option><option [value]="50">50</option>
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </label>
+        <span>{{ rango() }}</span>
+        <div class="flex items-center gap-1">
+          <button type="button" (click)="irAPagina(1)" [disabled]="pagina() === 1" class="w-8 h-8 rounded-md hover:bg-[#EFEAF3] disabled:opacity-30">«</button>
+          <button type="button" (click)="irAPagina(pagina() - 1)" [disabled]="pagina() === 1" class="w-8 h-8 rounded-md hover:bg-[#EFEAF3] disabled:opacity-30">‹</button>
+          @for (n of paginas(); track n) {
+            <button type="button" (click)="irAPagina(n)" class="w-8 h-8 rounded-md border"
+                    [ngClass]="n === pagina() ? 'border-[#4A1F52] bg-[#EFEAF3] font-semibold text-[#4A1F52]' : 'border-transparent hover:bg-[#EFEAF3]'">{{ n }}</button>
+          }
+          <button type="button" (click)="irAPagina(pagina() + 1)" [disabled]="pagina() === totalPaginas()" class="w-8 h-8 rounded-md hover:bg-[#EFEAF3] disabled:opacity-30">›</button>
+          <button type="button" (click)="irAPagina(totalPaginas())" [disabled]="pagina() === totalPaginas()" class="w-8 h-8 rounded-md hover:bg-[#EFEAF3] disabled:opacity-30">»</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ===================== Panel lateral derecho: Nuevo / Editar personal ===================== -->
+<!-- Mismo diseño que los paneles de Alumnos, Padres y Docentes -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-black/30" (click)="cerrarFormulario()"></div>
+    <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+      <div class="sticky top-0 z-10 bg-[#FBF7F1] border-b border-[#E3D5C4]">
+        <div class="flex items-center justify-between px-6 py-4">
+          <h3 class="font-serif font-bold text-[16px] text-[#241521]">{{ editando() ? 'Editar personal' : 'Nuevo personal' }}</h3>
+          <button type="button" (click)="cerrarFormulario()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        @if (!editando()) {
+          <!-- Avance de los campos obligatorios -->
+          <div class="h-1 bg-[#F0E6D8]">
+            <div class="h-full bg-[#4A1F52] transition-all duration-300" [style.width.%]="avance()"></div>
+          </div>
+        }
+      </div>
+
+      <!-- Tarjeta de cabecera -->
+      <div class="px-6 py-4 flex items-center gap-3 border-b border-[#E3D5C4]">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-[15px] font-semibold shrink-0" style="background:#13807A">
+          @if (f().nombres.trim() || f().apellidoPaterno.trim()) {
+            {{ iniciales(f().nombres + ' ' + f().apellidoPaterno) }}
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6"/></svg>
+          }
+        </div>
+        <div class="min-w-0">
+          <p class="font-serif font-bold text-[14.5px] text-[#241521] truncate">{{ nombreFormulario() || 'Nuevo miembro del staff' }}</p>
+          <p class="text-[12.5px] text-[#6B5A67] truncate">{{ f().cargo || 'Sin cargo' }} · {{ usuarioPreview() }}</p>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Identificación</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Tipo de documento *</label>
+            <div class="relative">
+              <select [ngModel]="f().tipoDocumento" (ngModelChange)="setCampo('tipoDocumento', $event)"
+                      class="w-full appearance-none pl-3 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border border-[#E3D5C4] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+                @for (t of tiposDocumento; track t.valor) { <option [value]="t.valor">{{ t.nombre }}</option> }
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">N.º de documento *</label>
+            <input type="text" [maxlength]="infoDocumento(f().tipoDocumento).max" [placeholder]="infoDocumento(f().tipoDocumento).ayuda"
+                   [ngModel]="f().numeroDocumento" (ngModelChange)="setCampo('numeroDocumento', $event)"
+                   class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          </div>
+        </div>
+
+        <h4 class="pt-2 text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Datos generales</h4>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Nombres *</label>
+          <input type="text" placeholder="Ej. María Elena" [ngModel]="f().nombres" (ngModelChange)="setCampo('nombres', $event)"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="letras" maxlength="100" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Apellido paterno *</label>
+            <input type="text" [ngModel]="f().apellidoPaterno" (ngModelChange)="setCampo('apellidoPaterno', $event)"
+                   class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="letras" maxlength="60" />
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Apellido materno</label>
+            <input type="text" [ngModel]="f().apellidoMaterno" (ngModelChange)="setCampo('apellidoMaterno', $event)"
+                   class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="letras" maxlength="60" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Correo de contacto</label>
+          <input type="email" placeholder="Ej. nombre@gmail.com" [ngModel]="f().correo" (ngModelChange)="setCampo('correo', $event)"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="150" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Teléfono móvil</label>
+            <input type="tel" [ngModel]="f().telefono" (ngModelChange)="setCampo('telefono', $event)"
+                   class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="digitos" [maximo]="9" maxlength="9" inputmode="numeric" placeholder="987654321" />
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Fecha de nacimiento</label>
+            <input type="date" [ngModel]="f().fechaNacimiento" (ngModelChange)="setCampo('fechaNacimiento', $event)"
+                   class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          </div>
+        </div>
+
+        <h4 class="pt-2 text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Estructura organizacional</h4>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Cargo o puesto institucional *</label>
+          <!-- Combobox: elige de la lista o escribe un cargo nuevo -->
+          <div class="relative">
+            <input type="text" role="combobox" autocomplete="off" placeholder="Selecciona o escribe un cargo"
+                   [attr.aria-expanded]="cargoAbierto()"
+                   [ngModel]="f().cargo" (ngModelChange)="escribirCargo($event)"
+                   (focus)="cargoAbierto.set(true)" (blur)="cargoAbierto.set(false)"
+                   (keydown)="teclaCargo($event)"
+                   class="w-full pl-3 pr-9 py-2.5 text-[13.5px] rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                   [ngClass]="cargoAbierto() ? 'border-[#4A1F52]/50' : 'border-[#E3D5C4]'" maxlength="100" />
+            <button type="button" tabindex="-1" (mousedown)="$event.preventDefault(); alternarListaCargos($any($event.currentTarget).previousElementSibling)"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8]" title="Ver cargos">
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 transition-transform" [ngClass]="cargoAbierto() ? 'rotate-180' : ''" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            @if (cargoAbierto()) {
+              <ul role="listbox" class="absolute left-0 right-0 top-full mt-1 z-20 max-h-56 overflow-y-auto bg-white rounded-lg border border-[#E3D5C4] shadow-xl py-1">
+                @for (c of cargosFiltrados(); track c; let i = $index) {
+                  <li role="option" [attr.aria-selected]="c === f().cargo"
+                      (mousedown)="$event.preventDefault(); elegirCargo(c)" (mouseenter)="cargoResaltado.set(i)"
+                      class="flex items-center justify-between gap-2 px-3.5 py-2 text-[13.5px] cursor-pointer"
+                      [ngClass]="i === cargoResaltado() ? 'bg-[#EFEAF3] text-[#4A1F52]' : 'text-[#241521]'">
+                    <span>{{ c }}</span>
+                    @if (c === f().cargo) {
+                      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52]" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5 9-10"/></svg>
+                    }
+                  </li>
+                } @empty {
+                  <li class="px-3.5 py-2 text-[12.5px] text-[#6B5A67]">
+                    Se registrará como cargo nuevo: <span class="font-medium text-[#241521]">{{ f().cargo }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        <!-- Cuenta de acceso -->
+        <div class="pt-2 border-t border-[#E3D5C4] space-y-4">
+          <div class="pt-3">
+            <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cuenta de acceso</h4>
+            <p class="text-[11.5px] text-[#6B5A67] mt-0.5">
+              {{ editando() ? 'El usuario se genera con el documento. Si cambias el documento, cambia el usuario.' : 'El usuario se genera con el documento: DIR + N.º de documento (DNI, carné, pasaporte u otro).' }}
+            </p>
+          </div>
+          <div class="flex items-center justify-between gap-3 rounded-lg bg-[#EFEAF3] px-3.5 py-2.5">
+            <span class="text-[12.5px] text-[#6B5A67]">Usuario</span>
+            <span class="font-semibold text-[14px] text-[#4A1F52] tracking-wide">{{ usuarioPreview() }}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">{{ editando() ? 'Nueva contraseña' : 'Contraseña' }}</label>
+              <app-campo-password autocomplete="new-password" [placeholder]="editando() ? 'Vacío = no cambiar' : 'Vacío = su documento'"
+                                  [ngModel]="f().password" (ngModelChange)="setCampo('password', $event)" />
+            </div>
+            <div>
+              <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Confirmar</label>
+              <app-campo-password autocomplete="new-password" placeholder="Repetir"
+                                  [ngModel]="f().confirmarPassword" (ngModelChange)="setCampo('confirmarPassword', $event)" />
+            </div>
+          </div>
+          @if (editando()) {
+            <p class="text-[11.5px] text-[#6B5A67] -mt-1">Déjala vacía para mantener la actual. Para activar o desactivar la cuenta usa el menú ⋮.</p>
+          } @else {
+            <p class="text-[11.5px] text-[#6B5A67] -mt-1">
+              {{ esAdmin ? 'Tendrá los mismos permisos que el administrador; puedes ajustarlos luego con "Gestionar Permisos".'
+                          : 'Tendrá como máximo los mismos permisos que tú.' }}
+            </p>
+          }
+        </div>
+
+        @if (errorModal()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorModal() }}</div>
+        }
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" (click)="guardar()" [disabled]="guardando()"
+                  class="flex-1 flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60">
+            @if (editando()) {
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6"/></svg>
+            }
+            {{ guardando() ? 'Guardando...' : (editando() ? 'Guardar cambios' : 'Registrar personal') }}
+          </button>
+          <button type="button" (click)="cerrarFormulario()"
+                  class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8] transition-colors">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Modal: Gestionar permisos (admin o quien tenga "Gestionar permisos") ===================== -->
+@if (permisosDe(); as p) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/45" (click)="permisosDe.set(null)"></div>
+    <div class="relative w-full max-w-md max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-3 px-5 py-4 border-b border-[#E3D5C4]">
+        <div class="overflow-hidden w-10 h-10 rounded-lg bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-semibold flex items-center justify-center"><app-foto [usuarioId]="p.usuarioId">{{ iniciales(p.nombres + ' ' + p.apellidoPaterno) }}</app-foto></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-[14.5px] text-[#241521] truncate">{{ p.nombreCompleto }}</p>
+          <p class="text-[12px] text-[#6B5A67]">(Gestión de permisos) · {{ p.usuario }}</p>
+        </div>
+        <button type="button" (click)="permisosDe.set(null)" class="text-[#6B5A67] hover:text-[#241521] text-lg">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FBF9F6]">
+        <!-- Seleccionar todos: activa o desactiva todas las casillas -->
+        <label class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl border border-dashed border-[#C9B8A6] bg-white cursor-pointer hover:border-[#4A1F52]/50">
+          <input type="checkbox" class="w-4 h-4 accent-[#4A1F52]" [checked]="todosMarcados()" [indeterminate]="algunoMarcado()"
+                 (change)="alternarTodos($any($event.target).checked)" />
+          <span class="text-[13.5px] font-semibold text-[#4A1F52]">Seleccionar todos</span>
+          <span class="ml-auto text-[12px] text-[#6B5A67]">{{ permisosMarcados().length }} de {{ permisosDisponibles.length }} marcados</span>
+        </label>
+        @for (perm of permisosDisponibles; track perm.valor) {
+          <label class="flex items-start gap-3 p-3.5 rounded-xl border bg-white transition-colors"
+                 [ngClass]="(permisosMarcados().includes(perm.valor) ? 'border-[#4A1F52]/40 ring-1 ring-[#4A1F52]/15' : 'border-[#E3D5C4] hover:border-[#C9B8A6]')
+                            + (puedoCambiarPermiso(perm.valor) ? ' cursor-pointer' : ' opacity-55 cursor-not-allowed')"
+                 [title]="puedoCambiarPermiso(perm.valor) ? '' : 'No puedes dar ni quitar un permiso que tú no tienes'">
+            <input type="checkbox" class="mt-1 w-4 h-4 accent-[#4A1F52]" [disabled]="!puedoCambiarPermiso(perm.valor)"
+                   [checked]="permisosMarcados().includes(perm.valor)" (change)="alternarPermiso(perm.valor, $any($event.target).checked)" />
+            <span>
+              <span class="flex items-center gap-1.5 text-[14px] font-semibold text-[#241521]">
+                {{ perm.titulo }}
+                @if (perm.sensible) { <span title="Permiso sensible" class="text-[#D98E16]">⚠</span> }
+              </span>
+              <span class="block text-[12.5px] text-[#6B5A67] leading-snug mt-0.5">{{ perm.descripcion }}</span>
+            </span>
+          </label>
+        }
+      </div>
+      @if (!esAdmin) {
+        <p class="px-5 pt-3 text-[11.5px] text-[#6B5A67]">Solo puedes dar o quitar los permisos que tú tienes. Los tuyos los cambia el administrador.</p>
+      }
+      <div class="flex justify-end gap-2 px-5 py-3.5 border-t border-[#E3D5C4]">
+        <button type="button" (click)="permisosDe.set(null)" class="px-4 py-2 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F5F1EC]">Cancelar</button>
+        <button type="button" (click)="guardarPermisos()" [disabled]="guardandoPermisos()"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#EFEAF3] hover:bg-[#E2D5EA] text-[13.5px] font-semibold text-[#4A1F52] disabled:opacity-60">
+          💾 {{ guardandoPermisos() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Panel: detalle ===================== -->
+@if (detalle(); as d) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/35" (click)="detalle.set(null)"></div>
+    <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+        <h3 class="font-serif font-bold text-[16px] text-[#241521]">Detalle del personal</h3>
+        <button type="button" (click)="detalle.set(null)" class="text-[#6B5A67] hover:text-[#241521]">✕</button>
+      </div>
+      <div class="px-6 py-5 flex items-center gap-3 border-b border-[#E3D5C4]">
+        <div class="overflow-hidden w-14 h-14 rounded-full flex items-center justify-center text-white text-[18px] font-semibold" style="background:#13807A"><app-foto [usuarioId]="d.usuarioId">{{ iniciales(d.nombres + ' ' + d.apellidoPaterno) }}</app-foto></div>
+        <div>
+          <p class="font-serif font-bold text-[15px] text-[#241521]">{{ d.nombreCompleto }}</p>
+          <p class="text-[12.5px] text-[#6B5A67]">{{ d.cargo || 'Sin cargo' }}</p>
+          <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium" [ngClass]="d.estado === 'Inactivo' ? 'bg-[#FBE7E9] text-[#A62639]' : 'bg-[#E7F3EA] text-[#1E7A3B]'">{{ d.estado }}</span>
+        </div>
+      </div>
+      <div class="p-6 space-y-5 text-[13px]">
+        <div>
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide mb-2.5">Datos personales</h4>
+          <dl class="space-y-2">
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Documento</dt><dd class="font-medium text-[#241521]">{{ infoDocumento(d.tipoDocumento).nombre }} {{ d.numeroDocumento }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Nombres</dt><dd class="font-medium text-[#241521]">{{ d.nombres }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Apellidos</dt><dd class="font-medium text-[#241521]">{{ d.apellidoPaterno }} {{ d.apellidoMaterno }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Fecha de nacimiento</dt><dd class="font-medium text-[#241521]">{{ d.fechaNacimiento ? fechaLarga(d.fechaNacimiento + 'T00:00:00').split(',')[0] : '—' }}</dd></div>
+            <div class="flex justify-between gap-3"><dt class="text-[#6B5A67]">Correo</dt><dd class="font-medium text-[#241521] break-all text-right">{{ d.correo || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Teléfono</dt><dd class="font-medium text-[#241521]">{{ d.telefono || '—' }}</dd></div>
+          </dl>
+        </div>
+        <div>
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide mb-2.5">Cuenta de acceso</h4>
+          <dl class="space-y-2">
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Usuario</dt><dd class="font-semibold text-[#241521] tracking-wide">{{ d.usuario }}</dd></div>
+            <div class="flex justify-between gap-3"><dt class="text-[#6B5A67]">Gmail</dt><dd class="text-right break-all">{{ d.correoCuenta || 'No vinculado' }} @if (d.correoVerificado) { <span class="text-[#1E7A3B]">✓</span> }</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Acceso</dt><dd>{{ d.cuentaActiva ? 'Habilitado' : 'Deshabilitado' }}</dd></div>
+          </dl>
+        </div>
+        <div>
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide mb-2.5">Permisos</h4>
+          <div class="flex flex-wrap gap-1.5">
+            @for (perm of d.permisos; track perm) {
+              <span class="px-2.5 py-1 rounded-full text-[11.5px] bg-[#EFEAF3] text-[#4A1F52]">{{ nombrePermiso(perm) }}</span>
+            } @empty {
+              <span class="text-[12.5px] text-[#6B5A67]">Sin permisos: solo ve Inicio, Comunicados y su cuenta.</span>
+            }
+          </div>
+        </div>
+      </div>
+      @if (!esYo(d)) {
+        <div class="px-6 pb-6 flex gap-2">
+          <button type="button" (click)="abrirEditar(d)" class="flex-1 py-2.5 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13px] font-medium">Editar</button>
+          @if (puedeGestionarPermisos) {
+            <button type="button" (click)="detalle.set(null); abrirPermisos(d)" class="flex-1 py-2.5 rounded-lg border border-[#4A1F52]/30 text-[#4A1F52] text-[13px] font-medium hover:bg-[#EFEAF3]">Permisos</button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

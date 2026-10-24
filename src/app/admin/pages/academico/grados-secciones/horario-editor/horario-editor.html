@@ -1,0 +1,179 @@
+<div class="space-y-4">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div class="flex items-start gap-3">
+      <button type="button" (click)="volver()" title="Volver"
+              class="mt-1 w-9 h-9 rounded-full flex items-center justify-center text-[#241521] hover:bg-[#EFEAF3]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <p class="text-[12px] font-semibold tracking-wide text-[#6B5A67] uppercase">Editor de horario</p>
+        @if (horario(); as h) {
+          <div class="flex items-center flex-wrap gap-2.5 mt-0.5">
+            <span class="flex items-center gap-1.5 font-serif font-bold text-[22px] text-[#241521]">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-[#4A1F52]"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13Zm8 0c-.3 0-.6 0-1 .1 1.2.8 2 2 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg>
+              {{ h.letra }}
+            </span>
+            <span class="px-2.5 py-1 rounded-md bg-[#EFEAF3] text-[11.5px] font-semibold tracking-wide text-[#4A1F52] uppercase">{{ titulo() }}</span>
+            <span class="px-2.5 py-1 rounded-md bg-white border border-[#E3D5C4] text-[11.5px] text-[#6B5A67]">Turno {{ h.turno }} · {{ h.inicio }} a {{ h.fin }}</span>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      @if (sucio()) { <span class="text-[12px] text-[#B07010]">Cambios sin guardar</span> }
+      <button type="button" (click)="guardar()" [disabled]="guardando() || !sucio()"
+              class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+
+  <p class="text-[12.5px] text-[#6B5A67]">Haga clic en un espacio libre para asignar un bloque, o clic en uno existente para editarlo o quitarlo. Los bloques pueden tener cualquier duración (en tramos de 15 min). @if (horario(); as h) { Recreo de {{ h.recesoInicio }} a {{ h.recesoFin }}. }</p>
+
+  @if (aviso()) {
+    <div class="flex items-start justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ aviso() }}</span>
+      <button type="button" (click)="aviso.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+  @if (error()) {
+    <div class="flex items-start justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="error.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+
+  @if (cargando()) {
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando horario...</div>
+  } @else if (horario()) {
+    <!-- Cuadro del horario -->
+    <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm overflow-x-auto">
+      <div class="grid min-w-[760px]" style="grid-template-columns: 78px repeat(5, minmax(130px, 1fr));" [style.grid-template-rows]="plantillaFilas()">
+
+        <!-- Cabecera -->
+        <div class="border-b border-r border-[#E3D5C4] bg-[#FAF6EF]" style="grid-row: 1; grid-column: 1;"></div>
+        @for (d of dias; track d; let di = $index) {
+          <div class="flex items-center justify-center border-b border-[#E3D5C4] bg-[#FAF6EF] text-[12.5px] font-bold tracking-wide text-[#241521] uppercase"
+               [class.border-r]="di < 4" [style.grid-row]="1" [style.grid-column]="di + 2">{{ d }}</div>
+        }
+
+        <!-- Filas: hora + celdas -->
+        @for (f of filas(); track f.inicio; let fi = $index) {
+          <div class="flex flex-col justify-center px-2 border-r border-b border-[#F0E6D8] text-[10.5px] leading-tight"
+               [ngClass]="f.receso ? 'bg-[#E8E1EC] font-bold text-[#241521]' : 'text-[#4A1F52]'"
+               [style.grid-row]="fi + 2" [style.grid-column]="1">
+            <span>{{ aHora(f.inicio) }} -</span><span>{{ aHora(f.fin) }}</span>
+          </div>
+          @for (d of dias; track d; let di = $index) {
+            @if (f.receso) {
+              <div class="flex items-center justify-center bg-[#E8E1EC] border-b border-[#D9CDE0] text-[11.5px] font-medium tracking-wide text-[#4A1F52] uppercase"
+                   [class.border-r]="di < 4" [style.grid-row]="fi + 2" [style.grid-column]="di + 2">Recreo</div>
+            } @else {
+              <button type="button" (click)="nuevoBloque(di + 1, f)" [title]="'Asignar bloque: ' + d + ' ' + aHora(f.inicio)"
+                      class="border-b border-[#F0E6D8] hover:bg-[#EFEAF3]/70 transition-colors"
+                      [class.border-r]="di < 4" [style.grid-row]="fi + 2" [style.grid-column]="di + 2"></button>
+            }
+          }
+        }
+
+        <!-- Bloques asignados (pintados con el color del curso) -->
+        @for (b of bloques(); track $index; let bi = $index) {
+          <button type="button" (click)="editarBloque(bi)"
+                  class="relative z-10 m-[3px] flex flex-col justify-start rounded-lg px-2.5 py-1.5 text-left shadow-sm overflow-hidden hover:brightness-105 hover:shadow-md transition"
+                  [class.opacity-60]="b.estadoCurso === 'Inactivo'"
+                  [style.background]="b.color" [style.color]="textoSobre(b.color)"
+                  [style.grid-row]="filaDe(b.horaInicio) + ' / ' + filaDe(b.horaFin)" [style.grid-column]="b.dia + 1"
+                  [title]="b.curso + ' · ' + b.horaInicio + ' - ' + b.horaFin + (b.docente ? ' · ' + b.docente : '')">
+            <span class="block font-semibold text-[13px] leading-tight truncate">{{ b.curso }}</span>
+            @if (filasDe(b) >= 2) {
+              <span class="block text-[11.5px] opacity-90">{{ b.horaInicio }} - {{ b.horaFin }}</span>
+            }
+            @if (filasDe(b) >= 4 && b.docente) {
+              <span class="block text-[11px] opacity-80 truncate mt-0.5">{{ b.docente }}</span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ===================== Ventana: Nuevo / Editar bloque ===================== -->
+@if (form(); as f) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/45" (click)="cerrarForm()"></div>
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-start gap-3 px-6 pt-5 pb-4">
+        <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-[#4A1F52]" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-serif font-bold text-[17px] text-[#241521]">{{ f.indice === null ? 'Nuevo bloque' : 'Editar bloque' }}</h3>
+          <p class="text-[12.5px] text-[#6B5A67]">Planificación del horario escolar de la sección</p>
+        </div>
+        <button type="button" (click)="cerrarForm()" class="w-8 h-8 rounded-full flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="px-6 pb-5 space-y-4">
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Curso o asignatura <span class="text-[#A62639]">*</span></label>
+          <select [ngModel]="f.seccionCursoId" (ngModelChange)="setForm('seccionCursoId', $event)"
+                  class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white"
+                  [ngClass]="f.seccionCursoId ? 'text-[#241521]' : 'text-[#6B5A67]'">
+            <option [ngValue]="null">Seleccionar curso...</option>
+            @for (c of cursosActivos(); track c.id) {
+              <option [ngValue]="c.id">{{ c.nombre }}{{ c.docenteNombre ? ' · ' + c.docenteNombre : '' }}</option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Día de la semana <span class="text-[#A62639]">*</span></label>
+            <select [ngModel]="f.dia" (ngModelChange)="setForm('dia', +$event)"
+                    class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white text-[#241521]">
+              @for (d of dias; track d; let di = $index) { <option [ngValue]="di + 1">{{ d }}</option> }
+            </select>
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Hora inicio <span class="text-[#A62639]">*</span></label>
+            <select [ngModel]="f.inicio" (ngModelChange)="setForm('inicio', $event)"
+                    class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white text-[#241521]">
+              @for (h of opcionesInicio(); track h) { <option [value]="h">{{ h }}</option> }
+            </select>
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Hora fin <span class="text-[#A62639]">*</span></label>
+            <select [ngModel]="f.fin" (ngModelChange)="setForm('fin', $event)"
+                    class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white text-[#241521]">
+              @for (h of opcionesFin(); track h) { <option [value]="h">{{ h }}</option> }
+            </select>
+          </div>
+        </div>
+        @if (errorForm()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorForm() }}</div>
+        }
+      </div>
+
+      <div class="flex items-center gap-3 px-6 py-4 border-t border-[#E3D5C4] bg-[#FBF9F6]">
+        @if (f.indice !== null) {
+          <button type="button" (click)="eliminarBloque()" class="flex items-center gap-2 text-[13.5px] font-medium text-[#A62639] hover:underline">
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/></svg>
+            Eliminar bloque
+          </button>
+        }
+        <div class="flex-1"></div>
+        <button type="button" (click)="cerrarForm()" class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8]">Cancelar</button>
+        <button type="button" (click)="aplicarBloque()"
+                class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>
+          {{ f.indice === null ? 'Asignar bloque' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

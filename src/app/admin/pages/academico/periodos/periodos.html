@@ -1,0 +1,284 @@
+<div class="space-y-6">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Periodos</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Bimestres del año escolar — solo un periodo puede estar activo</p>
+    </div>
+    <button type="button" (click)="abrirNuevo()"
+            class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo periodo
+    </button>
+  </div>
+
+  @if (aviso()) {
+    <div class="flex items-start justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ aviso() }}</span>
+      <button type="button" (click)="aviso.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+  @if (error()) {
+    <div class="flex items-start justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="error.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+
+  <!-- Tarjetas -->
+  @if (periodos().length) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      @for (p of periodos(); track p.id) {
+        @let b = info(p.bimestre);
+        <div class="relative bg-white rounded-2xl border shadow-sm p-5 flex flex-col gap-3 overflow-hidden"
+             [ngClass]="p.activo ? 'border-[#4A1F52]/30 shadow-md' : 'border-[#E3D5C4]'">
+          @if (p.activo) { <span class="absolute inset-x-0 top-0 h-1.5 bg-[#4A1F52]"></span> }
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center flex-wrap gap-2">
+              <span class="px-2.5 py-1 rounded-md bg-[#F0E6D8] text-[11px] font-semibold tracking-wide text-[#6B5A67] uppercase">{{ romanos[p.bimestre] }} Bimestre</span>
+              @if (p.activo) {
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E7F3EA] text-[11px] font-medium text-[#1E7A3B]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#1E7A3B]"></span>En curso
+                </span>
+              }
+            </div>
+            <span class="w-9 h-9 rounded-lg flex items-center justify-center text-[15px] font-bold"
+                  [style.background]="p.activo ? b.color : b.fondo" [style.color]="p.activo ? '#FFFFFF' : b.color">{{ p.bimestre }}</span>
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-[19px] text-[#241521] leading-tight">{{ p.nombre }}</h3>
+            <p class="text-[12.5px] text-[#6B5A67]">Año {{ p.anio }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="rounded-lg bg-[#FAF6EF] border border-[#F0E6D8] px-3 py-2">
+              <p class="text-[10.5px] font-semibold tracking-wide text-[#6B5A67] uppercase">Inicio</p>
+              <p class="flex items-center gap-1.5 text-[13px] font-medium text-[#241521]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                {{ fechaCorta(p.fechaInicio) }}
+              </p>
+            </div>
+            <div class="rounded-lg bg-[#FAF6EF] border border-[#F0E6D8] px-3 py-2">
+              <p class="text-[10.5px] font-semibold tracking-wide text-[#6B5A67] uppercase">Fin</p>
+              <p class="flex items-center gap-1.5 text-[13px] font-medium text-[#241521]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                {{ fechaCorta(p.fechaFin) }}
+              </p>
+            </div>
+          </div>
+          <div>
+            <div class="h-1.5 rounded-full bg-[#F0E6D8] overflow-hidden">
+              <div class="h-full rounded-full transition-all" [style.width.%]="avance(p)" [style.background]="p.activo ? b.color : '#C9B8A6'"></div>
+            </div>
+            <p class="mt-1.5 text-[12px] text-[#6B5A67]">{{ situacion(p) }}{{ avance(p) > 0 && avance(p) < 100 ? ' · ' + avance(p) + '%' : '' }}</p>
+          </div>
+          <div class="flex justify-end gap-2 mt-auto">
+            <button type="button" (click)="abrirEditar(p)" title="Editar nombre y fechas"
+                    class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3D5C4] bg-white text-[13px] font-medium text-[#241521] hover:bg-[#FAF6EF]">
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Editar
+            </button>
+            @if (p.activo) {
+              <span class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#EFEAF3] text-[13px] font-medium text-[#4A1F52]">
+                <span class="w-2 h-2 rounded-full bg-[#4A1F52]"></span>Periodo activo
+              </span>
+            } @else {
+              <button type="button" (click)="activar(p)" [disabled]="activando() === p.id"
+                      class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#E3D5C4] bg-white text-[13px] font-medium text-[#241521] hover:bg-[#FAF6EF] disabled:opacity-60">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"/></svg>
+                {{ activando() === p.id ? 'Activando...' : 'Activar' }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Resumen -->
+  <div class="space-y-3">
+    <h3 class="flex items-center gap-2 font-semibold text-[15px] text-[#241521]">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-[#4A1F52]"><path d="M3 4h18v16H3V4Zm2 2v3h6V6H5Zm8 0v3h6V6h-6Zm-8 5v3h6v-3H5Zm8 0v3h6v-3h-6Zm-8 5v2h6v-2H5Zm8 0v2h6v-2h-6Z"/></svg>
+      Resumen de periodos
+    </h3>
+    <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-[13px]">
+          <thead>
+            <tr class="text-left text-[#6B5A67] bg-[#FAF6EF] border-b border-[#E3D5C4] text-[11.5px] uppercase tracking-wide">
+              <th class="px-5 py-3 font-semibold">Nombre</th>
+              <th class="px-5 py-3 font-semibold">Bimestre</th>
+              <th class="px-5 py-3 font-semibold">Fechas</th>
+              <th class="px-5 py-3 font-semibold">Estado</th>
+              <th class="px-5 py-3 font-semibold text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of periodos(); track p.id) {
+              @let b = info(p.bimestre);
+              <tr class="border-b border-[#F0E6D8] last:border-0" [ngClass]="p.activo ? 'bg-[#FAF6EF]/70 shadow-[inset_3px_0_0_#4A1F52]' : ''">
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-[14px] font-bold" [style.background]="b.fondo" [style.color]="b.color">{{ p.bimestre }}</span>
+                    <div>
+                      <p class="font-semibold text-[#241521]">{{ p.nombre }}</p>
+                      <p class="text-[11.5px] text-[#6B5A67]">Año {{ p.anio }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3"><span class="px-2.5 py-1 rounded-md bg-[#F0E6D8] text-[12px] text-[#241521] whitespace-nowrap">{{ p.bimestre }}° Bim.</span></td>
+                <td class="px-5 py-3 text-[#241521] whitespace-nowrap">{{ fechaNum(p.fechaInicio) }} <span class="text-[#9A8E97] mx-1">→</span> {{ fechaNum(p.fechaFin) }}</td>
+                <td class="px-5 py-3">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-medium"
+                        [ngClass]="p.activo ? 'bg-[#E7F3EA] text-[#1E7A3B]' : 'bg-[#F0E6D8] text-[#6B5A67]'">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="p.activo ? 'bg-[#1E7A3B]' : 'bg-[#9A8E97]'"></span>
+                    {{ p.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center justify-center gap-2">
+                    <button type="button" (click)="abrirEditar(p)" title="Editar" aria-label="Editar periodo"
+                            class="w-8 h-8 rounded-lg border border-[#E3D5C4] bg-white text-[#4A1F52] hover:bg-[#FAF6EF] flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                    @if (!p.activo) {
+                      <button type="button" (click)="activar(p)" [disabled]="activando() === p.id"
+                              class="px-3.5 py-1.5 rounded-lg border border-[#E3D5C4] bg-white text-[12.5px] font-medium text-[#241521] hover:bg-[#FAF6EF] disabled:opacity-60">Activar</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="px-5 py-10 text-center text-[#6B5A67]">
+                {{ cargando() ? 'Cargando periodos...' : 'Aún no hay periodos. Pulsa "Nuevo periodo" para registrar el primer bimestre.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Panel lateral: Nuevo / Editar periodo ===================== -->
+@if (panelAbierto()) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-black/30" (click)="panelAbierto.set(false)"></div>
+    <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl flex flex-col">
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-[#E3D5C4]">
+        <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-[#4A1F52]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-serif font-bold text-[16px] text-[#241521]">{{ editando() ? 'Editar periodo' : 'Nuevo periodo' }}</h3>
+          <p class="text-[12px] text-[#6B5A67]">{{ editando() ? 'Cambia el nombre o las fechas del bimestre' : 'Configura los datos del nuevo bimestre escolar' }}</p>
+        </div>
+        <button type="button" (click)="panelAbierto.set(false)" class="w-8 h-8 rounded-full flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+        <div>
+          <label class="flex items-center gap-1.5 text-[11.5px] font-bold tracking-wide text-[#241521] uppercase mb-1.5">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-[#6B5A67]"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg>
+            Nombre del periodo
+          </label>
+          <input type="text" maxlength="80" placeholder="Ej: I Bimestre 2026" [ngModel]="nombre()" (ngModelChange)="escribirNombre($event)"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          <p class="mt-1 text-[11.5px] text-[#6B5A67]">Nombre descriptivo para identificar el periodo</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="flex items-center gap-1.5 text-[11.5px] font-bold tracking-wide text-[#241521] uppercase mb-1.5">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              Año *
+            </label>
+            <input type="number" min="2000" max="2100" [ngModel]="anio()" (ngModelChange)="cambiarAnio($event)"
+                   class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          </div>
+          <div>
+            <label class="flex items-center gap-1.5 text-[11.5px] font-bold tracking-wide text-[#241521] uppercase mb-1.5">
+              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              Bimestre *
+            </label>
+            <!-- Combo con el color de cada bimestre -->
+            <div class="relative">
+              <button type="button" (click)="alternarBimestres($event)"
+                      class="w-full flex items-center gap-2 pl-3 pr-9 py-2.5 text-[13.5px] rounded-lg border bg-white text-left"
+                      [ngClass]="listaBimestres() ? 'border-[#4A1F52]/50 ring-2 ring-[#4A1F52]/20' : 'border-[#E3D5C4]'">
+                @if (bimestre(); as bn) {
+                  <span class="w-2.5 h-2.5 rounded-full" [style.background]="info(bn).color"></span>
+                  <span class="text-[#241521]">{{ info(bn).nombre }}</span>
+                } @else {
+                  <span class="text-[#6B5A67]">Seleccionar</span>
+                }
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] transition-transform"
+                     [ngClass]="listaBimestres() ? 'rotate-180' : ''" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              @if (listaBimestres()) {
+                <ul role="listbox" (click)="$event.stopPropagation()"
+                    class="absolute left-0 right-0 top-full mt-1 z-20 bg-white rounded-lg border border-[#E3D5C4] shadow-xl py-1">
+                  @for (b of bimestres; track b.numero) {
+                    @let usado = usados().has(b.numero);
+                    <li role="option" [attr.aria-selected]="bimestre() === b.numero" [attr.aria-disabled]="usado"
+                        (click)="elegirBimestre(b.numero, $event)"
+                        class="flex items-center gap-2.5 px-3 py-2 text-[13.5px]"
+                        [ngClass]="usado ? 'opacity-45 cursor-not-allowed' : (bimestre() === b.numero ? 'bg-[#EFEAF3] text-[#4A1F52] font-medium cursor-pointer' : 'text-[#241521] hover:bg-[#FAF6EF] cursor-pointer')"
+                        [title]="usado ? 'Ya registrado en ' + anio() : ''">
+                      <span class="w-2.5 h-2.5 rounded-full shrink-0" [style.background]="b.color"></span>
+                      <span class="flex-1">{{ b.nombre }}</span>
+                      @if (usado) { <span class="text-[10.5px] text-[#6B5A67]">Registrado</span> }
+                      @if (bimestre() === b.numero) {
+                        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5 9-10"/></svg>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="flex items-center gap-1.5 text-[11.5px] font-bold tracking-wide text-[#241521] uppercase mb-1.5">
+            <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            Rango de fechas *
+          </label>
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <input type="date" title="Fecha de inicio" [ngModel]="inicio()" (ngModelChange)="inicio.set($event); errorPanel.set(null)"
+                     [min]="anio() + '-01-01'" [max]="anio() + '-12-31'"
+                     class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+              <p class="mt-1 text-[11px] text-[#6B5A67]">Fecha inicio *</p>
+            </div>
+            <span class="w-8 h-8 -mt-5 rounded-full bg-[#EFEAF3] flex items-center justify-center text-[#4A1F52] shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+            <div class="flex-1">
+              <input type="date" title="Fecha de fin" [ngModel]="fin()" (ngModelChange)="fin.set($event); errorPanel.set(null)"
+                     [min]="inicio() || anio() + '-01-01'" [max]="anio() + '-12-31'"
+                     class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+              <p class="mt-1 text-[11px] text-[#6B5A67]">Fecha fin *</p>
+            </div>
+          </div>
+        </div>
+
+        @if (errorPanel()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorPanel() }}</div>
+        }
+      </div>
+
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#E3D5C4]">
+        <button type="button" (click)="panelAbierto.set(false)"
+                class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8]">Cancelar</button>
+        <button type="button" (click)="guardar()" [disabled]="guardando()"
+                class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50">
+          @if (!editando()) { <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> }
+          {{ editando() ? (guardando() ? 'Guardando...' : 'Guardar cambios') : (guardando() ? 'Creando...' : 'Crear periodo') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

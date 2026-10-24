@@ -1,0 +1,162 @@
+@let act = a();
+@let tipo = infoTipo(act.tipo);
+<div class="fixed inset-0 z-50 flex justify-end">
+  <div class="absolute inset-0 bg-black/30" (click)="cerrar.emit()"></div>
+  <div class="relative w-full max-w-2xl bg-[#FBF7F1] h-full shadow-xl flex flex-col">
+    <!-- Cabecera -->
+    <div class="flex items-start gap-3 px-6 py-4 border-b border-[#E3D5C4]">
+      <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[12px] font-bold" [style.background]="tipo.fondo" [style.color]="tipo.color">
+        {{ tipo.etiqueta.charAt(0) }}
+      </span>
+      <div class="flex-1 min-w-0">
+        <p class="text-[11.5px] font-semibold uppercase tracking-wide" [style.color]="act.color">{{ act.curso }} · {{ tipo.etiqueta }}</p>
+        <h3 class="font-serif font-bold text-[18px] text-[#241521] leading-tight">{{ act.titulo }}</h3>
+        <p class="text-[12px] text-[#6B5A67] mt-0.5">
+          Fecha límite: <span class="font-medium text-[#241521]">{{ fechaHora(act.fechaLimite) }}</span>
+          · <span [ngClass]="act.vencida ? 'text-[#A62639]' : 'text-[#1E7A3B]'">{{ plazo(act.fechaLimite) }}</span>
+        </p>
+      </div>
+      <button type="button" (click)="cerrar.emit()" class="w-8 h-8 rounded-full flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8]" title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-5">
+      @if (cargando()) { <p class="text-[13px] text-[#6B5A67]">Cargando...</p> }
+
+      <div class="flex flex-wrap gap-2 text-[12px]">
+        <span class="px-2.5 py-1 rounded-md bg-white border border-[#E3D5C4] text-[#241521]">Puntaje máximo: <b>{{ num(act.puntajeMaximo) }}</b></span>
+        @if (act.permiteTardia) { <span class="px-2.5 py-1 rounded-md bg-[#FDF1DC] text-[#9A6B00]">Acepta entregas tardías</span> }
+        @if (act.situacion) {
+          <span class="px-2.5 py-1 rounded-md font-medium" [ngClass]="situaciones[act.situacion].clase">{{ situaciones[act.situacion].etiqueta }}</span>
+        }
+      </div>
+
+      @if (act.instrucciones) {
+        <div class="bg-white rounded-xl border border-[#E3D5C4] p-4">
+          <p class="text-[11.5px] font-bold uppercase tracking-wide text-[#241521] mb-1.5">Instrucciones</p>
+          <p class="text-[13.5px] text-[#241521] whitespace-pre-line leading-relaxed">{{ act.instrucciones }}</p>
+        </div>
+      }
+      @if (act.archivo || act.enlace) {
+        <div class="flex flex-wrap gap-2">
+          <app-vista-previa [archivo]="act.archivo" alto="h-[420px]" />
+          @if (act.enlace) {
+            <a [href]="act.enlace" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#E3D5C4] bg-white text-[12.5px] text-[#4A1F52] hover:bg-[#FAF6EF]">
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+              Abrir enlace
+            </a>
+          }
+        </div>
+      }
+
+      @if (exito()) {
+        <div class="bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">{{ exito() }}</div>
+      }
+
+      <!-- Entrega ya enviada -->
+      @if (entrega(); as e) {
+        <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-[11.5px] font-bold uppercase tracking-wide text-[#241521]">{{ puedeEntregar() ? 'Tu entrega' : 'Entrega' }}</p>
+            <span class="text-[11.5px] text-[#6B5A67]">Enviada {{ fechaHora(e.fechaEntrega) }}{{ e.tardia ? ' (tardía)' : '' }}</span>
+          </div>
+          @if (e.estado === 'CALIFICADA') {
+            <div class="flex items-center gap-4 rounded-lg bg-[#E7F3EA] px-4 py-3">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-[#1E7A3B]">Calificación</p>
+                <p class="font-serif font-bold text-[26px] text-[#1E7A3B] leading-none">{{ num(e.puntaje) }} <span class="text-[14px]">/ {{ num(e.puntajeMaximo) }}</span></p>
+              </div>
+              <div class="text-[12px] text-[#1E7A3B]">Equivale a <b>{{ num(e.nota20) }}</b> en la escala de 0 a 20</div>
+            </div>
+            @if (e.comentarioDocente) {
+              <p class="text-[13px] text-[#4A1F52] italic">“{{ e.comentarioDocente }}”</p>
+            }
+          } @else {
+            <p class="text-[12.5px] text-[#1D4ED8]">Pendiente de calificación por el docente.</p>
+          }
+          @if (!esCuestionario()) {
+            @if (e.texto) { <p class="text-[13.5px] text-[#241521] whitespace-pre-line">{{ e.texto }}</p> }
+            @if (e.enlace) { <a [href]="e.enlace" target="_blank" rel="noopener" class="text-[13px] text-[#4A1F52] underline break-all">{{ e.enlace }}</a> }
+            <app-vista-previa [archivo]="e.archivo" alto="h-[420px]" />
+            @if (abierta() && !editando()) {
+              <button type="button" (click)="editando.set(true)" class="text-[12.5px] font-medium text-[#4A1F52] hover:underline">Modificar mi entrega</button>
+            }
+          }
+        </div>
+      } @else if (!puedeEntregar()) {
+        <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 text-[13px] text-[#6B5A67]">Aún no hay entrega.</div>
+      }
+
+      <!-- Cuestionario: preguntas -->
+      @if (esCuestionario() && act.preguntas.length && (mostrarFormulario() || entrega())) {
+        <div class="space-y-3">
+          @if (mostrarFormulario()) {
+            <p class="text-[12.5px] text-[#6B5A67]">Respondidas {{ respondidas() }} de {{ act.preguntas.length }}</p>
+          }
+          @for (p of act.preguntas; track $index; let i = $index) {
+            <div class="bg-white rounded-xl border border-[#E3D5C4] p-4">
+              <p class="text-[13.5px] font-medium text-[#241521]"><span class="text-[#4A1F52] font-bold mr-1">{{ i + 1 }}.</span>{{ p.enunciado }}
+                <span class="text-[11.5px] text-[#6B5A67] font-normal">({{ num(p.puntos) }} pt{{ p.puntos === 1 ? '' : 's' }})</span></p>
+              <div class="mt-2.5 space-y-1.5">
+                @for (o of p.opciones; track $index; let k = $index) {
+                  <button type="button" [disabled]="!mostrarFormulario()" (click)="responder(i, k)"
+                          class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-left text-[13px] transition-colors disabled:cursor-default"
+                          [ngClass]="claseOpcion(i, k)">
+                    <span class="w-6 h-6 shrink-0 rounded-full border border-current flex items-center justify-center text-[11px] font-bold">{{ letras[k] }}</span>
+                    {{ o }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Formulario de tarea -->
+      @if (mostrarFormulario() && !esCuestionario()) {
+        <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 space-y-4">
+          <p class="text-[11.5px] font-bold uppercase tracking-wide text-[#241521]">{{ entrega() ? 'Modificar entrega' : 'Tu respuesta' }}</p>
+          <textarea rows="6" [(ngModel)]="texto" placeholder="Escribe tu respuesta aquí..." maxlength="20000"
+                    class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"></textarea>
+          <input type="url" [(ngModel)]="enlace" placeholder="Enlace (opcional): https://..."
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          @if (archivo(); as f) {
+            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#EFEAF3] text-[12.5px] text-[#4A1F52]">
+              <span class="truncate">📎 {{ f.nombre }}</span>
+              <button type="button" (click)="archivo.set(null)" class="font-medium hover:underline">Quitar</button>
+            </div>
+          } @else {
+            <label class="flex items-center gap-2 px-3 py-3 rounded-lg border border-dashed border-[#C9B8A6] text-[13px] text-[#6B5A67] cursor-pointer hover:bg-[#FAF6EF]">
+              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14"/></svg>
+              {{ entrega()?.archivo ? 'Reemplazar archivo (máx. 10 MB)' : 'Adjuntar archivo (PDF, Word, imagen... máx. 10 MB)' }}
+              <input type="file" class="hidden" (change)="elegirArchivo($event)" />
+            </label>
+          }
+        </div>
+      }
+
+      @if (error()) {
+        <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ error() }}</div>
+      }
+      @if (puedeEntregar() && !abierta() && !entrega()) {
+        <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">La fecha límite ya pasó y esta actividad no acepta entregas tardías.</div>
+      }
+    </div>
+
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#E3D5C4]">
+      @if (editando()) {
+        <button type="button" (click)="editando.set(false)" class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8]">Cancelar</button>
+      } @else {
+        <button type="button" (click)="cerrar.emit()" class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8]">Cerrar</button>
+      }
+      @if (mostrarFormulario()) {
+        <button type="button" (click)="enviar()" [disabled]="enviando()"
+                class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M3 11l18-7-7 18-2-8-9-3Z"/></svg>
+          {{ enviando() ? 'Enviando...' : (esCuestionario() ? 'Enviar respuestas' : (entrega() ? 'Actualizar entrega' : 'Entregar')) }}
+        </button>
+      }
+    </div>
+  </div>
+</div>

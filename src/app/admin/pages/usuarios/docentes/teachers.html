@@ -1,0 +1,386 @@
+<div class="space-y-5">
+
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Gestión de Docentes</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Administra la información del personal docente del colegio.</p>
+    </div>
+    <button type="button" (click)="abrirCrear()"
+            class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium
+                   px-4 py-2.5 rounded-lg transition-colors">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo docente
+    </button>
+  </div>
+
+  <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+    {{ error() }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[220px]">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar por nombre o documento..."
+             [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); paginaActual.set(1)"
+             class="w-full pl-9 pr-3 py-2 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-[#FAF6EF] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+    <select [ngModel]="filtroEspecialidad()" (ngModelChange)="filtroEspecialidad.set($event); paginaActual.set(1)"
+            class="text-[13.5px] rounded-lg border border-[#E3D5C4] px-3 py-2 bg-[#FAF6EF] focus:outline-none">
+      <option value="">Todas las especialidades</option>
+      <option *ngFor="let e of especialidades" [value]="e">{{ e }}</option>
+    </select>
+    <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
+            class="text-[13.5px] rounded-lg border border-[#E3D5C4] px-3 py-2 bg-[#FAF6EF] focus:outline-none">
+      <option value="">Todos los estados</option>
+      <option *ngFor="let s of estadosPosibles" [value]="s">{{ s }}</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-[13px]">
+        <thead>
+          <tr class="text-left text-[#6B5A67] bg-[#FAF6EF] border-b border-[#E3D5C4]">
+            <th class="px-5 py-3 font-medium">N°</th>
+            <th class="px-5 py-3 font-medium"></th>
+            <th class="px-5 py-3 font-medium">Nombre completo</th>
+            <th class="px-5 py-3 font-medium">Documento</th>
+            <th class="px-5 py-3 font-medium">Especialidad</th>
+            <th class="px-5 py-3 font-medium">Usuario</th>
+            <th class="px-5 py-3 font-medium">Estado</th>
+            <th class="px-5 py-3 font-medium text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of paginaDatos(); let i = index" class="border-b border-[#F0E6D8] last:border-0 hover:bg-[#FAF6EF]/60">
+            <td class="px-5 py-3 text-[#6B5A67]">{{ (paginaActual() - 1) * porPagina + i + 1 }}</td>
+            <td class="px-5 py-3">
+              <div class="overflow-hidden w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
+                   style="background:radial-gradient(circle at 35% 30%, #4A1F52, #2E1233 75%)">
+                <app-foto [usuarioId]="d.usuarioId">{{ iniciales(d.nombreCompleto) }}</app-foto>
+              </div>
+            </td>
+            <td class="px-5 py-3 font-medium text-[#241521]">{{ d.nombreCompleto }}</td>
+            <td class="px-5 py-3 text-[#6B5A67] whitespace-nowrap"><span class="px-1.5 py-0.5 rounded bg-[#EFEAF3] text-[10.5px] font-semibold text-[#4A1F52] mr-1.5">{{ etiquetaDoc(d.tipoDocumento) }}</span>{{ d.dni }}</td>
+            <td class="px-5 py-3 text-[#6B5A67]">{{ d.especialidad || '—' }}</td>
+            <td class="px-5 py-3">
+              <span *ngIf="d.usuario; else sinCuentaDoc" class="font-medium text-[#241521] tracking-wide">{{ d.usuario }}</span>
+              <ng-template #sinCuentaDoc><span class="text-[12px] italic text-[#A62639]">Sin cuenta</span></ng-template>
+              <span *ngIf="d.usuario" class="block text-[11px]" [ngClass]="d.correoVerificado ? 'text-[#1E7A3B]' : 'text-[#B08900]'">
+                {{ d.correoVerificado ? '✓ Gmail verificado' : 'Sin Gmail verificado' }}
+              </span>
+            </td>
+            <td class="px-5 py-3">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-medium" [ngClass]="claseEstado(d.estado)">
+                {{ d.estado }}
+              </span>
+            </td>
+            <td class="px-5 py-3">
+              <div class="flex items-center justify-end gap-1">
+                <button type="button" (click)="abrirVer(d)" title="Ver"
+                        class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#EFEAF3] hover:text-[#4A1F52] transition-colors">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <button type="button" (click)="docenteSeleccionado.set(d); abrirEditarDesdeVista()" title="Editar"
+                        class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#FDF1DC] hover:text-[#B08900] transition-colors">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button type="button" (click)="alternarEstado(d)" [title]="d.estado === 'Inactivo' ? 'Activar cuenta' : 'Desactivar cuenta'"
+                        class="p-1.5 rounded-md text-[#6B5A67] transition-colors"
+                        [ngClass]="d.estado === 'Inactivo' ? 'hover:bg-[#E7F3EA] hover:text-[#1E7A3B]' : 'hover:bg-[#FBE7E9] hover:text-[#A62639]'">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+                    <path [attr.d]="d.estado === 'Inactivo' ? 'm16 11 2 2 4-4' : 'm17 8 5 5M22 8l-5 5'"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando() && paginaDatos().length === 0">
+            <td colspan="8" class="px-5 py-10 text-center text-[#6B5A67]">No se encontraron docentes con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between px-5 py-3.5 border-t border-[#E3D5C4] text-[12.5px] text-[#6B5A67]">
+      <span>Mostrando {{ paginaDatos().length }} de {{ filtrados().length }} docentes</span>
+      <div class="flex items-center gap-1">
+        <button type="button" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="w-7 h-7 rounded-md bg-[#2E1233] text-white flex items-center justify-center font-medium">{{ paginaActual() }}</span>
+        <button type="button" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() === totalPaginas()"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel: Ver docente -->
+<div *ngIf="panelVerAbierto() && docenteSeleccionado() as doc" class="fixed inset-0 z-50 flex justify-end">
+  <div class="absolute inset-0 bg-black/30" (click)="cerrarPaneles()"></div>
+
+  <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+      <h3 class="font-serif font-bold text-[16px] text-[#241521]">Ver docente</h3>
+      <button type="button" (click)="cerrarPaneles()" class="text-[#6B5A67] hover:text-[#241521]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-5 flex items-center gap-3 border-b border-[#E3D5C4]">
+      <div class="overflow-hidden w-14 h-14 rounded-full flex items-center justify-center text-white text-[18px] font-semibold shrink-0"
+           style="background:radial-gradient(circle at 35% 30%, #4A1F52, #2E1233 75%)">
+        <app-foto [usuarioId]="doc.usuarioId">{{ iniciales(doc.nombreCompleto) }}</app-foto>
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <p class="font-serif font-bold text-[15px] text-[#241521] truncate">{{ doc.nombreCompleto }}</p>
+          <span class="px-2 py-0.5 rounded-full text-[10.5px] font-medium shrink-0" [ngClass]="claseEstado(doc.estado)">{{ doc.estado }}</span>
+        </div>
+        <p class="text-[12.5px] text-[#6B5A67]">{{ nombreDoc(doc.tipoDocumento) }} {{ doc.dni }}</p>
+        <p class="text-[12.5px] text-[#6B5A67]">{{ doc.especialidad || 'Sin especialidad asignada' }}</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-[#E3D5C4] px-6">
+      <button type="button" (click)="pestanaActiva.set('general')"
+              class="px-3 py-3 text-[12.5px] font-medium border-b-2 -mb-px transition-colors"
+              [ngClass]="pestanaActiva() === 'general' ? 'border-[#4A1F52] text-[#4A1F52]' : 'border-transparent text-[#6B5A67]'">
+        Información general
+      </button>
+      <button type="button" (click)="pestanaActiva.set('cuenta')"
+              class="px-3 py-3 text-[12.5px] font-medium border-b-2 -mb-px transition-colors"
+              [ngClass]="pestanaActiva() === 'cuenta' ? 'border-[#4A1F52] text-[#4A1F52]' : 'border-transparent text-[#6B5A67]'">
+        Cuenta de acceso
+      </button>
+      <button type="button" (click)="pestanaActiva.set('historial')"
+              class="px-3 py-3 text-[12.5px] font-medium border-b-2 -mb-px transition-colors"
+              [ngClass]="pestanaActiva() === 'historial' ? 'border-[#4A1F52] text-[#4A1F52]' : 'border-transparent text-[#6B5A67]'">
+        Historial
+      </button>
+    </div>
+
+    <div class="p-6 space-y-5">
+
+      <div *ngIf="pestanaActiva() === 'general'" class="space-y-5">
+        <div>
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide mb-2.5">Información personal</h4>
+          <dl class="space-y-2 text-[13px]">
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Fecha de nacimiento</dt><dd class="text-[#241521] font-medium">{{ doc.fechaNacimiento || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Género</dt><dd class="text-[#241521] font-medium">{{ doc.genero || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Teléfono</dt><dd class="text-[#241521] font-medium">{{ doc.telefono || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Correo</dt><dd class="text-[#241521] font-medium">{{ doc.correo || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Dirección</dt><dd class="text-[#241521] font-medium text-right">{{ doc.direccion || '—' }}</dd></div>
+          </dl>
+        </div>
+
+        <div>
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide mb-2.5">Información profesional</h4>
+          <dl class="space-y-2 text-[13px]">
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Especialidad</dt><dd class="text-[#241521] font-medium">{{ doc.especialidad || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Título profesional</dt><dd class="text-[#241521] font-medium text-right">{{ doc.tituloProfesional || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Fecha de ingreso</dt><dd class="text-[#241521] font-medium">{{ doc.fechaIngreso || '—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-[#6B5A67]">Estado</dt><dd><span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [ngClass]="claseEstado(doc.estado)">{{ doc.estado }}</span></dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div *ngIf="pestanaActiva() === 'cuenta'" class="space-y-3">
+        <div *ngIf="!doc.usuario" class="text-[13px] text-[#6B5A67]">
+          Este docente todavía no tiene cuenta. Al pulsar <strong>Editar</strong> y guardar, se le crea con usuario DOC + N.º de documento.
+        </div>
+        <dl *ngIf="doc.usuario" class="rounded-lg border border-[#E3D5C4] p-3.5 bg-white space-y-2 text-[13px]">
+          <div class="flex justify-between"><dt class="text-[#6B5A67]">Usuario</dt><dd class="font-semibold text-[#241521] tracking-wide">{{ doc.usuario }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-[#6B5A67]">Gmail</dt>
+            <dd class="text-right break-all">
+              <span class="text-[#241521] font-medium">{{ doc.correoCuenta || 'No vinculado' }}</span>
+              <span class="block text-[11px]" [ngClass]="doc.correoVerificado ? 'text-[#1E7A3B]' : 'text-[#B08900]'">{{ doc.correoVerificado ? '✓ Verificado' : 'El docente debe vincularlo en su perfil' }}</span>
+            </dd></div>
+          <div class="flex justify-between"><dt class="text-[#6B5A67]">Contraseña</dt><dd class="font-medium tracking-widest">••••••••</dd></div>
+          <div class="flex justify-between"><dt class="text-[#6B5A67]">Acceso</dt>
+            <dd><span class="px-2 py-0.5 rounded-full text-[11px] font-medium" [ngClass]="doc.cuentaActiva ? 'bg-[#E7F3EA] text-[#1E7A3B]' : 'bg-[#FBE7E9] text-[#A62639]'">{{ doc.cuentaActiva ? 'Habilitado' : 'Deshabilitado' }}</span></dd></div>
+        </dl>
+      </div>
+
+      <div *ngIf="pestanaActiva() === 'historial'" class="space-y-3">
+        <div class="flex items-start gap-3 text-[13px]">
+          <div class="w-2 h-2 rounded-full bg-[#4A1F52] mt-1.5 shrink-0"></div>
+          <div>
+            <p class="text-[#241521] font-medium">Registrado en el sistema</p>
+            <p class="text-[#6B5A67] text-[12px]">{{ doc.fechaRegistro | date:'d MMM y, HH:mm' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 pb-6 flex gap-3">
+      <button type="button" (click)="abrirEditarDesdeVista()"
+              class="flex-1 flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Editar
+      </button>
+      <button type="button" (click)="alternarEstado(doc)"
+              class="flex-1 flex items-center justify-center gap-2 border text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors"
+              [ngClass]="doc.estado === 'Inactivo' ? 'border-[#1E7A3B]/40 text-[#1E7A3B] hover:bg-[#E7F3EA]' : 'border-[#A62639]/40 text-[#A62639] hover:bg-[#FBE7E9]'">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+          <path [attr.d]="doc.estado === 'Inactivo' ? 'm16 11 2 2 4-4' : 'm17 8 5 5M22 8l-5 5'"/></svg>
+        {{ doc.estado === 'Inactivo' ? 'Activar cuenta' : 'Desactivar cuenta' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel: Crear / Editar docente -->
+<div *ngIf="panelEditarAbierto()" class="fixed inset-0 z-50 flex justify-end">
+  <div class="absolute inset-0 bg-black/30" (click)="cerrarPaneles()"></div>
+
+  <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+      <h3 class="font-serif font-bold text-[16px] text-[#241521]">{{ docenteSeleccionado() ? 'Editar docente' : 'Nuevo docente' }}</h3>
+      <button type="button" (click)="cerrarPaneles()" class="text-[#6B5A67] hover:text-[#241521]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="p-6 space-y-4">
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Nombre completo *</label>
+        <input type="text" formControlName="nombreCompleto" placeholder="Ej. Carlos Mendoza Ruiz"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="letras" maxlength="100" autocomplete="off" />
+<app-error-campo [control]="form.get('nombreCompleto')" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Tipo de documento *</label>
+          <div class="relative">
+            <select formControlName="tipoDocumento"
+                    class="w-full appearance-none pl-3 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border border-[#E3D5C4] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+              @for (t of tiposDocumento; track t.valor) { <option [value]="t.valor">{{ t.nombre }}</option> }
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">N.º de documento *</label>
+          <input type="text" formControlName="dni" autocomplete="off" [maxlength]="infoDoc().max" [placeholder]="infoDoc().ayuda"
+                 class="w-full px-3 py-2.5 text-[13.5px] uppercase placeholder:normal-case rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                 [ngClass]="errorDoc() ? 'border-[#A62639]/60' : 'border-[#E3D5C4]'" />
+        </div>
+      </div>
+      @if (errorDoc()) { <p class="-mt-2 text-[11.5px] text-[#A62639]">{{ errorDoc() }}</p> }
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Fecha de nacimiento</label>
+        <input type="date" formControlName="fechaNacimiento" [max]="hoy"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+<app-error-campo [control]="form.get('fechaNacimiento')" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Género</label>
+          <select formControlName="genero" class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none">
+            <option value="">Seleccionar</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Teléfono</label>
+          <input type="text" formControlName="telefono"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="digitos" [maximo]="9" maxlength="9" inputmode="numeric" placeholder="987654321" />
+<app-error-campo [control]="form.get('telefono')" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Correo de contacto</label>
+        <input type="email" formControlName="correo" placeholder="docente@colegio.pe"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="150" />
+<app-error-campo [control]="form.get('correo')" />
+      </div>
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Dirección</label>
+        <input type="text" formControlName="direccion"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="200" />
+<app-error-campo [control]="form.get('direccion')" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Especialidad *</label>
+          <select formControlName="especialidad" class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none">
+            <option value="" disabled>—</option>
+            <option *ngFor="let e of especialidades" [value]="e">{{ e }}</option>
+          </select>
+<app-error-campo [control]="form.get('especialidad')" />
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Fecha de ingreso</label>
+          <input type="date" formControlName="fechaIngreso"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+<app-error-campo [control]="form.get('fechaIngreso')" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Título profesional</label>
+        <input type="text" formControlName="tituloProfesional" placeholder="Ej. Licenciado en Educación Secundaria"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="150" />
+<app-error-campo [control]="form.get('tituloProfesional')" />
+      </div>
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Estado</label>
+        <select formControlName="estado" class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none">
+          <option *ngFor="let s of estadosPosibles" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Cuenta de acceso: usuario DOC + N.º de documento (automático) -->
+      <div class="pt-2 border-t border-[#E3D5C4] space-y-4">
+        <div class="pt-3">
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cuenta de acceso</h4>
+          <p class="text-[11.5px] text-[#6B5A67] mt-0.5">El usuario se genera con el número de documento. El docente vinculará su propio Gmail desde su perfil.</p>
+        </div>
+        <div class="flex items-center justify-between gap-3 rounded-lg bg-[#EFEAF3] px-3.5 py-2.5">
+          <span class="text-[12.5px] text-[#6B5A67]">Usuario</span>
+          <span class="font-semibold text-[14px] text-[#4A1F52] tracking-wide">{{ usuarioPreview() }}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">{{ tieneCuenta() ? 'Nueva contraseña' : 'Contraseña' }}</label>
+            <app-campo-password formControlName="password" autocomplete="new-password"
+                                [placeholder]="tieneCuenta() ? 'Vacío = no cambiar' : 'Vacío = su N.º de documento'" />
+<app-error-campo [control]="form.get('password')" />
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Confirmar</label>
+            <app-campo-password formControlName="confirmarPassword" autocomplete="new-password" placeholder="Repetir" />
+          </div>
+        </div>
+        <p class="text-[11.5px] text-[#6B5A67] -mt-1">
+          {{ tieneCuenta() ? 'Déjala vacía para mantener la actual.' : 'Si la dejas vacía, la contraseña inicial será su número de documento.' }}
+          Si el estado es <strong>Inactivo</strong>, no podrá iniciar sesión.
+        </p>
+      </div>
+
+      <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">
+        {{ error() }}
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit" [disabled]="guardando()"
+                class="flex-1 flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+        <button type="button" (click)="cerrarPaneles()"
+                class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8] transition-colors">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

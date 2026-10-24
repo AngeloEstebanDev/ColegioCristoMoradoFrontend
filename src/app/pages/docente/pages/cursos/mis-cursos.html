@@ -1,0 +1,79 @@
+<div class="space-y-5">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-4">
+    <div>
+      <h2 class="font-serif font-bold text-[26px] text-[#241521] leading-tight">Cursos a Cargo</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-1">Gestiona tus cursos, revisa información y accede a sus herramientas.</p>
+    </div>
+    <div class="relative w-full sm:w-72">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar curso..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
+             class="w-full pl-9 pr-3 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando tus cursos...</div>
+  } @else if (!cursos().length) {
+    <div class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm flex flex-col items-center text-center px-6 py-14">
+      <div class="w-20 h-20 rounded-full bg-[#EFEAF3] flex items-center justify-center shadow-[0_0_0_10px_rgba(239,234,243,0.5)]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-9 h-9 text-[#4A1F52]" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 2 9l10 5 10-5-10-5ZM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+      </div>
+      <h3 class="mt-6 font-serif font-bold text-[20px] text-[#241521]">Sin cursos asignados</h3>
+      <p class="mt-1.5 max-w-md text-[13.5px] text-[#6B5A67]">La administración asigna los cursos en Académico &gt; Grados y Secciones.</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      @for (c of filtrados(); track c.seccionCursoId) {
+        <article class="group bg-white rounded-2xl border border-[#E3D5C4] shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col">
+          <!-- Portada con el color de la categoría -->
+          <div class="relative h-28 flex items-center justify-center" [style.background]="'linear-gradient(135deg,' + c.color + ', ' + c.color + 'CC)'">
+            <span class="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white text-[11px] font-medium text-[#241521] shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-[#1E9E4B]"></span>Activo
+            </span>
+            @if (c.porCalificar) {
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#FDF1DC] text-[11px] font-semibold text-[#9A6B00] shadow-sm">
+                {{ c.porCalificar }} por calificar
+              </span>
+            }
+            <div class="opacity-95 drop-shadow-sm"><app-icono-categoria [categoria]="c.categoria" [tam]="58" [sinFondo]="true" color="#FFFFFF" /></div>
+          </div>
+
+          <div class="flex-1 flex flex-col px-5 pt-4 pb-5">
+            <h3 class="font-serif font-bold text-[18px] text-[#241521] leading-tight">{{ c.curso }}</h3>
+            <p class="text-[14px] font-semibold text-[#241521] mt-1">{{ salon(c) }}</p>
+            <p class="text-[12.5px] text-[#6B5A67]">{{ nivel(c) }}</p>
+
+            <div class="border-t border-[#F0E6D8] mt-4 pt-3 space-y-2.5 text-[12.5px]">
+              <div class="flex items-center gap-2.5 text-[#6B5A67]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#4A1F52]" stroke="currentColor" stroke-width="1.8"><path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4"/></svg>
+                Estudiantes <span class="ml-auto font-semibold text-[#241521]">{{ c.totalAlumnos }}</span>
+              </div>
+              <div class="flex items-start gap-2.5 text-[#6B5A67]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 mt-0.5 text-[#4A1F52]" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <div>
+                  <p>Horario</p>
+                  <p class="font-medium text-[#241521]">{{ dias(c) }}</p>
+                  @if (horas(c)) { <p class="font-medium text-[#241521]">{{ horas(c) }}</p> }
+                </div>
+              </div>
+            </div>
+
+            <a [routerLink]="['/home', 'docente', 'cursos', c.seccionCursoId]"
+               class="mt-4 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#EFEAF3] group-hover:bg-[#2E1233] text-[13.5px] font-medium text-[#4A1F52] group-hover:text-white transition-colors">
+              Ver curso
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </article>
+      } @empty {
+        <p class="col-span-full text-center text-[13.5px] text-[#6B5A67] py-10">No hay cursos que coincidan con “{{ busqueda() }}”.</p>
+      }
+    </div>
+  }
+</div>

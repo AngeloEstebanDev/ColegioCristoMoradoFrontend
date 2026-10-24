@@ -1,0 +1,266 @@
+<div class="space-y-3">
+
+  @if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+  @if (aviso()) {
+    <div class="bg-[#E7F3EA] border border-[#1E7A3B]/25 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">{{ aviso() }}</div>
+  }
+
+  <div class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden flex h-[calc(100vh-240px)] min-h-[480px]">
+
+    <!-- ===================== Lista de chats ===================== -->
+    <aside class="w-full md:w-[320px] md:shrink-0 border-r border-[#F0E6D8] flex-col bg-[#FBF7F1]"
+           [ngClass]="abiertoId() !== null ? 'hidden md:flex' : 'flex'">
+      <div class="px-4 pt-4 pb-3 space-y-3 border-b border-[#F0E6D8]">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="font-serif font-bold text-[17px] text-[#241521]">Chats</h3>
+          <button type="button" (click)="abrirNuevo()"
+                  class="flex items-center gap-1.5 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[12.5px] font-medium px-3 py-1.5 rounded-lg shadow-sm transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo chat
+          </button>
+        </div>
+        <div class="relative">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          <input type="text" placeholder="Buscar chat..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
+                 class="w-full pl-9 pr-3 py-2 text-[13px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto">
+        @if (cargando()) {
+          <p class="text-center text-[13px] text-[#6B5A67] py-10">Cargando chats...</p>
+        } @else {
+          @for (c of filtradas(); track c.id) {
+            <button type="button" (click)="abrir(c.id, c)"
+                    class="w-full flex items-center gap-3 px-4 py-3 text-left border-b border-[#F0E6D8] transition-colors"
+                    [ngClass]="abiertoId() === c.id ? 'bg-[#EFEAF3]' : 'hover:bg-white'">
+              @if (c.id === AVISOS) {
+                <span class="w-11 h-11 rounded-full shrink-0 flex items-center justify-center bg-[#F0E6D8] text-[#4A1F52]">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10v4h3l6 4V6L6 10H3ZM16 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+                </span>
+              } @else {
+                <span class="overflow-hidden w-11 h-11 rounded-full shrink-0 flex items-center justify-center text-white text-[13.5px] font-semibold"
+                      style="background:radial-gradient(circle at 35% 30%, #6B3474, #2E1233 75%)"><app-foto [usuarioId]="c.id">{{ iniciales(c.nombre) }}</app-foto></span>
+              }
+              <span class="flex-1 min-w-0">
+                <span class="flex items-center justify-between gap-2">
+                  <span class="text-[14px] text-[#241521] truncate" [ngClass]="c.noLeidos > 0 ? 'font-semibold' : 'font-medium'">{{ c.nombre }}</span>
+                  <span class="text-[11px] shrink-0" [ngClass]="c.noLeidos > 0 ? 'text-[#A62639] font-semibold' : 'text-[#6B5A67]'">{{ cuando(c.fecha) }}</span>
+                </span>
+                @if (esPadreRol(c.rol) && c.detalle) {
+                  <span class="block text-[11px] text-[#9A8E97] truncate">{{ c.detalle }}</span>
+                }
+                <span class="flex items-center justify-between gap-2 mt-0.5">
+                  <span class="text-[12.5px] truncate" [ngClass]="c.noLeidos > 0 ? 'text-[#241521]' : 'text-[#6B5A67]'">
+                    @if (c.ultimoEsMio) { <span class="text-[#4A1F52]">Tú: </span> }{{ c.ultimoMensaje }}
+                  </span>
+                  @if (c.noLeidos > 0) {
+                    <span class="min-w-5 h-5 px-1.5 rounded-full bg-[#A62639] text-white text-[10.5px] font-semibold flex items-center justify-center shrink-0">{{ c.noLeidos }}</span>
+                  }
+                </span>
+              </span>
+            </button>
+          } @empty {
+            <div class="flex flex-col items-center text-center px-6 py-12">
+              <div class="w-16 h-16 rounded-full bg-[#EFEAF3] flex items-center justify-center mb-3">
+                <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8" stroke="#4A1F52" stroke-width="1.6"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z"/></svg>
+              </div>
+              <p class="font-serif font-bold text-[15px] text-[#241521]">{{ busqueda() ? 'Sin resultados' : 'Aún no tienes chats' }}</p>
+              <p class="text-[12.5px] text-[#6B5A67] mt-1">Usa <strong>Nuevo chat</strong> para escribirle a alguien.</p>
+            </div>
+          }
+        }
+      </div>
+    </aside>
+
+    <!-- ===================== Chat abierto ===================== -->
+    <section class="flex-1 min-w-0 flex-col bg-[#FAF6EF]" [ngClass]="abiertoId() === null ? 'hidden md:flex' : 'flex'">
+      @if (abierto(); as chat) {
+        <!-- Cabecera -->
+        <header class="flex items-center gap-3 px-4 py-3 bg-white border-b border-[#F0E6D8]">
+          <button type="button" (click)="cerrarChat()" class="md:hidden -ml-1 p-1 text-[#4A1F52]" title="Volver">
+            <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          @if (chat.conversacion.id === AVISOS) {
+            <span class="w-10 h-10 rounded-full shrink-0 flex items-center justify-center bg-[#F0E6D8] text-[#4A1F52]">
+              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10v4h3l6 4V6L6 10H3ZM16 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+            </span>
+          } @else {
+            <span class="overflow-hidden w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-white text-[13px] font-semibold"
+                  style="background:radial-gradient(circle at 35% 30%, #6B3474, #2E1233 75%)"><app-foto [usuarioId]="chat.conversacion.id">{{ iniciales(chat.conversacion.nombre) }}</app-foto></span>
+          }
+          <div class="flex-1 min-w-0">
+            <p class="text-[15px] font-semibold text-[#241521] truncate">{{ chat.conversacion.nombre }}</p>
+            <p class="flex items-center gap-1.5 text-[11.5px] text-[#6B5A67]">
+              @if (chat.conversacion.rol) {
+                <span class="px-1.5 py-px rounded-full font-medium" [ngClass]="claseRol(chat.conversacion.rol)">{{ chat.conversacion.rol }}</span>
+              }
+              @if (chat.conversacion.detalle) { <span class="truncate">{{ chat.conversacion.detalle }}</span> }
+            </p>
+          </div>
+          <div class="relative">
+            <button type="button" (click)="menuAbierto.set(!menuAbierto())" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B5A67] hover:bg-[#FAF6EF] hover:text-[#241521]" title="Opciones">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+            </button>
+            @if (menuAbierto()) {
+              <div class="fixed inset-0 z-10" (click)="menuAbierto.set(false)"></div>
+              <div class="absolute right-0 mt-1 z-20 w-48 bg-white rounded-lg border border-[#E3D5C4] shadow-xl py-1">
+                <button type="button" (click)="eliminarChat()" [disabled]="!chat.mensajes.length"
+                        class="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] text-[#A62639] hover:bg-[#FBE7E9] disabled:opacity-40 disabled:hover:bg-transparent">
+                  <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 12H7L6 9Z"/></svg>
+                  Eliminar chat
+                </button>
+              </div>
+            }
+          </div>
+        </header>
+
+        <!-- Mensajes -->
+        <div #zonaMensajes class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-1">
+          @if (cargandoChat() && !chat.mensajes.length) {
+            <p class="text-center text-[13px] text-[#6B5A67] py-10">Cargando mensajes...</p>
+          } @else {
+            @for (d of dias(); track d.etiqueta) {
+              <div class="flex justify-center py-2">
+                <span class="px-3 py-1 rounded-full bg-[#F0E6D8] text-[11px] font-medium text-[#6B5A67] first-letter:uppercase">{{ d.etiqueta }}</span>
+              </div>
+              @for (m of d.mensajes; track m.id) {
+                @if (m.aviso) {
+                  <!-- Aviso del colegio -->
+                  <div class="flex justify-start py-1">
+                    <div class="max-w-[85%] sm:max-w-[70%] bg-white rounded-2xl rounded-tl-md border border-[#E3D5C4] border-l-4 border-l-[#4A1F52] shadow-sm px-4 py-3">
+                      <p class="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#4A1F52]">
+                        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                        {{ m.asunto }}
+                      </p>
+                      <div class="contenido-rico mt-1.5 space-y-1 text-[13.5px] leading-relaxed text-[#241521]" [innerHTML]="m.contenido"></div>
+                      <div class="flex items-center justify-between gap-3 mt-2.5">
+                        @if (esAlumno && m.asunto === 'Cambio de horario') {
+                          <a routerLink="/home/alumno/inicio"
+                             class="inline-flex items-center gap-1.5 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[12.5px] font-medium px-3 py-1.5 rounded-lg">
+                            Ver mi horario
+                            <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                          </a>
+                        } @else { <span></span> }
+                        <span class="text-[10.5px] text-[#6B5A67]">{{ hora(m.fecha) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="flex py-0.5" [ngClass]="m.mio ? 'justify-end' : 'justify-start'">
+                    <div class="max-w-[85%] sm:max-w-[70%] px-3.5 pt-2 pb-1.5 shadow-sm"
+                         [ngClass]="m.mio ? 'bg-[#4A1F52] text-white rounded-2xl rounded-br-md' : 'bg-white text-[#241521] border border-[#E3D5C4] rounded-2xl rounded-bl-md'">
+                      @if (m.asunto) {
+                        <p class="text-[12.5px] font-semibold mb-0.5" [ngClass]="m.mio ? 'text-[#E3D5C4]' : 'text-[#4A1F52]'">{{ m.asunto }}</p>
+                      }
+                      <div class="contenido-rico text-[14px] leading-snug break-words" [innerHTML]="m.contenido"></div>
+                      <p class="flex items-center justify-end gap-1 mt-0.5 text-[10.5px]" [ngClass]="m.mio ? 'text-white/70' : 'text-[#6B5A67]'">
+                        {{ hora(m.fecha) }}
+                        @if (m.mio) {
+                          <span [title]="m.leido ? 'Visto' : 'Enviado'" [ngClass]="m.leido ? 'text-[#9FE3B4]' : ''">{{ m.leido ? '✓✓' : '✓' }}</span>
+                        }
+                      </p>
+                    </div>
+                  </div>
+                }
+              }
+            } @empty {
+              <div class="flex flex-col items-center justify-center text-center h-full py-10">
+                <div class="w-16 h-16 rounded-full bg-[#EFEAF3] flex items-center justify-center mb-3">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8" stroke="#4A1F52" stroke-width="1.6"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1-1-1Z"/></svg>
+                </div>
+                <p class="text-[13.5px] text-[#6B5A67]">Escribe el primer mensaje a <strong class="text-[#241521]">{{ chat.conversacion.nombre }}</strong>.</p>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Escribir -->
+        @if (chat.conversacion.puedeEscribir) {
+          <footer class="bg-white border-t border-[#F0E6D8] px-3 sm:px-4 py-3">
+            @if (errorChat()) {
+              <p class="mb-2 bg-[#FBE7E9] text-[#A62639] text-[12.5px] rounded-lg px-3 py-2">{{ errorChat() }}</p>
+            }
+            <div class="flex items-end gap-2">
+              <textarea #campo rows="1" placeholder="Escribe un mensaje..." [maxlength]="MAX"
+                        [ngModel]="texto()" (ngModelChange)="texto.set($event)" (input)="ajustarAlto(campo)" (keydown)="teclaCampo($event)"
+                        class="flex-1 resize-none max-h-[140px] px-4 py-2.5 text-[14px] rounded-2xl border border-[#E3D5C4] bg-[#FBF7F1] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"></textarea>
+              <button type="button" (click)="enviar()" [disabled]="enviando() || !texto().trim()" title="Enviar (Enter)"
+                      class="w-11 h-11 shrink-0 rounded-full bg-[#2E1233] hover:bg-[#4A1F52] text-white flex items-center justify-center shadow-sm disabled:opacity-40 transition-colors">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 -mr-0.5"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>
+              </button>
+            </div>
+            <p class="mt-1.5 text-[10.5px] text-[#6B5A67] px-1">Enter para enviar · Shift + Enter para un salto de línea</p>
+          </footer>
+        } @else {
+          <footer class="bg-white border-t border-[#F0E6D8] px-4 py-3 text-center text-[12.5px] text-[#6B5A67]">
+            @if (chat.conversacion.id === AVISOS) {
+              Los avisos del colegio son automáticos y no se pueden responder.
+            } @else {
+              No puedes responder en este chat.
+            }
+          </footer>
+        }
+      } @else if (errorChat()) {
+        <div class="m-auto text-center px-6">
+          <p class="bg-[#FBE7E9] text-[#A62639] text-[13px] rounded-lg px-4 py-3">{{ errorChat() }}</p>
+        </div>
+      } @else {
+        <div class="m-auto flex flex-col items-center text-center px-6">
+          <div class="w-20 h-20 rounded-full bg-[#EFEAF3] flex items-center justify-center shadow-[0_0_0_10px_rgba(239,234,243,0.5)]">
+            <svg viewBox="0 0 24 24" fill="none" class="w-9 h-9 text-[#4A1F52]" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-4 3V6a1 1 0 0 1-1-1ZM16 9h4a1 1 0 0 1 1 1v9l-3-2h-6a1 1 0 0 1-1-1v-2"/></svg>
+          </div>
+          <h3 class="mt-6 font-serif font-bold text-[18px] text-[#241521]">Tus mensajes</h3>
+          <p class="mt-1 max-w-xs text-[13px] text-[#6B5A67]">Elige un chat de la lista o empieza uno nuevo. Cada persona tiene su propia conversación.</p>
+        </div>
+      }
+    </section>
+  </div>
+</div>
+
+<!-- ===================== Nuevo chat ===================== -->
+@if (modalNuevo()) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarNuevo()"></div>
+    <div class="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#F0E6D8]">
+        <h3 class="font-serif font-bold text-[20px] text-[#241521]">Nuevo chat</h3>
+        <button type="button" (click)="cerrarNuevo()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+        <!-- Elegir persona (los mensajes son siempre de persona a persona) -->
+        <div class="px-6 pt-4 pb-3">
+          <div class="relative">
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input type="text" placeholder="Buscar por nombre, rol o salón..." [ngModel]="filtroContacto()" (ngModelChange)="filtroContacto.set($event)"
+                   class="w-full pl-9 pr-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto pb-4">
+          @if (errorModal()) {
+            <p class="mx-6 bg-[#FBE7E9] text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorModal() }}</p>
+          } @else if (!contactos()) {
+            <p class="px-6 py-6 text-[13px] text-[#6B5A67]">Cargando contactos...</p>
+          } @else {
+            <p class="px-6 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-[#6B5A67] uppercase">Personas</p>
+            @for (c of contactosFiltrados().personas; track c.usuarioId) {
+              <button type="button" (click)="elegirPersona(c)" class="w-full flex items-center gap-3 px-6 py-2.5 text-left hover:bg-[#FAF6EF]">
+                <span class="overflow-hidden w-9 h-9 rounded-full bg-[#6B5A67]/80 text-white text-[12px] font-semibold flex items-center justify-center shrink-0"><app-foto [usuarioId]="c.usuarioId">{{ iniciales(c.nombre) }}</app-foto></span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[14px] text-[#241521] truncate">{{ c.nombre }}</span>
+                  @if (c.detalle) { <span class="block text-[11.5px] text-[#6B5A67]">{{ c.detalle }}</span> }
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0" [ngClass]="claseRol(c.rol)">{{ c.rol }}</span>
+              </button>
+            } @empty {
+              <p class="px-6 py-3 text-[13px] text-[#6B5A67]">No hay contactos que coincidan.</p>
+            }
+          }
+        </div>
+    </div>
+  </div>
+}

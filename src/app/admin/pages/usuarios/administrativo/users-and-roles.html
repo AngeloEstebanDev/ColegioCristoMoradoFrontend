@@ -1,0 +1,263 @@
+<div class="space-y-5">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Usuarios y Roles</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Gestiona los usuarios del sistema y sus roles de acceso.</p>
+    </div>
+    <button type="button" (click)="abrirCrear()"
+            class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium
+                   px-4 py-2.5 rounded-lg transition-colors">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+    {{ error() }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[220px]">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar por nombre, correo o usuario..."
+             [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); paginaActual.set(1)"
+             class="w-full pl-9 pr-3 py-2 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-[#FAF6EF]
+                    focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+    <select [ngModel]="filtroRol()" (ngModelChange)="filtroRol.set($event); paginaActual.set(1)"
+            class="text-[13.5px] rounded-lg border border-[#E3D5C4] px-3 py-2 bg-[#FAF6EF] focus:outline-none">
+      <option value="">Todos los roles</option>
+      <option *ngFor="let r of roles" [value]="r.valor">{{ r.etiqueta }}</option>
+    </select>
+    <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
+            class="text-[13.5px] rounded-lg border border-[#E3D5C4] px-3 py-2 bg-[#FAF6EF] focus:outline-none">
+      <option value="">Todos los estados</option>
+      <option value="activo">Activo</option>
+      <option value="inactivo">Inactivo</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-[13px]">
+        <thead>
+          <tr class="text-left text-[#6B5A67] bg-[#FAF6EF] border-b border-[#E3D5C4]">
+            <th class="px-5 py-3 font-medium">ID</th>
+            <th class="px-5 py-3 font-medium">Nombre completo</th>
+            <th class="px-5 py-3 font-medium">Usuario</th>
+            <th class="px-5 py-3 font-medium">Gmail</th>
+            <th class="px-5 py-3 font-medium">Rol</th>
+            <th class="px-5 py-3 font-medium">Estado</th>
+            <th class="px-5 py-3 font-medium text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of paginaDatos()" class="border-b border-[#F0E6D8] last:border-0 hover:bg-[#FAF6EF]/60">
+            <td class="px-5 py-3 text-[#6B5A67]">{{ u.id }}</td>
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-2.5">
+                <div class="overflow-hidden w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-[11px] font-semibold"
+                     style="background:radial-gradient(circle at 35% 30%, #4A1F52, #2E1233 75%)">
+                  <app-foto [usuarioId]="u.id">{{ u.nombre.charAt(0) }}</app-foto>
+                </div>
+                <span class="font-medium text-[#241521]">{{ u.nombre }}</span>
+                @if (esMiCuenta(u)) {
+                  <span class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#FDF1DC] text-[#8A6A00]">Tú</span>
+                }
+              </div>
+            </td>
+            <td class="px-5 py-3">
+              <span class="font-medium text-[#241521] tracking-wide">{{ u.usuario }}</span>
+              @if (u.vinculadoA) { <span class="block text-[11px] text-[#6B5A67]">Cuenta de {{ u.vinculadoA.toLowerCase() }}</span> }
+            </td>
+            <td class="px-5 py-3 text-[#6B5A67]">
+              @if (u.correo) {
+                <span class="break-all">{{ u.correo }}</span>
+                <span class="block text-[11px]" [ngClass]="u.correoVerificado ? 'text-[#1E7A3B]' : 'text-[#B08900]'">{{ u.correoVerificado ? '✓ Verificado' : 'Sin verificar' }}</span>
+              } @else { <span class="text-[12px] italic">No vinculado</span> }
+            </td>
+            <td class="px-5 py-3">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#EFEAF3] text-[#4A1F52]">
+                {{ etiquetaRol(u.rol) }}
+              </span>
+            </td>
+            <td class="px-5 py-3">
+              <span class="flex items-center gap-1.5 text-[12px] font-medium"
+                    [ngClass]="u.estado ? 'text-[#1E7A3B]' : 'text-[#A62639]'">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="u.estado ? 'bg-[#1E7A3B]' : 'bg-[#A62639]'"></span>
+                {{ u.estado ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="px-5 py-3">
+              <div class="flex items-center justify-end gap-1">
+                @if (esMiCuenta(u)) {
+                  <!-- Tu propia cuenta: no se puede editar, apagar ni eliminar desde aquí -->
+                  <span class="flex items-center gap-1 px-2 py-1 text-[11px] text-[#6B5A67]" title="No puedes editar ni desactivar tu propia cuenta">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                    Tu cuenta
+                  </span>
+                } @else {
+                <button type="button" (click)="abrirEditar(u)" title="Editar"
+                        class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#EFEAF3] hover:text-[#4A1F52] transition-colors">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button type="button" (click)="toggleEstado(u)" [title]="u.estado ? 'Desactivar cuenta' : 'Activar cuenta'"
+                        class="p-1.5 rounded-md text-[#6B5A67] transition-colors"
+                        [ngClass]="u.estado ? 'hover:bg-[#FBE7E9] hover:text-[#A62639]' : 'hover:bg-[#E7F3EA] hover:text-[#1E7A3B]'">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+                    <path [attr.d]="u.estado ? 'm17 8 5 5M22 8l-5 5' : 'm16 11 2 2 4-4'"/></svg>
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando() && paginaDatos().length === 0">
+            <td colspan="7" class="px-5 py-10 text-center text-[#6B5A67]">No se encontraron usuarios con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="flex items-center justify-between px-5 py-3.5 border-t border-[#E3D5C4] text-[12.5px] text-[#6B5A67]">
+      <span>Mostrando {{ paginaDatos().length }} de {{ filtrados().length }} usuarios</span>
+      <div class="flex items-center gap-1">
+        <button type="button" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="w-7 h-7 rounded-md bg-[#2E1233] text-white flex items-center justify-center font-medium">{{ paginaActual() }}</span>
+        <button type="button" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() === totalPaginas()"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Roles del sistema -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] p-5">
+    <h3 class="font-serif font-bold text-[14.5px] text-[#241521] mb-3 flex items-center gap-1.5">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="#4A1F52" stroke-width="1.8"><path d="M12 3 3 7v5c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-4Z"/></svg>
+      Roles del sistema
+    </h3>
+    <p class="text-[12.5px] text-[#6B5A67] mb-4 -mt-2">Roles disponibles y sus permisos principales.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div *ngFor="let r of roles" class="rounded-lg border border-[#E3D5C4] p-3.5 bg-[#FAF6EF]">
+        <p class="font-semibold text-[13px] text-[#241521]">{{ r.etiqueta }}</p>
+        <p class="text-[11.5px] text-[#6B5A67] mt-1 leading-snug">{{ r.descripcion }}</p>
+        <p class="text-[11px] text-[#4A1F52] font-medium mt-2">{{ conteoPorRol()[r.valor.toLowerCase()] ?? 0 }} usuarios</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel lateral: crear / editar -->
+<div *ngIf="panelAbierto()" class="fixed inset-0 z-50 flex justify-end">
+  <div class="absolute inset-0 bg-black/30" (click)="cerrarPanel()"></div>
+
+  <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+      <h3 class="font-serif font-bold text-[16px] text-[#241521] flex items-center gap-2">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4.5 h-4.5" stroke="#4A1F52" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        {{ modoEdicion() ? 'Editar usuario' : 'Crear usuario' }}
+      </h3>
+      <button type="button" (click)="cerrarPanel()" class="text-[#6B5A67] hover:text-[#241521]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="p-6 space-y-4">
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Nombre completo *</label>
+        <input type="text" formControlName="nombre" placeholder="Ej. Juan Pérez García"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="letras" maxlength="100" />
+<app-error-campo [control]="form.get('nombre')" />
+      </div>
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Rol *</label>
+        <select formControlName="rol"
+                class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30 disabled:bg-[#F0E6D8]">
+          <option value="" disabled>Seleccionar rol</option>
+          <option *ngFor="let r of rolesDelFormulario()" [value]="r.valor">{{ r.etiqueta }}</option>
+        </select>
+        @if (!modoEdicion()) {
+          <p class="text-[11.5px] text-[#6B5A67] mt-1.5">Aquí se crean cuentas de Administrador. Alumnos, docentes y apoderados obtienen su cuenta en su módulo, y la Directiva en "Personal Staff".</p>
+        }
+      </div>
+
+      @if (usuarioSeleccionado()?.vinculadoA; as vinculado) {
+        <div class="rounded-lg bg-[#EFEAF3] px-3.5 py-3 text-[12.5px] text-[#4A1F52]">
+          <p class="font-medium">Cuenta de {{ vinculado.toLowerCase() }}: <span class="tracking-wide">{{ usuarioSeleccionado()?.usuario }}</span></p>
+          <p class="text-[#6B5A67] mt-0.5">El usuario (PREFIJO + DNI) y el rol se manejan desde su módulo. Aquí puedes cambiar el estado o la contraseña.</p>
+        </div>
+      } @else if (esDirectiva()) {
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">DNI *</label>
+          <input type="text" formControlName="dni"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="12" placeholder="Ej. 11223344" />
+<app-error-campo [control]="form.get('dni')" />
+        </div>
+        <div class="flex items-center justify-between gap-3 rounded-lg bg-[#EFEAF3] px-3.5 py-2.5">
+          <span class="text-[12.5px] text-[#6B5A67]">Usuario</span>
+          <span class="font-semibold text-[14px] text-[#4A1F52] tracking-wide">{{ usuarioDirectiva() }}</span>
+        </div>
+      } @else {
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Usuario *</label>
+          <input type="text" formControlName="usuario" placeholder="Ej. admin123"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="usuario" maxlength="30" />
+<app-error-campo [control]="form.get('usuario')" />
+        </div>
+      }
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">
+          Contraseña {{ modoEdicion() ? '(dejar en blanco para no cambiar)' : '*' }}
+        </label>
+        <app-campo-password formControlName="password" autocomplete="new-password" placeholder="Mín. 4 caracteres" />
+<app-error-campo [control]="form.get('password')" />
+      </div>
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Confirmar contraseña</label>
+        <app-campo-password formControlName="confirmarPassword" autocomplete="new-password" placeholder="Repetir contraseña" />
+      </div>
+
+      <p class="text-[11.5px] text-[#6B5A67]">El Gmail no se escribe aquí: cada usuario lo vincula y verifica desde <strong>Mi perfil</strong>.</p>
+
+      <div class="flex items-center justify-between pt-1">
+        <span class="text-[12.5px] font-medium text-[#241521]">Estado</span>
+        <button type="button" (click)="form.patchValue({estado: !form.value.estado})"
+                class="w-11 h-6 rounded-full transition-colors relative"
+                [ngClass]="form.value.estado ? 'bg-[#1E7A3B]' : 'bg-[#C9BFC6]'">
+          <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all"
+                [ngClass]="form.value.estado ? 'left-[22px]' : 'left-0.5'"></span>
+        </button>
+      </div>
+
+      <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">
+        {{ error() }}
+      </div>
+
+      <div class="flex gap-3 pt-3">
+        <button type="submit" [disabled]="guardando()"
+                class="flex-1 flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white
+                       text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+        <button type="button" (click)="cerrarPanel()"
+                class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8] transition-colors">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

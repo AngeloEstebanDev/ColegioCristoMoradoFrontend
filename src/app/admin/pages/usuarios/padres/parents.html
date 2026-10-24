@@ -1,0 +1,287 @@
+<div class="space-y-5">
+
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Padres de Familia</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Administra la información de los padres de familia y su asociación con los estudiantes.</p>
+    </div>
+    <button type="button" (click)="abrirCrear()"
+            class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium
+                   px-4 py-2.5 rounded-lg transition-colors">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo padre de familia
+    </button>
+  </div>
+
+  <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+    {{ error() }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[220px]">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar por nombre, documento, teléfono o estudiante..."
+             [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); paginaActual.set(1)"
+             class="w-full pl-9 pr-3 py-2 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-[#FAF6EF] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+    <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
+            class="text-[13.5px] rounded-lg border border-[#E3D5C4] px-3 py-2 bg-[#FAF6EF] focus:outline-none">
+      <option value="">Todos los estados</option>
+      <option *ngFor="let s of estadosPosibles" [value]="s">{{ s }}</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-[13px]">
+        <thead>
+          <tr class="text-left text-[#6B5A67] bg-[#FAF6EF] border-b border-[#E3D5C4]">
+            <th class="px-5 py-3 font-medium">N°</th>
+            <th class="px-5 py-3 font-medium">Nombre completo</th>
+            <th class="px-5 py-3 font-medium">Documento</th>
+            <th class="px-5 py-3 font-medium">Usuario</th>
+            <th class="px-5 py-3 font-medium">Teléfono</th>
+            <th class="px-5 py-3 font-medium">Estudiante(s) asociado(s)</th>
+            <th class="px-5 py-3 font-medium">Estado</th>
+            <th class="px-5 py-3 font-medium text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of paginaDatos(); let i = index" class="border-b border-[#F0E6D8] last:border-0 hover:bg-[#FAF6EF]/60">
+            <td class="px-5 py-3 text-[#6B5A67]">{{ (paginaActual() - 1) * porPagina + i + 1 }}</td>
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-2.5">
+                <div class="overflow-hidden w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-[11px] font-semibold"
+                     style="background:radial-gradient(circle at 35% 30%, #4A1F52, #2E1233 75%)">
+                  <app-foto [usuarioId]="p.usuarioId">{{ iniciales(p.nombreCompleto) }}</app-foto>
+                </div>
+                <span class="font-medium text-[#241521]">{{ p.nombreCompleto }}</span>
+              </div>
+            </td>
+            <td class="px-5 py-3 text-[#6B5A67] whitespace-nowrap"><span class="px-1.5 py-0.5 rounded bg-[#EFEAF3] text-[10.5px] font-semibold text-[#4A1F52] mr-1.5">{{ etiquetaDoc(p.tipoDocumento) }}</span>{{ p.dni }}</td>
+            <td class="px-5 py-3 text-[#6B5A67]">
+              <span *ngIf="p.usuario; else sinCuentaPadre" class="font-medium text-[#241521] tracking-wide">{{ p.usuario }}</span>
+              <ng-template #sinCuentaPadre><span class="text-[12px] italic text-[#A62639]">Sin cuenta</span></ng-template>
+              <span *ngIf="p.usuario" class="block text-[11px]" [ngClass]="p.correoVerificado ? 'text-[#1E7A3B]' : 'text-[#B08900]'">
+                {{ p.correoVerificado ? '✓ Gmail verificado' : 'Sin Gmail verificado' }}
+              </span>
+            </td>
+            <td class="px-5 py-3 text-[#6B5A67]">{{ p.telefono }}</td>
+            <td class="px-5 py-3">
+              <div class="flex flex-wrap gap-1 max-w-[220px]">
+                <span *ngFor="let e of p.estudiantes.slice(0,2)"
+                      class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#EFEAF3] text-[#4A1F52]">
+                  {{ e.nombreCompleto }}
+                </span>
+                <span *ngIf="p.estudiantes.length > 2"
+                      class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F0E6D8] text-[#6B5A67]">
+                  +{{ p.estudiantes.length - 2 }}
+                </span>
+                <span *ngIf="!p.estudiantes.length" class="text-[12px] text-[#6B5A67]">Sin vincular</span>
+              </div>
+            </td>
+            <td class="px-5 py-3">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-medium" [ngClass]="claseEstado(p.estado)">
+                {{ p.estado }}
+              </span>
+            </td>
+            <td class="px-5 py-3">
+              <div class="flex items-center justify-end gap-1">
+                <button type="button" (click)="abrirEditar(p)" title="Ver / Editar"
+                        class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#EFEAF3] hover:text-[#4A1F52] transition-colors">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <button type="button" (click)="abrirEditar(p)" title="Editar"
+                        class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#FDF1DC] hover:text-[#B08900] transition-colors">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button type="button" (click)="alternarEstado(p)" [title]="p.estado === 'Inactivo' ? 'Activar cuenta' : 'Desactivar cuenta'"
+                        class="p-1.5 rounded-md text-[#6B5A67] transition-colors"
+                        [ngClass]="p.estado === 'Inactivo' ? 'hover:bg-[#E7F3EA] hover:text-[#1E7A3B]' : 'hover:bg-[#FBE7E9] hover:text-[#A62639]'">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+                    <path [attr.d]="p.estado === 'Inactivo' ? 'm16 11 2 2 4-4' : 'm17 8 5 5M22 8l-5 5'"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando() && paginaDatos().length === 0">
+            <td colspan="8" class="px-5 py-10 text-center text-[#6B5A67]">No se encontraron padres de familia con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between px-5 py-3.5 border-t border-[#E3D5C4] text-[12.5px] text-[#6B5A67]">
+      <span>Mostrando {{ paginaDatos().length }} de {{ filtrados().length }} padres de familia</span>
+      <div class="flex items-center gap-1">
+        <button type="button" (click)="irAPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="w-7 h-7 rounded-md bg-[#2E1233] text-white flex items-center justify-center font-medium">{{ paginaActual() }}</span>
+        <button type="button" (click)="irAPagina(paginaActual() + 1)" [disabled]="paginaActual() === totalPaginas()"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel: Crear / Editar padre de familia -->
+<div *ngIf="panelAbierto()" class="fixed inset-0 z-50 flex justify-end">
+  <div class="absolute inset-0 bg-black/30" (click)="cerrarPanel()"></div>
+
+  <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+      <h3 class="font-serif font-bold text-[16px] text-[#241521]">
+        {{ padreSeleccionado() ? 'Editar padre de familia' : 'Crear padre de familia' }}
+      </h3>
+      <button type="button" (click)="cerrarPanel()" class="text-[#6B5A67] hover:text-[#241521]">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="p-6 space-y-4">
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Nombre completo *</label>
+        <input type="text" formControlName="nombreCompleto" placeholder="Ej. Juan Pérez García"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="letras" maxlength="100" autocomplete="off" />
+<app-error-campo [control]="form.get('nombreCompleto')" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Tipo de documento *</label>
+          <div class="relative">
+            <select formControlName="tipoDocumento"
+                    class="w-full appearance-none pl-3 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border border-[#E3D5C4] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+              @for (t of tiposDocumento; track t.valor) { <option [value]="t.valor">{{ t.nombre }}</option> }
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">N.º de documento *</label>
+          <input type="text" formControlName="dni" autocomplete="off" [maxlength]="infoDoc().max" [placeholder]="infoDoc().ayuda"
+                 class="w-full px-3 py-2.5 text-[13.5px] uppercase placeholder:normal-case rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                 [ngClass]="errorDoc() ? 'border-[#A62639]/60' : 'border-[#E3D5C4]'" />
+        </div>
+      </div>
+      @if (errorDoc()) { <p class="-mt-2 text-[11.5px] text-[#A62639]">{{ errorDoc() }}</p> }
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Fecha de nacimiento</label>
+        <!-- Solo se muestra en su perfil (no en la tabla) -->
+        <input type="date" formControlName="fechaNacimiento" [max]="hoy"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+<app-error-campo [control]="form.get('fechaNacimiento')" />
+      </div>
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Teléfono *</label>
+        <input type="text" formControlName="telefono"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="digitos" [maximo]="9" maxlength="9" inputmode="numeric" placeholder="987654321" />
+<app-error-campo [control]="form.get('telefono')" />
+      </div>
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Correo de contacto</label>
+        <input type="email" formControlName="correo" placeholder="Ej. correo@ejemplo.com"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="150" />
+<app-error-campo [control]="form.get('correo')" />
+      </div>
+
+      <div>
+        <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Dirección</label>
+        <input type="text" formControlName="direccion" placeholder="Ej. Av. Los Olivos 123, Comas"
+               class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" maxlength="200" />
+<app-error-campo [control]="form.get('direccion')" />
+      </div>
+
+      <!-- Hijos: solo lectura. Se vinculan en Académico > Vínculo Padre-Hijo -->
+      @if (padreSeleccionado(); as ps) {
+        <div class="rounded-lg border border-[#E3D5C4] bg-white p-3.5 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[12.5px] font-medium text-[#241521]">Hijos vinculados</span>
+            <span class="text-[11px] text-[#6B5A67]">{{ ps.estudiantes.length }}</span>
+          </div>
+          @for (e of ps.estudiantes; track e.id) {
+            <div class="flex items-center justify-between gap-2 text-[12.5px]">
+              <span class="text-[#241521] truncate">{{ e.nombreCompleto }} <span class="text-[#6B5A67]">· {{ e.grado }} "{{ e.seccion }}"</span></span>
+              <span class="px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-[#EFEAF3] text-[#4A1F52] shrink-0">{{ e.parentesco }}</span>
+            </div>
+          } @empty {
+            <p class="text-[12px] text-[#6B5A67]">Aún no tiene hijos vinculados.</p>
+          }
+          <p class="pt-1 text-[11.5px] text-[#6B5A67] border-t border-[#F0E6D8]">
+            Los hijos se vinculan solo en
+            @if (puedeVincular) {
+              <a routerLink="/home/admin/academico/vinculo-padre-hijo" class="font-medium text-[#4A1F52] underline">Académico › Vínculo Padre-Hijo</a>.
+            } @else {
+              <span class="font-medium text-[#241521]">Académico › Vínculo Padre-Hijo</span>.
+            }
+          </p>
+        </div>
+      } @else {
+        <p class="rounded-lg bg-[#EFEAF3] px-3.5 py-2.5 text-[11.5px] text-[#4A1F52]">
+          Después de registrarlo, vincula a sus hijos en <strong>Académico › Vínculo Padre-Hijo</strong>.
+        </p>
+      }
+
+      <div class="flex items-center justify-between pt-1">
+        <span class="text-[12.5px] font-medium text-[#241521]">Estado</span>
+        <select formControlName="estado" class="text-[12.5px] rounded-lg border border-[#E3D5C4] px-2.5 py-1.5 bg-white focus:outline-none">
+          <option *ngFor="let s of estadosPosibles" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Cuenta de acceso: usuario APO + N.º de documento (automático) -->
+      <div class="pt-2 border-t border-[#E3D5C4] space-y-4">
+        <div class="pt-3">
+          <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cuenta de acceso</h4>
+          <p class="text-[11.5px] text-[#6B5A67] mt-0.5">El usuario se genera con el número de documento. El apoderado vinculará su propio Gmail desde su perfil.</p>
+        </div>
+        <div class="flex items-center justify-between gap-3 rounded-lg bg-[#EFEAF3] px-3.5 py-2.5">
+          <span class="text-[12.5px] text-[#6B5A67]">Usuario</span>
+          <span class="font-semibold text-[14px] text-[#4A1F52] tracking-wide">{{ usuarioPreview() }}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">{{ tieneCuenta() ? 'Nueva contraseña' : 'Contraseña' }}</label>
+            <app-campo-password formControlName="password" autocomplete="new-password"
+                                [placeholder]="tieneCuenta() ? 'Vacío = no cambiar' : 'Vacío = su N.º de documento'" />
+<app-error-campo [control]="form.get('password')" />
+          </div>
+          <div>
+            <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Confirmar</label>
+            <app-campo-password formControlName="confirmarPassword" autocomplete="new-password" placeholder="Repetir" />
+          </div>
+        </div>
+        <p class="text-[11.5px] text-[#6B5A67] -mt-1">
+          {{ tieneCuenta() ? 'Déjala vacía para mantener la actual.' : 'Si la dejas vacía, la contraseña inicial será su número de documento.' }}
+          Si el estado es <strong>Inactivo</strong>, no podrá iniciar sesión.
+        </p>
+      </div>
+
+      <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">
+        {{ error() }}
+      </div>
+
+      <div class="flex gap-3 pt-3">
+        <button type="button" (click)="cerrarPanel()"
+                class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8] transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="guardando()"
+                class="flex-1 flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          {{ guardando() ? 'Guardando...' : 'Guardar padre de familia' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

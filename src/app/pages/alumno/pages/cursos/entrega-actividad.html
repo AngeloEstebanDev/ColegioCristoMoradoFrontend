@@ -1,0 +1,258 @@
+<ng-template #cabeceraSeccion let-titulo let-abierta="abierta" let-icono="icono">
+  <span class="flex items-center gap-3">
+    <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-[#4A1F52]" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="icono"/></svg>
+    <span class="font-serif font-bold text-[16px] text-[#241521]">{{ titulo }}</span>
+  </span>
+  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [class.rotate-180]="!abierta" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+</ng-template>
+
+<div class="space-y-4 max-w-5xl">
+
+  @if (cargando()) {
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando actividad...</div>
+  } @else if (actividad(); as a) {
+
+    <!-- Encabezado -->
+    <div class="flex items-center gap-4 flex-wrap">
+      <a [routerLink]="['/home', 'alumno', 'cursos', cursoId]" [queryParams]="{ tab: 'actividades' }" title="Volver al curso"
+         class="w-11 h-11 shrink-0 rounded-xl bg-white border border-[#E3D5C4] hover:bg-[#FAF6EF] flex items-center justify-center text-[#4A1F52] shadow-sm">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </a>
+      <div class="flex-1 min-w-0">
+        <p class="text-[12px] font-semibold uppercase tracking-wide" [style.color]="a.color">{{ a.curso }} · {{ tipo().etiqueta }}</p>
+        <h2 class="font-serif font-bold text-[24px] text-[#241521] leading-tight">{{ a.titulo }}</h2>
+      </div>
+      <div class="text-right">
+        <p class="text-[12px] text-[#6B5A67]">Nota</p>
+        <p class="font-serif font-bold text-[22px] leading-none" [style.color]="entrega()?.estado === 'CALIFICADA' ? colorNota().color : '#241521'">
+          {{ entrega()?.estado === 'CALIFICADA' ? num(entrega()?.nota20, 1) + '/20' : '—' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#F0E6D8]">
+      <div class="flex items-center gap-3 px-5 py-3.5">
+        <span class="w-9 h-9 rounded-lg flex items-center justify-center text-[13px] font-bold" [style.background]="tipo().fondo" [style.color]="tipo().color">{{ tipo().etiqueta.charAt(0) }}</span>
+        <span class="text-[14px] font-semibold text-[#241521]">{{ tipo().etiqueta }}</span>
+      </div>
+      <div class="flex items-center gap-3 px-5 py-3.5">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-[#2563EB]" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <div>
+          <p class="text-[14px] font-semibold" [ngClass]="vencida() ? 'text-[#A62639]' : 'text-[#241521]'">Fecha de entrega: {{ dmyHora(a.fechaLimite) }}</p>
+          <p class="text-[12px]" [ngClass]="vencida() ? 'text-[#A62639]' : 'text-[#1E7A3B]'">{{ plazo(a.fechaLimite) }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 px-5 py-3.5">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-[#2563EB]" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 20v-6M12 20V8M18 20V4"/></svg>
+        <span class="text-[14px] font-semibold text-[#241521]">Puntaje: {{ num(a.puntajeMaximo) }} puntos</span>
+      </div>
+    </div>
+
+    @if (exito()) {
+      <div class="bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13.5px] rounded-xl px-4 py-3">{{ exito() }}</div>
+    }
+    @if (tarde() && abierta()) {
+      <div class="flex items-start gap-3 bg-[#FEF3E2] border border-[#F5C77E] text-[#92400E] text-[13.5px] rounded-xl px-4 py-3">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0 mt-px" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>La fecha de entrega venció el <b>{{ dmyHora(a.fechaLimite) }}</b>, pero tu docente permite la <b>entrega tardía</b>.
+          Si envías ahora, tu entrega quedará marcada como <b>enviada tarde</b>.</span>
+      </div>
+    } @else if (vencida() && !entrega()) {
+      <div class="flex items-start gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13.5px] rounded-xl px-4 py-3">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0 mt-px" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>La fecha de entrega venció el <b>{{ dmyHora(a.fechaLimite) }}</b>. Ya no puedes enviar esta {{ tipo().etiqueta.toLowerCase() }}.</span>
+      </div>
+    }
+
+    <!-- Instrucciones -->
+    <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+      <button type="button" (click)="verInstrucciones.set(!verInstrucciones())" class="w-full flex items-center justify-between px-5 py-3.5 bg-[#FAF6EF]">
+        <ng-container *ngTemplateOutlet="cabeceraSeccion; context: { $implicit: 'Instrucciones de la actividad', abierta: verInstrucciones(), icono: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' }" />
+      </button>
+      @if (verInstrucciones()) {
+        <p class="px-5 py-4 text-[14px] leading-relaxed text-[#3A2A37] whitespace-pre-line">{{ a.instrucciones || 'El docente no agregó instrucciones.' }}</p>
+      }
+    </section>
+
+    <!-- Adjuntos del docente -->
+    @if (a.archivo || a.enlace) {
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+        <button type="button" (click)="verAdjuntos.set(!verAdjuntos())" class="w-full flex items-center justify-between px-5 py-3.5 bg-[#FAF6EF]">
+          <ng-container *ngTemplateOutlet="cabeceraSeccion; context: { $implicit: 'Documentos adjuntos por el docente', abierta: verAdjuntos(), icono: 'M21 12.5l-8.5 8.5a5 5 0 0 1-7-7L14 5.5a3.3 3.3 0 0 1 4.7 4.7L10.2 18.7a1.7 1.7 0 0 1-2.4-2.4L15.5 8.6' }" />
+        </button>
+        @if (verAdjuntos()) {
+          <div class="px-5 py-4 space-y-3">
+            @if (a.archivo; as f) {
+              <app-vista-previa [archivo]="f" alto="h-[480px]" />
+            }
+            @if (a.enlace) {
+              <a [href]="a.enlace" target="_blank" rel="noopener" class="flex items-center gap-2 text-[13.5px] text-[#4A1F52] underline break-all">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0" stroke="currentColor" stroke-width="2"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+                {{ a.enlace }}
+              </a>
+            }
+          </div>
+        }
+      </section>
+    }
+
+    <!-- Entrega -->
+    <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
+      <button type="button" (click)="verEntrega.set(!verEntrega())" class="w-full flex items-center justify-between px-5 py-3.5 bg-[#FAF6EF]">
+        <ng-container *ngTemplateOutlet="cabeceraSeccion; context: { $implicit: esCuestionario() ? 'Cuestionario' : 'Entrega', abierta: verEntrega(), icono: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' }" />
+      </button>
+      @if (verEntrega()) {
+        <div class="px-5 py-5 space-y-4">
+
+          <!-- Entrega ya enviada -->
+          @if (entrega(); as e) {
+            <div class="rounded-xl border border-[#E3D5C4] bg-[#FBF7F1] p-4 space-y-3">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <p class="text-[12px] font-bold uppercase tracking-wide text-[#241521]">Tu entrega</p>
+                <span class="text-[12px] text-[#6B5A67]">Enviada el {{ dmyHora(e.fechaEntrega) }} · intento {{ intentosUsados() }} de {{ intentosPermitidos() }}
+                  @if (e.tardia) { · <b class="text-[#B45309]">enviada tarde</b> }</span>
+              </div>
+              @if (e.tardia) {
+                <p class="rounded-lg bg-[#FEF3E2] border border-[#F5C77E] px-3 py-2 text-[12.5px] text-[#92400E]">⏰ Enviaste tarde: tu entrega llegó después de la fecha límite ({{ dmyHora(a.fechaLimite) }}).</p>
+              }
+              <!-- Historial: Entrega 1, Entrega 2... -->
+              @if (envios().length) {
+                <div class="flex flex-wrap gap-1.5 border-b border-[#E3D5C4]">
+                  @for (x of envios(); track x.numero) {
+                    <button type="button" (click)="envioSel.set(x.numero)"
+                            class="px-4 py-2 -mb-px rounded-t-xl border text-[13px] font-semibold transition"
+                            [ngClass]="envio()?.numero === x.numero ? 'bg-white border-[#E3D5C4] border-b-white text-[#4A1F52]' : 'bg-transparent border-transparent text-[#6B5A67] hover:text-[#4A1F52]'">
+                      Entrega {{ x.numero }}
+                      @if (x.tardia) { <span class="ml-1 text-[10.5px] font-medium text-[#B45309]">(tarde)</span> }
+                    </button>
+                  }
+                </div>
+                @if (envio(); as v) {
+                  <p class="text-[12px] text-[#6B5A67]">
+                    Entrega {{ v.numero }} · enviada el {{ dmyHora(v.fecha) }}
+                    @if (esCuestionario() && v.puntaje !== null) { · puntaje {{ num(v.puntaje) }} de {{ num(a.puntajeMaximo) }} }
+                    @if (v.numero === envios()[envios().length - 1].numero && envios().length > 1) { · <b class="text-[#1E7A3B]">la más reciente</b> }
+                  </p>
+                }
+              }
+              @if (e.estado === 'CALIFICADA') {
+                <div class="flex items-center gap-4 rounded-lg px-4 py-3" [style.background]="colorNota().fondo">
+                  <p class="font-serif font-bold text-[26px] leading-none" [style.color]="colorNota().color">{{ num(e.nota20, 1) }}<span class="text-[14px]">/20</span></p>
+                  <p class="text-[12.5px]" [style.color]="colorNota().color">{{ num(e.puntaje) }} de {{ num(e.puntajeMaximo) }} puntos</p>
+                </div>
+                @if (e.comentarioDocente) { <p class="text-[13px] text-[#4A1F52] italic">“{{ e.comentarioDocente }}”</p> }
+              } @else {
+                <p class="text-[13px] text-[#1D4ED8]">Pendiente de calificación por el docente.</p>
+              }
+              @if (!esCuestionario()) {
+                @let v = envio();
+                @let txt = v ? v.texto : e.texto;
+                @let enl = v ? v.enlace : e.enlace;
+                @let arch = v ? v.archivo : e.archivo;
+                @if (txt) { <p class="text-[14px] text-[#241521] whitespace-pre-line">{{ txt }}</p> }
+                @if (enl) { <a [href]="enl" target="_blank" rel="noopener" class="block text-[13px] text-[#4A1F52] underline break-all">{{ enl }}</a> }
+                @if (arch) { <app-vista-previa [archivo]="arch" alto="h-[420px]" /> }
+                @if (abierta() && !editando()) {
+                  <div>
+                    <button type="button" (click)="editando.set(true)" class="text-[13px] font-medium text-[#4A1F52] hover:underline">
+                      Enviar otra entrega (Entrega {{ intentosUsados() + 1 }} · te queda{{ quedan() === 1 ? '' : 'n' }} {{ quedan() }} intento{{ quedan() === 1 ? '' : 's' }}{{ tarde() ? ', entrega tardía' : ', hasta el ' + dmyHora(a.fechaLimite) }})
+                    </button>
+                  </div>
+                }
+              } @else if (abierta() && !editando()) {
+                <div class="flex items-center justify-between gap-3 flex-wrap rounded-lg bg-white border border-[#E3D5C4] px-4 py-2.5">
+                  <span class="text-[12.5px] text-[#6B5A67]">Te queda{{ quedan() === 1 ? '' : 'n' }} {{ quedan() }} intento{{ quedan() === 1 ? '' : 's' }}. Se guarda tu mejor puntaje.</span>
+                  <button type="button" (click)="nuevoIntento()" class="px-4 py-2 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13px] font-semibold">Nuevo intento</button>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Cuestionario -->
+          @if (esCuestionario() && a.preguntas.length && (mostrarFormulario() || entrega())) {
+            @if (mostrarFormulario()) {
+              <p class="text-[12.5px] text-[#6B5A67]">Respondidas {{ respondidas() }} de {{ a.preguntas.length }} · intento {{ intentosUsados() + 1 }} de {{ intentosPermitidos() }}.</p>
+            }
+            @for (p of a.preguntas; track $index; let i = $index) {
+              <div class="rounded-xl border border-[#E3D5C4] p-4">
+                <p class="text-[14px] font-medium text-[#241521]"><span class="text-[#4A1F52] font-bold mr-1">{{ i + 1 }}.</span>{{ p.enunciado }}
+                  <span class="text-[11.5px] text-[#6B5A67] font-normal">({{ num(p.puntos) }} pt{{ p.puntos === 1 ? '' : 's' }}{{ p.tipo === 'MULTIPLE' ? ' · marca todas las correctas' : '' }})</span></p>
+                <div class="mt-2.5 space-y-1.5">
+                  @for (o of p.opciones; track $index; let k = $index) {
+                    <button type="button" [disabled]="!mostrarFormulario()" (click)="responder(i, k)"
+                            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-left text-[13.5px] transition-colors disabled:cursor-default"
+                            [ngClass]="claseOpcion(i, k)">
+                      <span class="w-6 h-6 shrink-0 border border-current flex items-center justify-center text-[11px] font-bold" [ngClass]="p.tipo === 'MULTIPLE' ? 'rounded-md' : 'rounded-full'">
+                        @if (p.tipo === 'MULTIPLE' && elegidas(i).includes(k)) { ✓ } @else { {{ letras[k] }} }
+                      </span>
+                      {{ o }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Formulario de tarea -->
+          @if (mostrarFormulario() && !esCuestionario()) {
+            <div class="space-y-4">
+              <div>
+                <label class="block text-[13.5px] font-semibold text-[#241521] mb-1.5">Tu respuesta</label>
+                <textarea rows="6" [(ngModel)]="texto" placeholder="Escribe aquí tu respuesta..." maxlength="20000"
+                          class="w-full px-4 py-3 text-[14px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"></textarea>
+              </div>
+              <div>
+                <label class="block text-[13.5px] font-semibold text-[#241521] mb-1.5">Enlace (opcional)</label>
+                <input type="url" [(ngModel)]="enlace" placeholder="https://..."
+                       class="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+              </div>
+              <div>
+                <label class="block text-[13.5px] font-semibold text-[#241521] mb-1.5">Adjuntar archivo (opcional)</label>
+                @if (archivo(); as f) {
+                  <!-- Vista previa del archivo elegido antes de enviarlo -->
+                  <app-vista-previa [local]="f" alto="h-[420px]" (quitar)="archivo.set(null)" />
+                } @else {
+                  <label class="flex flex-col items-center justify-center gap-1.5 px-4 py-7 rounded-xl border-2 border-dashed text-center cursor-pointer transition-colors"
+                         [ngClass]="arrastrando() ? 'border-[#4A1F52] bg-[#EFEAF3]' : 'border-[#C9B8A6] hover:bg-[#FAF6EF]'"
+                         (dragover)="sobre($event)" (dragleave)="arrastrando.set(false)" (drop)="soltar($event)">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-9 h-9 text-[#4A1F52]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8a4 4 0 0 1 .5 7.97M12 12v8m0-8-3 3m3-3 3 3"/></svg>
+                    <span class="text-[14px] font-semibold text-[#241521]">Arrastra un archivo aquí</span>
+                    <span class="text-[12px] text-[#6B5A67]">o haz clic para seleccionarlo desde tu dispositivo</span>
+                    <span class="text-[11.5px] text-[#6B5A67]">Formatos aceptados: <b>{{ formatosTexto() }}</b> (máx. 10 MB)
+                      @if (entrega()) { · tus entregas anteriores se conservan }</span>
+                    <span class="mt-1.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#EFEAF3] text-[12.5px] font-medium text-[#4A1F52]">Cargar archivo</span>
+                    <input type="file" class="hidden" [accept]="aceptar()" (change)="elegirArchivo($event)" />
+                  </label>
+                }
+              </div>
+            </div>
+          }
+
+          @if (!mostrarFormulario() && !entrega() && !vencida()) {
+            <p class="text-[13px] text-[#6B5A67]">Esta actividad ya no admite entregas.</p>
+          }
+
+          @if (error()) {
+            <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-lg px-4 py-2.5">{{ error() }}</div>
+          }
+
+          @if (mostrarFormulario()) {
+            <div class="flex justify-end gap-3 pt-1">
+              @if (editando()) {
+                <button type="button" (click)="editando.set(false)" class="px-5 py-2.5 rounded-xl border border-[#E3D5C4] text-[14px] font-medium text-[#241521] hover:bg-[#F0E6D8]">Cancelar</button>
+              }
+              <button type="button" (click)="enviar()" [disabled]="enviando()"
+                      class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[14px] font-semibold shadow-md disabled:opacity-50 transition-colors">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l18-7-7 18-2-8-9-3Z"/></svg>
+                {{ enviando() ? 'Enviando...' : (esCuestionario() ? 'Enviar respuestas' : (entrega() ? 'Enviar Entrega ' + (intentosUsados() + 1) : 'Enviar entrega')) }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  } @else if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+</div>

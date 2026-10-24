@@ -1,0 +1,303 @@
+<div class="space-y-5">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Vínculo Padre-Hijo</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Relaciona a cada alumno con su padre, madre o apoderado. Es el único lugar donde se vinculan.</p>
+    </div>
+    <button type="button" (click)="abrirNuevo()"
+            class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+      Nuevo vínculo
+    </button>
+  </div>
+
+  @if (aviso()) {
+    <div class="flex items-start justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ aviso() }}</span>
+      <button type="button" (click)="aviso.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+  @if (error()) {
+    <div class="flex items-start justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="error.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+
+  <!-- Resumen -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="bg-white rounded-xl border border-[#E3D5C4] px-4 py-3.5">
+      <p class="text-[12px] text-[#6B5A67]">Vínculos registrados</p>
+      <p class="font-serif font-bold text-[22px] text-[#241521]">{{ vinculos().length }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-[#E3D5C4] px-4 py-3.5">
+      <p class="text-[12px] text-[#6B5A67]">Alumnos sin padre/apoderado</p>
+      <p class="font-serif font-bold text-[22px]" [ngClass]="alumnosSinApoderado() ? 'text-[#B07010]' : 'text-[#1E7A3B]'">{{ alumnosSinApoderado() }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-[#E3D5C4] px-4 py-3.5">
+      <p class="text-[12px] text-[#6B5A67]">Padres sin hijos vinculados</p>
+      <p class="font-serif font-bold text-[22px]" [ngClass]="padresSinHijos() ? 'text-[#B07010]' : 'text-[#1E7A3B]'">{{ padresSinHijos() }}</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[220px]">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar alumno, padre o documento..."
+             [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); pagina.set(1)"
+             class="w-full pl-9 pr-3 py-2 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-[#FAF6EF] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+    <div class="relative">
+      <select [ngModel]="filtroGrado()" (ngModelChange)="filtroGrado.set($event); pagina.set(1)"
+              class="appearance-none text-[13.5px] rounded-lg border border-[#E3D5C4] pl-3 pr-9 py-2 bg-[#FAF6EF] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+        <option value="">Todos los grados</option>
+        @for (g of grados; track g) { <option [value]="g">{{ g }}</option> }
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div class="relative">
+      <select [ngModel]="filtroParentesco()" (ngModelChange)="filtroParentesco.set($event); pagina.set(1)"
+              class="appearance-none text-[13.5px] rounded-lg border border-[#E3D5C4] pl-3 pr-9 py-2 bg-[#FAF6EF] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+        <option value="">Todos los parentescos</option>
+        @for (p of parentescos; track p) { <option [value]="p">{{ p }}</option> }
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-[13px]">
+        <thead>
+          <tr class="text-left text-[#6B5A67] bg-[#FAF6EF] border-b border-[#E3D5C4]">
+            <th class="px-5 py-3 font-medium">Alumno</th>
+            <th class="px-5 py-3 font-medium">Grado</th>
+            <th class="px-5 py-3 font-medium">Padre / Apoderado</th>
+            <th class="px-5 py-3 font-medium">Parentesco</th>
+            <th class="px-5 py-3 font-medium">Teléfono</th>
+            <th class="px-5 py-3 font-medium text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of paginaDatos(); track v.id) {
+            <tr class="border-b border-[#F0E6D8] last:border-0 hover:bg-[#FAF6EF]/60">
+              <td class="px-5 py-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="overflow-hidden w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white text-[11px] font-semibold"
+                       style="background:radial-gradient(circle at 35% 30%, #4A1F52, #2E1233 75%)"><app-foto [usuarioId]="v.estudianteUsuarioId">{{ iniciales(v.estudianteNombre) }}</app-foto></div>
+                  <div class="min-w-0">
+                    <p class="font-medium text-[#241521]">{{ v.estudianteNombre }}</p>
+                    <p class="text-[11.5px] text-[#6B5A67]">{{ etiquetaDoc(v.estudianteTipoDocumento) }} {{ v.estudianteDocumento }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-5 py-3 text-[#6B5A67] whitespace-nowrap">{{ v.grado ? v.grado + ' "' + v.seccion + '"' : 'Sin matrícula' }}</td>
+              <td class="px-5 py-3">
+                <p class="font-medium text-[#241521]">{{ v.padreNombre }}</p>
+                <p class="text-[11.5px] text-[#6B5A67]">{{ etiquetaDoc(v.padreTipoDocumento) }} {{ v.padreDocumento }}</p>
+              </td>
+              <td class="px-5 py-3">
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-medium" [ngClass]="claseParentesco(v.parentesco)">{{ v.parentesco }}</span>
+              </td>
+              <td class="px-5 py-3 text-[#6B5A67] whitespace-nowrap">{{ v.padreTelefono || '—' }}</td>
+              <td class="px-5 py-3">
+                <div class="flex items-center justify-end gap-1">
+                  <button type="button" (click)="abrirEditar(v)" title="Cambiar parentesco"
+                          class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#FDF1DC] hover:text-[#B08900] transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  </button>
+                  <button type="button" (click)="desvincular(v)" title="Quitar vínculo"
+                          class="p-1.5 rounded-md text-[#6B5A67] hover:bg-[#FBE7E9] hover:text-[#A62639] transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/><path d="m4 4 16 16"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="px-5 py-12 text-center text-[#6B5A67]">
+              {{ cargando() ? 'Cargando vínculos...' : (vinculos().length ? 'No hay vínculos con esos filtros.' : 'Aún no hay vínculos. Pulsa "Nuevo vínculo" para relacionar a un alumno con su padre o apoderado.') }}
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between px-5 py-3.5 border-t border-[#E3D5C4] text-[12.5px] text-[#6B5A67]">
+      <span>Mostrando {{ paginaDatos().length }} de {{ filtrados().length }} vínculos</span>
+      <div class="flex items-center gap-1">
+        <button type="button" (click)="irAPagina(pagina() - 1)" [disabled]="pagina() === 1"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="w-7 h-7 rounded-md bg-[#2E1233] text-white flex items-center justify-center font-medium">{{ pagina() }}</span>
+        <button type="button" (click)="irAPagina(pagina() + 1)" [disabled]="pagina() === totalPaginas()"
+                class="w-7 h-7 rounded-md border border-[#E3D5C4] flex items-center justify-center disabled:opacity-40">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Panel lateral: Nuevo vínculo / Cambiar parentesco ===================== -->
+@if (panelAbierto()) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-black/30" (click)="cerrarPanel()"></div>
+    <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#E3D5C4]">
+        <h3 class="font-serif font-bold text-[16px] text-[#241521]">{{ editando() ? 'Cambiar parentesco' : 'Nuevo vínculo' }}</h3>
+        <button type="button" (click)="cerrarPanel()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <!-- Alumno -->
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Alumno *</label>
+          @if (editando(); as ed) {
+            <div class="flex items-center gap-3 rounded-lg border border-[#E3D5C4] bg-[#F0E6D8]/50 px-3 py-2.5">
+              <div class="overflow-hidden w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-semibold" style="background:radial-gradient(circle at 35% 30%, #4A1F52, #2E1233 75%)"><app-foto [usuarioId]="ed.estudianteUsuarioId">{{ iniciales(ed.estudianteNombre) }}</app-foto></div>
+              <div class="min-w-0">
+                <p class="text-[13px] font-medium text-[#241521] truncate">{{ ed.estudianteNombre }}</p>
+                <p class="text-[11.5px] text-[#6B5A67]">{{ etiquetaDoc(ed.estudianteTipoDocumento) }} {{ ed.estudianteDocumento }}{{ ed.grado ? ' · ' + ed.grado + ' "' + ed.seccion + '"' : '' }}</p>
+              </div>
+            </div>
+          } @else {
+            <div class="relative">
+              <input type="text" role="combobox" autocomplete="off" placeholder="Busca por nombre o documento"
+                     [attr.aria-expanded]="abierto() === 'alumno'"
+                     [ngModel]="textoAlumno()" (ngModelChange)="escribir('alumno', $event)"
+                     (focus)="abrirLista('alumno')" (blur)="abierto() === 'alumno' && abierto.set(null)" (keydown)="tecla('alumno', $event)"
+                     class="w-full pl-3 pr-9 py-2.5 text-[13.5px] rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                     [ngClass]="abierto() === 'alumno' ? 'border-[#4A1F52]/50' : 'border-[#E3D5C4]'" />
+              <button type="button" tabindex="-1" title="Ver alumnos"
+                      (mousedown)="$event.preventDefault(); alternarLista('alumno', $any($event.currentTarget).previousElementSibling)"
+                      class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 transition-transform" [ngClass]="abierto() === 'alumno' ? 'rotate-180' : ''" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              @if (abierto() === 'alumno') {
+                <ul role="listbox" class="absolute left-0 right-0 top-full mt-1 z-20 max-h-64 overflow-y-auto bg-white rounded-lg border border-[#E3D5C4] shadow-xl py-1">
+                  @for (a of opcionesAlumno(); track a.id; let i = $index) {
+                    <li role="option" [attr.aria-selected]="alumnoSel()?.id === a.id"
+                        (mousedown)="$event.preventDefault(); elegirAlumno(a)" (mouseenter)="resaltado.set(i)"
+                        class="flex items-center justify-between gap-2 px-3.5 py-2 cursor-pointer"
+                        [ngClass]="i === resaltado() ? 'bg-[#EFEAF3]' : ''">
+                      <span class="min-w-0">
+                        <span class="block text-[13px] text-[#241521] truncate">{{ a.nombreCompleto }}</span>
+                        <span class="block text-[11px] text-[#6B5A67]">{{ etiquetaDoc(a.tipoDocumento) }} {{ a.dni }}{{ a.grado ? ' · ' + a.grado + ' "' + a.seccion + '"' : ' · Sin matrícula' }}</span>
+                      </span>
+                      @if (alumnoSel()?.id === a.id) {
+                        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] shrink-0" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5 9-10"/></svg>
+                      }
+                    </li>
+                  } @empty {
+                    <li class="px-3.5 py-2.5 text-[12.5px] text-[#6B5A67]">No se encontraron alumnos.</li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Padre / apoderado -->
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Padre / Apoderado *</label>
+          @if (editando(); as ed) {
+            <div class="rounded-lg border border-[#E3D5C4] bg-[#F0E6D8]/50 px-3 py-2.5">
+              <p class="text-[13px] font-medium text-[#241521]">{{ ed.padreNombre }}</p>
+              <p class="text-[11.5px] text-[#6B5A67]">{{ etiquetaDoc(ed.padreTipoDocumento) }} {{ ed.padreDocumento }} · {{ ed.padreTelefono || 'Sin teléfono' }}</p>
+            </div>
+            <p class="mt-1.5 text-[11.5px] text-[#6B5A67]">Para cambiar de padre o de alumno, quita este vínculo y crea uno nuevo.</p>
+          } @else {
+            <div class="relative">
+              <input type="text" role="combobox" autocomplete="off" placeholder="Busca por nombre o documento"
+                     [attr.aria-expanded]="abierto() === 'padre'"
+                     [ngModel]="textoPadre()" (ngModelChange)="escribir('padre', $event)"
+                     (focus)="abrirLista('padre')" (blur)="abierto() === 'padre' && abierto.set(null)" (keydown)="tecla('padre', $event)"
+                     class="w-full pl-3 pr-9 py-2.5 text-[13.5px] rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                     [ngClass]="abierto() === 'padre' ? 'border-[#4A1F52]/50' : 'border-[#E3D5C4]'" />
+              <button type="button" tabindex="-1" title="Ver padres"
+                      (mousedown)="$event.preventDefault(); alternarLista('padre', $any($event.currentTarget).previousElementSibling)"
+                      class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 transition-transform" [ngClass]="abierto() === 'padre' ? 'rotate-180' : ''" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              @if (abierto() === 'padre') {
+                <ul role="listbox" class="absolute left-0 right-0 top-full mt-1 z-20 max-h-64 overflow-y-auto bg-white rounded-lg border border-[#E3D5C4] shadow-xl py-1">
+                  @for (p of opcionesPadre(); track p.id; let i = $index) {
+                    <li role="option" [attr.aria-selected]="padreSel()?.id === p.id"
+                        (mousedown)="$event.preventDefault(); elegirPadre(p)" (mouseenter)="resaltado.set(i)"
+                        class="flex items-center justify-between gap-2 px-3.5 py-2 cursor-pointer"
+                        [ngClass]="i === resaltado() ? 'bg-[#EFEAF3]' : ''">
+                      <span class="min-w-0">
+                        <span class="block text-[13px] text-[#241521] truncate">{{ p.nombreCompleto }}</span>
+                        <span class="block text-[11px] text-[#6B5A67]">{{ etiquetaDoc(p.tipoDocumento) }} {{ p.dni }} · {{ p.estudiantes.length }} hijo(s) vinculado(s)</span>
+                      </span>
+                      @if (padreSel()?.id === p.id) {
+                        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] shrink-0" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5 9-10"/></svg>
+                      }
+                    </li>
+                  } @empty {
+                    <li class="px-3.5 py-2.5 text-[12.5px] text-[#6B5A67]">No se encontraron padres. Regístralo primero en Usuarios › Padres.</li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Parentesco -->
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Parentesco *</label>
+          <div class="grid grid-cols-3 gap-2">
+            @for (p of parentescos; track p) {
+              <button type="button" (click)="parentesco.set(p)"
+                      class="px-2 py-2 rounded-lg border text-[12.5px] font-medium transition-colors"
+                      [ngClass]="parentesco() === p ? 'border-[#4A1F52] bg-[#EFEAF3] text-[#4A1F52]' : 'border-[#E3D5C4] bg-white text-[#241521] hover:bg-[#FAF6EF]'">
+                {{ p }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Vínculos actuales del alumno elegido -->
+        @if (alumnoSel(); as a) {
+          <div class="rounded-lg border border-[#E3D5C4] bg-white p-3.5 space-y-2">
+            <p class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Ya vinculados con {{ a.nombreCompleto }}</p>
+            @for (v of vinculosDelAlumno(); track v.id) {
+              <div class="flex items-center justify-between gap-2 text-[12.5px]">
+                <span class="text-[#241521] truncate">{{ v.padreNombre }}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-medium shrink-0" [ngClass]="claseParentesco(v.parentesco)">{{ v.parentesco }}</span>
+              </div>
+            } @empty {
+              <p class="text-[12px] text-[#6B5A67]">Todavía no tiene padres ni apoderados vinculados.</p>
+            }
+          </div>
+        }
+
+        @if (advertencia()) {
+          <div class="bg-[#FDF1DC] border border-[#D98E16]/30 text-[#8A5A00] text-[12.5px] rounded-lg px-3 py-2.5">{{ advertencia() }}</div>
+        }
+        @if (errorPanel()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorPanel() }}</div>
+        }
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" (click)="guardar()" [disabled]="guardando() || !!advertencia()"
+                  class="flex-1 flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60">
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            {{ guardando() ? 'Guardando...' : (editando() ? 'Guardar parentesco' : 'Vincular') }}
+          </button>
+          <button type="button" (click)="cerrarPanel()"
+                  class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8] transition-colors">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

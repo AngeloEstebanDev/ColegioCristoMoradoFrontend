@@ -1,0 +1,298 @@
+<ng-template #flecha let-abierta>
+  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#4A1F52] transition-transform" [ngClass]="abierta ? 'rotate-90' : ''"
+       stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+</ng-template>
+
+@if (vistaParticipacion(); as b) {
+  <!-- ===================== Participación ===================== -->
+  <div class="space-y-4">
+    <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-4 flex-wrap">
+      <button type="button" (click)="volver()" title="Volver a Exámenes"
+              class="w-11 h-11 shrink-0 rounded-full bg-[#EFEAF3] hover:bg-[#E5DCEC] text-[#4A1F52] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </button>
+      <app-icono-item [e]="estiloParticipacion" tam="w-14 h-14" />
+      <div class="flex-1 min-w-0">
+        <h3 class="font-serif font-bold text-[24px] text-[#241521] leading-tight">Participación</h3>
+        <p class="text-[13.5px] text-[#6B5A67]">Promedio de actividades y cuestionarios del {{ romanos[b.periodo.bimestre] }} Bimestre</p>
+        <p class="flex flex-wrap items-center gap-x-2 mt-1 text-[12.5px] text-[#6B5A67]">
+          <span>Fecha de registro: {{ dmy(b.participacion?.fechaRegistro) || '—' }}</span>
+          <span class="text-[#D9CDBD]">|</span>
+          <span>{{ b.participacion?.actividades ?? 0 }} actividad{{ (b.participacion?.actividades ?? 0) === 1 ? '' : 'es' }}</span>
+          <span class="text-[#D9CDBD]">|</span><span>Evaluación automática</span>
+        </p>
+      </div>
+      <app-chip-visible [visible]="true" />
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 items-start">
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-4">
+        <h4 class="font-serif font-bold text-[18px] text-[#241521] mb-3 px-1">Estudiantes</h4>
+        <ul class="space-y-1 max-h-[640px] overflow-y-auto">
+          @for (al of b.participacion?.alumnos ?? []; track al.estudianteId) {
+            @let p = pastilla(al.promedio.valor);
+            <li>
+              <button type="button" (click)="alumnoParticipacion.set(al.estudianteId)"
+                      class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors"
+                      [ngClass]="alumnoParticipacion() === al.estudianteId ? 'border-[#4A1F52]/40 bg-[#F3EEF6]' : 'border-transparent hover:bg-[#FAF6EF]'">
+                <app-avatar-persona [nombre]="al.nombre" [foto]="al.foto" tam="w-11 h-11 text-[13px]" />
+                <span class="flex-1 min-w-0 text-[14.5px] font-semibold text-[#241521] truncate">{{ al.nombre }}</span>
+                <span class="px-3 py-1 rounded-full text-[14px] font-bold" [style.color]="p.color" [style.background]="p.fondo">{{ p.texto }}</span>
+              </button>
+            </li>
+          } @empty {
+            <li class="px-3 py-6 text-center text-[13px] text-[#6B5A67]">Sin alumnos.</li>
+          }
+        </ul>
+      </section>
+
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+        <h4 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Detalle de participación</h4>
+        @if (detalleAlumno(); as al) {
+          @let p = pastilla(al.promedio.valor);
+          <div class="flex items-center gap-4 rounded-2xl border border-[#F0E6D8] p-4">
+            <app-avatar-persona [nombre]="al.nombre" [foto]="al.foto" tam="w-16 h-16 text-[16px]" />
+            <p class="flex-1 text-[19px] font-semibold text-[#241521]">{{ al.nombre }}</p>
+            <div class="rounded-xl px-5 py-3 text-center" [style.background]="p.fondo === 'transparent' ? '#F0E6D8' : p.fondo">
+              <p class="text-[12px] text-[#6B5A67]">Promedio final:</p>
+              <p class="font-serif font-bold text-[28px] leading-none mt-1" [style.color]="p.color">{{ p.texto }}</p>
+            </div>
+          </div>
+          <div class="mt-3 rounded-xl border border-[#F0E6D8] overflow-x-auto">
+            <table class="w-full min-w-[460px] text-[13px]">
+              <thead class="bg-[#F3EEF6] text-[#241521]">
+                <tr>
+                  <th class="text-left font-semibold px-4 py-2.5 w-12">N.°</th>
+                  <th class="text-left font-semibold px-4 py-2.5">Actividad / Cuestionario</th>
+                  <th class="text-left font-semibold px-4 py-2.5">Tipo</th>
+                  <th class="text-center font-semibold px-4 py-2.5">Nota</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#F0E6D8]">
+                @for (d of al.detalle; track d.actividadId; let i = $index) {
+                  @let n = notaDetalle(d);
+                  <tr>
+                    <td class="px-4 py-2.5 text-[#6B5A67]">{{ i + 1 }}</td>
+                    <td class="px-4 py-2.5 text-[#241521]">{{ d.titulo }}</td>
+                    <td class="px-4 py-2.5">
+                      <span class="px-2.5 py-1 rounded-lg text-[11.5px] font-medium"
+                            [ngClass]="d.tipo === 'CUESTIONARIO' ? 'bg-[#F0EAFD] text-[#6D28D9]' : 'bg-[#E6EEFB] text-[#1D4ED8]'">{{ etiquetaTipo(d.tipo) }}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-center">
+                      <span class="px-3 py-1 rounded-full text-[12.5px] font-bold whitespace-nowrap" [style.color]="n.color" [style.background]="n.fondo">{{ n.texto }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="px-4 py-6 text-center text-[#6B5A67]">Aún no hay actividades en este bimestre.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 flex items-start gap-2 rounded-xl bg-[#F1F5FD] px-4 py-3 text-[12.5px] text-[#1E3A8A]">
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 mt-0.5" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            Las notas se calculan automáticamente a partir de las actividades y cuestionarios del bimestre. Si no envió una actividad que ya venció, cuenta como 0; las que están por calificar o en plazo aún no cuentan.
+          </p>
+        } @else {
+          <p class="text-center text-[13px] text-[#6B5A67] py-10">Elige un alumno.</p>
+        }
+      </section>
+    </div>
+  </div>
+} @else if (vistaExamen(); as ve) {
+  <!-- ===================== Registro de notas de un examen ===================== -->
+  <div class="space-y-4">
+    <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-4 flex-wrap">
+      <button type="button" (click)="volver()" title="Volver a Exámenes"
+              class="w-11 h-11 shrink-0 rounded-full bg-[#EFEAF3] hover:bg-[#E5DCEC] text-[#4A1F52] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </button>
+      <app-icono-item [e]="estiloExamen(0)" tam="w-14 h-14" />
+      <div class="flex-1 min-w-0">
+        <h3 class="font-serif font-bold text-[24px] text-[#241521] leading-tight">{{ ve.evaluacion.nombre }}</h3>
+        <p class="text-[13.5px] text-[#6B5A67]">Registro de notas del examen presencial · {{ nombre(ve.bloque.periodo) }}</p>
+        <p class="flex flex-wrap items-center gap-x-2 mt-1 text-[12.5px] text-[#6B5A67]">
+          <span>Fecha de aplicación: {{ dmy(ve.evaluacion.fecha) || '—' }}</span>
+          <span class="text-[#D9CDBD]">|</span><span>Evaluación</span>
+        </p>
+      </div>
+      <app-chip-visible [visible]="true" />
+    </section>
+
+    <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+      <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div>
+          <h4 class="font-serif font-bold text-[20px] text-[#241521]">Registro de notas</h4>
+          <p class="text-[13px] text-[#6B5A67]">Ingresa la nota de cada estudiante (sobre 20 puntos). Deja vacío si aún no tiene nota.</p>
+        </div>
+        <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFEAF3] text-[12.5px] text-[#4A1F52]">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4"/></svg>
+          {{ ve.bloque.registro?.alumnos?.length ?? 0 }} estudiantes
+        </span>
+      </div>
+      <div class="rounded-xl border border-[#F0E6D8] overflow-x-auto">
+        <table class="w-full min-w-[480px] text-[13.5px]">
+          <thead class="bg-[#F3EEF6] text-[#241521]">
+            <tr>
+              <th class="text-left font-semibold px-4 py-2.5 w-12">#</th>
+              <th class="text-left font-semibold px-4 py-2.5">Estudiante</th>
+              <th class="text-left font-semibold px-4 py-2.5 w-56">Nota (sobre 20)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#F0E6D8]">
+            @for (al of ve.bloque.registro?.alumnos ?? []; track al.estudianteId; let i = $index) {
+              <tr>
+                <td class="px-4 py-2 text-[#6B5A67]">{{ i + 1 }}</td>
+                <td class="px-4 py-2">
+                  <span class="flex items-center gap-3">
+                    <app-avatar-persona [nombre]="al.nombre" [foto]="al.foto" />
+                    <span class="font-medium text-[#241521]">{{ al.nombre }}</span>
+                  </span>
+                </td>
+                <td class="px-4 py-2">
+                  <span class="flex items-center gap-2">
+                    <input type="number" min="0" max="20" step="0.5" [ngModel]="valores()[al.estudianteId]" (ngModelChange)="cambiarValor(al.estudianteId, $event === null ? '' : '' + $event)"
+                           class="w-28 px-3 py-2 rounded-xl border border-[#E3D5C4] text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+                    <span class="text-[#6B5A67]">/ 20</span>
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="3" class="px-4 py-6 text-center text-[#6B5A67]">No hay alumnos matriculados.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (error()) { <div class="mt-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ error() }}</div> }
+      @if (exito()) { <div class="mt-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-2.5">{{ exito() }}</div> }
+      <div class="mt-4 flex justify-end rounded-xl bg-[#FAF6EF] px-4 py-3">
+        <button type="button" (click)="guardarNotas()" [disabled]="guardando()"
+                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[14px] font-semibold disabled:opacity-60">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM7 3v6h8V3M7 21v-7h10v7"/></svg>
+          {{ guardando() ? 'Guardando...' : 'Guardar notas' }}
+        </button>
+      </div>
+    </section>
+  </div>
+} @else {
+  <!-- ===================== Lista por bimestre ===================== -->
+  <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <h3 class="font-serif font-bold text-[20px] text-[#241521]">Exámenes</h3>
+      <button type="button" (click)="nuevo()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-semibold shadow-sm">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Crear examen
+      </button>
+    </div>
+    @if (error()) { <div class="mb-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ error() }}</div> }
+
+    @if (cargando()) {
+      <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando exámenes...</p>
+    } @else {
+      <div class="space-y-2">
+        @for (b of bloques(); track b.periodo.id) {
+          <div class="rounded-xl border border-[#F0E6D8]">
+            <button type="button" (click)="alternar(b.periodo.id)" class="w-full flex items-center gap-3 px-4 py-3 bg-[#FAF6EF] hover:bg-[#F5EEE3] text-left rounded-t-xl"
+                    [ngClass]="cerrados().has(b.periodo.id) ? 'rounded-b-xl' : ''">
+              <ng-container *ngTemplateOutlet="flecha; context: { $implicit: !cerrados().has(b.periodo.id) }" />
+              <svg viewBox="0 0 24 24" class="w-8 h-8 shrink-0" fill="#F5B83D"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2l2 2.2h6.8A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14.5px] font-bold text-[#241521]">{{ nombre(b.periodo) }}</span>
+                <span class="block text-[12px] text-[#6B5A67]">{{ dmy(b.periodo.fechaInicio) }} - {{ dmy(b.periodo.fechaFin) }}</span>
+              </span>
+              @if (b.periodo.activo) { <span class="px-2.5 py-1 rounded-full bg-[#E7F3EA] text-[11.5px] font-medium text-[#1E7A3B]">Actual</span> }
+            </button>
+            @if (!cerrados().has(b.periodo.id)) {
+              <div class="divide-y divide-[#F0E6D8]">
+                @if ((b.participacion?.actividades ?? 0) > 0) {
+                  <button type="button" (click)="abrirParticipacion(b)" class="w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-[#FBF7F1]">
+                    <app-icono-item [e]="estiloParticipacion" />
+                    <span class="flex-1 min-w-0">
+                      <span class="block text-[14.5px] font-semibold text-[#241521]">Participación</span>
+                      <span class="block text-[12.5px] text-[#6B5A67]">Es el promedio de todas las actividades y cuestionarios realizados en este periodo.</span>
+                      <span class="flex flex-wrap items-center gap-x-2 mt-0.5 text-[12px] text-[#6B5A67]">
+                        <span>Fecha de registro: {{ dmy(b.participacion?.fechaRegistro) || '—' }}</span>
+                        <span class="text-[#D9CDBD]">|</span><span>Evaluación</span>
+                      </span>
+                    </span>
+                    <app-chip-visible [visible]="true" />
+                    <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 shrink-0 text-[#4A1F52]" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+                  </button>
+                }
+                @for (ev of b.registro?.evaluaciones ?? []; track ev.id; let i = $index) {
+                  <div class="relative flex items-center gap-4 px-4 py-3.5 hover:bg-[#FBF7F1]">
+                    <button type="button" (click)="abrirExamen(b, ev)" class="flex flex-1 min-w-0 items-center gap-4 text-left">
+                      <app-icono-item [e]="estiloExamen(i)" />
+                      <span class="flex-1 min-w-0">
+                        <span class="block text-[14.5px] font-semibold text-[#241521] truncate">{{ ev.nombre }}</span>
+                        <span class="flex flex-wrap items-center gap-x-2 mt-0.5 text-[12px] text-[#6B5A67]">
+                          <span>Fecha de aplicación: {{ dmy(ev.fecha) || '—' }}</span>
+                          <span class="text-[#D9CDBD]">|</span><span>Evaluación</span>
+                          <span class="text-[#D9CDBD]">|</span><span>{{ ev.notasRegistradas }} nota{{ ev.notasRegistradas === 1 ? '' : 's' }}</span>
+                        </span>
+                      </span>
+                    </button>
+                    <app-chip-visible [visible]="true" />
+                    <div class="relative">
+                      <button type="button" (click)="alternarMenu(ev.id, $event)" class="p-1.5 rounded-lg text-[#4A1F52] hover:bg-[#EFEAF3]" title="Opciones">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+                      </button>
+                      @if (menu() === ev.id) {
+                        <div class="absolute right-0 top-full mt-1 z-30 w-36 bg-white rounded-xl border border-[#E3D5C4] shadow-lg py-1 text-[13px]" (click)="$event.stopPropagation()">
+                          <button type="button" (click)="editar(ev, b)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">
+                            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            Editar
+                          </button>
+                          <button type="button" (click)="eliminar(ev)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FBE7E9] text-[#A62639]">
+                            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+                            Eliminar
+                          </button>
+                        </div>
+                      }
+                    </div>
+                    <button type="button" (click)="abrirExamen(b, ev)" class="text-[#4A1F52]" title="Registrar notas">
+                      <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+                    </button>
+                  </div>
+                }
+                @if (!tieneAlgo(b)) {
+                  <p class="px-4 py-3 text-[12.5px] text-[#6B5A67]">Sin evaluaciones en este bimestre. La Participación aparece al publicar la primera tarea o cuestionario.</p>
+                }
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="text-center text-[13px] text-[#6B5A67] py-8">No hay bimestres registrados para este año.</p>
+        }
+      </div>
+    }
+  </section>
+}
+
+<!-- ===================== Modal: crear / editar examen ===================== -->
+@if (modal(); as m) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/50" (click)="modal.set(null)"></div>
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6">
+      <div class="flex items-start justify-between gap-3">
+        <h3 class="font-serif font-bold text-[24px] text-[#241521]">{{ m.id ? 'Editar examen' : 'Crear examen' }}</h3>
+        <button type="button" (click)="modal.set(null)" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <label class="block mt-4">
+        <span class="block text-[13.5px] font-semibold text-[#241521] mb-1.5">Nombre del examen</span>
+        <input type="text" [(ngModel)]="m.nombre" maxlength="120" placeholder="Ej. Examen Mensual, Examen Bimestral, Comportamiento..." (keydown.enter)="guardarModal()"
+               class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+      </label>
+      @if (!m.id && periodoActivo(); as p) { <p class="text-[12px] text-[#6B5A67] mt-1.5">Se registrará en el {{ p.nombre }}.</p> }
+      @if (errorModal()) { <div class="mt-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ errorModal() }}</div> }
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button" (click)="modal.set(null)" class="px-5 py-2.5 rounded-xl border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F5EEE3]">Cancelar</button>
+        <button type="button" (click)="guardarModal()" [disabled]="guardandoModal()"
+                class="px-5 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-semibold disabled:opacity-60">
+          {{ guardandoModal() ? 'Guardando...' : (m.id ? 'Guardar' : 'Crear examen') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

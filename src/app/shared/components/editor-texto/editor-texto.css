@@ -1,0 +1,6 @@
+.editor-area:empty::before {
+  content: attr(data-placeholder);
+  color: #B08900;
+  opacity: .75;
+  pointer-events: none;
+}

@@ -1,0 +1,83 @@
+<div class="max-w-lg space-y-5">
+
+  <div>
+    <h2 class="font-serif font-bold text-2xl text-[#241521]">Configuración</h2>
+    <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Gestiona la seguridad de tu cuenta.</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
+    <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cambiar contraseña</h3>
+
+    @if (cargando()) {
+      <p class="text-[13px] text-[#6B5A67]">Cargando...</p>
+    } @else if (!correoVerificado()) {
+      <!-- Sin Gmail verificado: no se puede cambiar -->
+      <div class="rounded-lg bg-[#FDF1DC] border border-[#B08900]/30 px-4 py-3.5 space-y-2">
+        <p class="text-[13.5px] font-medium text-[#241521]">Primero vincula tu Gmail</p>
+        <p class="text-[12.5px] text-[#6B5A67]">
+          Para cambiar tu contraseña te enviaremos un código a tu Gmail verificado.
+          {{ correo() ? 'Tu Gmail ' + correo() + ' aún no está verificado.' : 'Todavía no tienes uno vinculado.' }}
+        </p>
+        <a [routerLink]="rutaPerfil" class="inline-flex items-center gap-1.5 mt-1 px-3.5 py-2 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[12.5px] font-medium">
+          Ir a Mi perfil
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+      @if (error()) {
+        <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+      }
+    } @else {
+      @if (exito()) {
+        <div class="bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+          Tu contraseña se actualizó correctamente.
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="cambiarPassword()" class="space-y-4" autocomplete="off">
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Contraseña actual *</label>
+          <app-campo-password formControlName="passwordActual" autocomplete="current-password" claseInput="px-3 py-2.5 text-[13.5px] rounded-lg bg-[#FAF6EF]" />
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Nueva contraseña *</label>
+          <app-campo-password formControlName="passwordNueva" autocomplete="new-password" placeholder="Mínimo 4 caracteres" claseInput="px-3 py-2.5 text-[13.5px] rounded-lg bg-[#FAF6EF]" />
+<app-error-campo [control]="form.get('passwordNueva')" />
+        </div>
+        <div>
+          <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Confirmar nueva contraseña *</label>
+          <app-campo-password formControlName="confirmarPassword" autocomplete="new-password" claseInput="px-3 py-2.5 text-[13.5px] rounded-lg bg-[#FAF6EF]" />
+        </div>
+
+        <!-- Verificación por Gmail -->
+        <div class="rounded-lg border border-[#E3D5C4] bg-[#FAF6EF] p-4 space-y-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[12.5px] font-medium text-[#241521]">Código de verificación *</p>
+              <p class="text-[11.5px] text-[#6B5A67]">Se envía a tu Gmail {{ correo() }}</p>
+            </div>
+            <button type="button" (click)="enviarCodigo()" [disabled]="enviandoCodigo() || segundosReenvio() > 0"
+                    class="shrink-0 px-3 py-2 rounded-lg border border-[#4A1F52]/30 text-[12.5px] font-medium text-[#4A1F52] bg-white hover:bg-[#EFEAF3] disabled:opacity-60">
+              @if (enviandoCodigo()) { Enviando... }
+              @else if (segundosReenvio() > 0) { Reenviar en {{ segundosReenvio() }} s }
+              @else { {{ codigoEnviadoA() ? 'Reenviar código' : 'Enviar código' }} }
+            </button>
+          </div>
+          @if (codigoEnviadoA()) {
+            <p class="text-[12px] text-[#4A1F52]">Código enviado a <strong>{{ codigoEnviadoA() }}</strong>. Vence en 10 minutos.</p>
+            <input type="text" formControlName="codigo" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"
+                   class="w-full sm:w-48 px-3 py-2.5 text-center text-[18px] font-semibold tracking-[0.45em] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" appFiltro="digitos" [maximo]="6" />
+          }
+        </div>
+
+        @if (error()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+        }
+
+        <button type="submit" [disabled]="guardando()"
+                class="w-full flex items-center justify-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-60">
+          {{ guardando() ? 'Guardando...' : 'Actualizar contraseña' }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

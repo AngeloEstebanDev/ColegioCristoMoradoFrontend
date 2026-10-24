@@ -1,0 +1,210 @@
+@let a = datos()?.actividad ?? actividad;
+<div class="space-y-4">
+  <!-- Cabecera de la actividad -->
+  <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-4 flex-wrap">
+    <button type="button" (click)="volver.emit()" title="Volver a las actividades"
+            class="w-11 h-11 shrink-0 rounded-full bg-[#EFEAF3] hover:bg-[#E5DCEC] text-[#4A1F52] flex items-center justify-center">
+      <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    </button>
+    <app-icono-item [e]="estilo()" tam="w-14 h-14" />
+    <div class="flex-1 min-w-0">
+      <h3 class="font-serif font-bold text-[22px] text-[#241521] leading-tight">{{ a.titulo }}</h3>
+      <p class="text-[13px] text-[#6B5A67]">{{ estilo().etiqueta }} · {{ a.intentosPermitidos }} intento{{ a.intentosPermitidos === 1 ? '' : 's' }} permitido{{ a.intentosPermitidos === 1 ? '' : 's' }}</p>
+      <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[12.5px] text-[#6B5A67]">
+        <span>Fecha de entrega: <b class="font-medium" [ngClass]="a.vencida ? 'text-[#A62639]' : 'text-[#241521]'">{{ dmyHora(a.fechaLimite) }}</b></span>
+        <span class="text-[#D9CDBD]">|</span>
+        <span>{{ num(a.puntajeMaximo) }} pts</span>
+        <span class="text-[#D9CDBD]">|</span>
+        <span>{{ a.tipo === 'CUESTIONARIO' ? a.preguntas.length + ' pregunta' + (a.preguntas.length === 1 ? '' : 's') + ' · se califica solo' : 'Archivo/Tarea' }}</span>
+        @if (a.vencida) { <span class="text-[#D9CDBD]">|</span><span [ngClass]="a.permiteTardia ? 'text-[#B45309]' : 'text-[#A62639]'">{{ a.permiteTardia ? 'Plazo vencido · acepta tardías' : 'Plazo cerrado' }}</span> }
+      </p>
+      <!-- Opción: aceptar entregas tardías -->
+      <button type="button" (click)="alternarTardia()" [disabled]="cambiandoTardia()"
+              class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition disabled:opacity-60"
+              [ngClass]="a.permiteTardia ? 'bg-[#FEF3E2] border-[#F5C77E] text-[#B45309]' : 'bg-white border-[#E3D5C4] text-[#6B5A67] hover:border-[#4A1F52]'"
+              title="Si está activada, los alumnos pueden enviar después de la fecha límite y su envío queda marcado como tardío">
+        <span class="relative w-8 h-[18px] rounded-full transition" [ngClass]="a.permiteTardia ? 'bg-[#D97706]' : 'bg-[#D9CDBD]'">
+          <span class="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow transition-all" [ngClass]="a.permiteTardia ? 'left-[16px]' : 'left-[2px]'"></span>
+        </span>
+        Entrega tardía: {{ a.permiteTardia ? 'permitida' : 'no permitida' }}
+      </button>
+      @if (a.tipo !== 'CUESTIONARIO' && a.formatosPermitidos?.length) {
+        <p class="mt-1.5 text-[12px] text-[#6B5A67]">Formatos aceptados: <b class="font-medium text-[#241521]">{{ a.formatosPermitidos.join(', ') }}</b> · máx. 10 MB</p>
+      }
+    </div>
+    <app-chip-visible [visible]="a.visible !== false" />
+    <div class="relative">
+      <button type="button" (click)="menu.set(!menu())" class="p-1.5 rounded-lg text-[#4A1F52] hover:bg-[#EFEAF3]" title="Opciones">
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+      </button>
+      @if (menu()) {
+        <div class="absolute right-0 top-full mt-1 z-30 w-40 bg-white rounded-xl border border-[#E3D5C4] shadow-lg py-1 text-[13px]">
+          <button type="button" (click)="menu.set(false); alternarVisible.emit()" class="w-full text-left px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">{{ a.visible !== false ? 'Ocultar' : 'Mostrar' }}</button>
+          <button type="button" (click)="menu.set(false); editar.emit()" class="w-full text-left px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">Editar</button>
+          <button type="button" (click)="menu.set(false); eliminar.emit()" class="w-full text-left px-3.5 py-2 hover:bg-[#FBE7E9] text-[#A62639]">Eliminar</button>
+        </div>
+      }
+    </div>
+    @if (a.instrucciones) {
+      <p class="basis-full text-[13.5px] text-[#3A2A37] whitespace-pre-line border-t border-[#F0E6D8] pt-3">{{ a.instrucciones }}</p>
+    }
+  </section>
+
+  @if (cargando() && !datos()) {
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando entregas...</div>
+  } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 items-start">
+      <!-- Entregas -->
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-4">
+        <div class="flex items-center justify-between gap-2 mb-3 px-1">
+          <h4 class="font-serif font-bold text-[18px] text-[#241521]">Entregas de estudiantes</h4>
+          <span class="px-3 py-1 rounded-lg bg-[#EFEAF3] text-[12px] text-[#4A1F52]">{{ enviados() }} de {{ datos()?.alumnos?.length ?? 0 }} enviados</span>
+        </div>
+        <ul class="space-y-1 max-h-[640px] overflow-y-auto">
+          @for (f of datos()?.alumnos ?? []; track f.estudianteId) {
+            @let p = pastilla(f);
+            <li>
+              <button type="button" (click)="elegir(f.estudianteId)"
+                      class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors"
+                      [ngClass]="seleccion() === f.estudianteId ? 'border-[#4A1F52]/40 bg-[#F3EEF6]' : 'border-transparent hover:bg-[#FAF6EF]'">
+                <app-avatar-persona [nombre]="f.estudianteNombre" [foto]="f.foto" tam="w-11 h-11 text-[13px]" />
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[14px] font-semibold text-[#241521] truncate">{{ f.estudianteNombre }}</span>
+                  @if (f.entrega) {
+                    <span class="mt-0.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E7F3EA] text-[11.5px] font-medium text-[#1E7A3B]">
+                      <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4-7 7Z"/></svg>Enviado
+                    </span>
+                    @if (f.entrega.tardia) { <span class="mt-0.5 ml-1 inline-flex px-2 py-0.5 rounded-full bg-[#FEF3E2] text-[11px] font-medium text-[#B45309]">Tarde</span> }
+                    @if ((f.entrega.envios?.length ?? 0) > 1) { <span class="mt-0.5 ml-1 inline-flex px-2 py-0.5 rounded-full bg-[#EFEAF3] text-[11px] font-medium text-[#4A1F52]">{{ f.entrega.envios.length }} entregas</span> }
+                  } @else {
+                    <span class="mt-0.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FBE7E9] text-[11.5px] font-medium text-[#A62639]">
+                      <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 12.1-1.4 1.4L12 13.4l-2.1 2.1-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1Z"/></svg>No enviado
+                    </span>
+                  }
+                </span>
+                <span class="px-3 py-1 rounded-full text-[13px] font-bold whitespace-nowrap" [style.color]="p.color" [style.background]="p.fondo">{{ p.texto }}</span>
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#4A1F52]" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
+            </li>
+          } @empty {
+            <li class="px-3 py-6 text-center text-[13px] text-[#6B5A67]">No hay alumnos matriculados en esta sección.</li>
+          }
+        </ul>
+      </section>
+
+      <!-- Detalle -->
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5 space-y-5">
+        @if (fila(); as f) {
+          @let e = f.entrega;
+          <div>
+            <h4 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Calificar entrega</h4>
+            <div class="flex items-center gap-4 flex-wrap">
+              <app-avatar-persona [nombre]="f.estudianteNombre" [foto]="f.foto" tam="w-14 h-14 text-[15px]" />
+              <div class="flex-1 min-w-0">
+                <p class="text-[17px] font-semibold text-[#241521] truncate">{{ f.estudianteNombre }}</p>
+                <p class="text-[12.5px] text-[#6B5A67]">{{ salon() }}</p>
+                @if (e) {
+                  <p class="text-[12px] text-[#6B5A67]">Enviado el {{ dmyHora(e.fechaEntrega) }} · intento {{ e.intentos }} de {{ a.intentosPermitidos }}
+                    @if (e.tardia) { · <b class="text-[#B45309] font-semibold">enviado tarde</b> }</p>
+                }
+              </div>
+              <label class="flex items-center gap-2 text-[13px] text-[#6B5A67]">
+                Nota (sobre 20)
+                <input type="number" min="0" max="20" step="0.5" [(ngModel)]="nota" [disabled]="!e"
+                       class="w-20 px-3 py-2 text-[16px] font-semibold text-[#241521] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30 disabled:bg-[#F5F0E8]" />
+                <span class="text-[16px] text-[#6B5A67]">/ 20</span>
+              </label>
+            </div>
+            @if (e) {
+              <label class="block mt-3">
+                <span class="block text-[12.5px] text-[#6B5A67] mb-1">Comentario (opcional)</span>
+                <textarea [(ngModel)]="comentario" rows="3" maxlength="500" placeholder="Escribe un comentario para el alumno..."
+                          class="w-full px-3.5 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30 resize-y"></textarea>
+                <span class="block text-right text-[11px] text-[#6B5A67]">{{ comentario.length }}/500</span>
+              </label>
+              @if (error()) { <div class="mt-2 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ error() }}</div> }
+              @if (exito()) { <div class="mt-2 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-2.5">{{ exito() }}</div> }
+              <div class="flex justify-end mt-2">
+                <button type="button" (click)="guardarNota()" [disabled]="guardando()"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-semibold disabled:opacity-60">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM7 3v6h8V3M7 21v-7h10v7"/></svg>
+                  {{ guardando() ? 'Guardando...' : (e.estado === 'CALIFICADA' ? 'Actualizar nota' : 'Guardar nota') }}
+                </button>
+              </div>
+            } @else {
+              <p class="mt-3 rounded-xl bg-[#FAF6EF] px-4 py-3 text-[13px] text-[#6B5A67]">
+                {{ a.vencida ? 'No envió la actividad: en Participación cuenta como 0.' : 'Aún no envía la actividad. Tiene plazo hasta el ' + dmyHora(a.fechaLimite) + '.' }}
+              </p>
+            }
+          </div>
+
+          @if (e && vista(); as v) {
+            <!-- Historial: Entrega 1, Entrega 2... -->
+            @if ((e.envios?.length ?? 0) > 0) {
+              <div>
+                <h4 class="font-serif font-bold text-[17px] text-[#241521] mb-2">Entregas enviadas</h4>
+                <div class="flex flex-wrap gap-1.5 border-b border-[#E3D5C4]">
+                  @for (x of e.envios; track x.numero) {
+                    <button type="button" (click)="envioSel.set(x.numero)"
+                            class="px-4 py-2 -mb-px rounded-t-xl border text-[13px] font-semibold transition"
+                            [ngClass]="v.numero === x.numero ? 'bg-white border-[#E3D5C4] border-b-white text-[#4A1F52]' : 'bg-[#FAF6EF] border-transparent text-[#6B5A67] hover:text-[#4A1F52]'">
+                      Entrega {{ x.numero }}
+                      @if (x.tardia) { <span class="ml-1 text-[10.5px] font-medium text-[#B45309]">(tarde)</span> }
+                    </button>
+                  }
+                </div>
+                <p class="mt-2 text-[12px] text-[#6B5A67]">
+                  Entrega {{ v.numero }} · enviada el {{ dmyHora(v.fecha) }}
+                  @if (v.tardia) { · <b class="text-[#B45309]">después de la fecha límite</b> }
+                  @if (v.numero === e.envios[e.envios.length - 1].numero && e.envios.length > 1) { · <b class="text-[#1E7A3B]">es la vigente</b> }
+                </p>
+              </div>
+            }
+            @if (a.tipo === 'CUESTIONARIO') {
+              <div>
+                <h4 class="font-serif font-bold text-[17px] text-[#241521] mb-2">Respuestas del estudiante</h4>
+                <p class="text-[12.5px] text-[#6B5A67] mb-3">Puntaje de este intento: <b class="text-[#241521]">{{ num(v.puntaje ?? e.puntaje) }} de {{ num(a.puntajeMaximo) }}</b> · nota vigente: <b class="text-[#241521]">{{ num(e.puntaje) }}</b> (se guarda el mejor intento)</p>
+                <div class="space-y-3">
+                  @for (p of a.preguntas; track $index; let pi = $index) {
+                    <div class="rounded-xl border border-[#F0E6D8] p-3">
+                      <p class="text-[13.5px] font-semibold text-[#241521]">{{ pi + 1 }}. {{ p.enunciado }}
+                        <span class="ml-1 text-[11px] font-normal text-[#6B5A67]">({{ p.tipo === 'MULTIPLE' ? 'selección múltiple' : 'opción única' }} · {{ num(p.puntos) }} pt)</span>
+                      </p>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-2">
+                        @for (o of p.opciones; track $index; let k = $index) {
+                          <span class="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[12.5px]" [ngClass]="claseOpcion(pi, k)">
+                            <b>{{ letras[k] }}.</b> {{ o }} @if (marcada(pi, k)) { <span class="ml-auto text-[11px]">← marcó</span> }
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div>
+                <h4 class="font-serif font-bold text-[17px] text-[#241521] mb-2">Respuesta del estudiante</h4>
+                @if (v.texto) {
+                  <p class="rounded-xl border border-[#F0E6D8] bg-[#FBF7F1] px-4 py-3 text-[13.5px] text-[#3A2A37] whitespace-pre-line">{{ v.texto }}</p>
+                } @else {
+                  <p class="text-[13px] text-[#6B5A67]">El alumno no escribió una respuesta.</p>
+                }
+                @if (v.enlace) {
+                  <a [href]="v.enlace" target="_blank" rel="noopener" class="mt-2 block text-[13px] text-[#4A1F52] underline break-all">{{ v.enlace }}</a>
+                }
+              </div>
+              @if (v.archivo) {
+                <div>
+                  <h4 class="font-serif font-bold text-[17px] text-[#241521] mb-2">Archivo adjunto</h4>
+                  <app-vista-previa [archivo]="v.archivo" />
+                </div>
+              }
+            }
+          }
+        } @else {
+          <p class="text-center text-[13px] text-[#6B5A67] py-10">Elige un alumno para ver su entrega.</p>
+        }
+      </section>
+    </div>
+  }
+</div>

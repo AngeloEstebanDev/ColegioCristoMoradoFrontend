@@ -1,0 +1,44 @@
+<div class="mx-auto space-y-4" [ngClass]="pestana() === 'mensajes' ? 'max-w-6xl' : 'max-w-3xl'">
+
+  <!-- Encabezado -->
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center">
+      @if (pestana() === 'comunicados') {
+        <svg viewBox="0 0 24 24" fill="none" class="w-5.5 h-5.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10v4h3l6 4V6L6 10H3ZM16 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" class="w-5.5 h-5.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-4 3V6a1 1 0 0 1-1-1ZM16 9h4a1 1 0 0 1 1 1v9l-3-2h-6a1 1 0 0 1-1-1v-2"/></svg>
+      }
+    </div>
+    <div>
+      <h2 class="font-serif font-bold text-[21px] text-[#241521] leading-tight">{{ pestana() === 'comunicados' ? 'Comunicados' : 'Mensajes' }}</h2>
+      <p class="text-[12.5px] text-[#6B5A67]">{{ pestana() === 'comunicados' ? 'Avisos oficiales del colegio' : (esAlumno ? 'Un chat por persona: tus compañeros de salón y tus profesores' : 'Un chat por persona: tu salón, docentes y la administración') }}</p>
+    </div>
+  </div>
+
+  <!-- Pestañas -->
+  <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#EDE6DB]">
+    <button type="button" (click)="pestana.set('comunicados')"
+            class="flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
+            [ngClass]="pestana() === 'comunicados' ? 'bg-white text-[#241521] shadow-sm' : 'text-[#6B5A67] hover:text-[#241521]'">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-[#4A1F52]"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>
+      Comunicados
+      @if (notificaciones.datos().comunicadosNoLeidos > 0) {
+        <span class="min-w-4 h-4 px-1 rounded-full bg-[#A62639] text-white text-[10px] flex items-center justify-center">{{ notificaciones.datos().comunicadosNoLeidos }}</span>
+      }
+    </button>
+    <button type="button" (click)="pestana.set('mensajes')"
+            class="flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
+            [ngClass]="pestana() === 'mensajes' ? 'bg-white text-[#241521] shadow-sm' : 'text-[#6B5A67] hover:text-[#241521]'">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-[#4A1F52]"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8l-5 4V5a1 1 0 0 1 1-1Z"/></svg>
+      Mensajes
+      @if (notificaciones.datos().mensajesNoLeidos > 0) {
+        <span class="min-w-4 h-4 px-1 rounded-full bg-[#A62639] text-white text-[10px] flex items-center justify-center">{{ notificaciones.datos().mensajesNoLeidos }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Ambas pestañas quedan cargadas para que el anuncio grande
+       aparezca aunque se entre directo a Mensajes. -->
+  <div [class.hidden]="pestana() !== 'comunicados'"><app-lista-comunicados /></div>
+  <div [class.hidden]="pestana() !== 'mensajes'"><app-bandeja-mensajes /></div>
+</div>

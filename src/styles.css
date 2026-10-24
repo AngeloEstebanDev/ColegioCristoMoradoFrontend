@@ -1,0 +1,33 @@
+@import "tailwindcss";
+/* Texto con formato de comunicados y mensajes (editor + vista).
+   Tailwind quita los estilos de listas; aquí se devuelven. */
+.contenido-rico ul { list-style: disc; padding-left: 1.4rem; margin: .35rem 0; }
+.contenido-rico ol { list-style: decimal; padding-left: 1.4rem; margin: .35rem 0; }
+.contenido-rico p, .contenido-rico div { margin: 0; }
+.contenido-rico b, .contenido-rico strong { font-weight: 600; }
+.contenido-rico a { color: #4A1F52; text-decoration: underline; }
+
+/* Entrada del anuncio grande de Comunicados */
+@keyframes anuncio-entrada {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+.anuncio-entrada { animation: anuncio-entrada .25s ease-out; }
+
+/* Combobox (select) con el diseño del sistema: sin flecha nativa y con la
+   flecha morada-gris de los demás campos. Los que ya dibujan su propia
+   flecha llevan la clase "appearance-none" y no se tocan. */
+select:not([multiple]):not(.appearance-none) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B5A67' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem;
+  cursor: pointer;
+}
+select:not([multiple]):not(.appearance-none):focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(74 31 82 / 0.3);
+}

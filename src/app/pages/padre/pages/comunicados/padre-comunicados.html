@@ -1,0 +1,384 @@
+<div class="mx-auto max-w-4xl space-y-4">
+
+  <!-- Encabezado -->
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center">
+      @if (pestana() === 'comunicados') {
+        <svg viewBox="0 0 24 24" fill="none" class="w-5.5 h-5.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10v4h3l6 4V6L6 10H3ZM16 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" class="w-5.5 h-5.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-4 3V6a1 1 0 0 1-1-1ZM16 9h4a1 1 0 0 1 1 1v9l-3-2h-6a1 1 0 0 1-1-1v-2"/></svg>
+      }
+    </div>
+    <div>
+      <h2 class="font-serif font-bold text-[21px] text-[#241521] leading-tight">{{ pestana() === 'comunicados' ? 'Comunicados' : 'Mensajes' }}</h2>
+      <p class="text-[12.5px] text-[#6B5A67]">{{ pestana() === 'comunicados' ? 'Avisos oficiales del colegio' : 'Escribe a los profesores de tus hijos y a la administración' }}</p>
+    </div>
+  </div>
+
+  <!-- Pestañas -->
+  <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#EDE6DB]" role="tablist">
+    <button type="button" role="tab" (click)="cambiarPestana('comunicados')" [attr.aria-selected]="pestana() === 'comunicados'"
+            class="flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
+            [ngClass]="pestana() === 'comunicados' ? 'bg-white text-[#4A1F52] shadow-sm' : 'text-[#6B5A67] hover:text-[#241521]'">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-[#4A1F52]"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>
+      Comunicados
+      @if (notificaciones.datos().comunicadosNoLeidos > 0) {
+        <span class="min-w-4 h-4 px-1 rounded-full bg-[#A62639] text-white text-[10px] flex items-center justify-center">{{ notificaciones.datos().comunicadosNoLeidos }}</span>
+      }
+    </button>
+    <button type="button" role="tab" (click)="cambiarPestana('mensajes')" [attr.aria-selected]="pestana() === 'mensajes'"
+            class="flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
+            [ngClass]="pestana() === 'mensajes' ? 'bg-white text-[#4A1F52] shadow-sm' : 'text-[#6B5A67] hover:text-[#241521]'">
+      <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#4A1F52]" stroke="currentColor" stroke-width="2.2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+      Mensajes
+      @if (notificaciones.datos().mensajesNoLeidos > 0) {
+        <span class="min-w-4 h-4 px-1 rounded-full bg-[#A62639] text-white text-[10px] flex items-center justify-center">{{ notificaciones.datos().mensajesNoLeidos }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- ======================= COMUNICADOS ======================= -->
+  @if (pestana() === 'comunicados') {
+    <div class="relative">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar comunicados..." aria-label="Buscar comunicados"
+             [ngModel]="buscarComunicado()" (ngModelChange)="buscarComunicado.set($event)"
+             class="w-full pl-10 pr-3 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label class="relative flex items-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <select [ngModel]="anioComunicado()" (ngModelChange)="anioComunicado.set(+$event)" aria-label="Año"
+                class="pl-9 pr-8 py-2 rounded-xl border border-[#D9CDE0] bg-white text-[13.5px] font-semibold text-[#241521] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+          @for (a of aniosComunicados(); track a) { <option [ngValue]="a">{{ a }}</option> }
+          <option [ngValue]="0">Todos los años</option>
+        </select>
+      </label>
+      @for (f of [{ id: 'TODOS', t: 'Todos' }, { id: 'LEIDOS', t: 'Leídos' }, { id: 'NO_LEIDOS', t: 'No leídos' }]; track f.id) {
+        <button type="button" (click)="filtroComunicado.set($any(f.id))"
+                class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border transition-colors"
+                [ngClass]="filtroComunicado() === f.id ? 'bg-[#EFEAF3] border-[#D9CDE0] text-[#4A1F52]' : 'bg-white border-[#E3D5C4] text-[#241521] hover:bg-[#FAF6EF]'">
+          @switch (f.id) {
+            @case ('TODOS') { <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg> }
+            @case ('LEIDOS') { <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg> }
+            @default { <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> }
+          }
+          {{ f.t }}
+        </button>
+      }
+    </div>
+
+    @if (errorComunicados()) {
+      <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ errorComunicados() }}</div>
+    }
+
+    @if (cargandoComunicados()) {
+      <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando comunicados...</div>
+    } @else {
+      <div class="space-y-3">
+        @for (c of comunicadosFiltrados(); track c.id) {
+          <article class="relative rounded-2xl border p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+                   [ngClass]="c.leido ? 'bg-white border-[#E3D5C4]' : 'bg-[#F4ECF8] border-[#D9C6E3]'"
+                   (click)="verComunicado(c)" (keydown.enter)="verComunicado(c)" tabindex="0" [attr.aria-label]="'Comunicado: ' + c.titulo">
+            <div class="flex items-start gap-4">
+              <span class="overflow-hidden w-14 h-14 rounded-full bg-[#6B2C63] text-white font-semibold text-[18px] flex items-center justify-center shrink-0"><app-foto [usuarioId]="c.autorId">{{ iniciales(c.autorNombre || 'Colegio') }}</app-foto></span>
+              <div class="min-w-0 flex-1 pr-12">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-serif font-bold text-[18px] text-[#241521] leading-tight">{{ c.titulo }}</h3>
+                  @if (!c.leido) { <span class="px-2 py-0.5 rounded-full bg-[#4A1F52] text-white text-[10.5px] font-semibold">Nuevo</span> }
+                  @if (c.anuncio) { <span class="px-2 py-0.5 rounded-full bg-[#FDF1DC] text-[#9A6B00] text-[10.5px] font-semibold">Anuncio</span> }
+                </div>
+                <p class="text-[13px] text-[#6B5A67] mt-0.5">Enviado por: {{ autor(c) }} • {{ haceCuanto(c.fechaCreacion) }}</p>
+                <p class="text-[14px] text-[#3B2A37] mt-2.5 line-clamp-3">{{ vistaPrevia(c) }}</p>
+              </div>
+            </div>
+            <span class="absolute right-4 bottom-4 w-11 h-11 rounded-full flex items-center justify-center text-[#4A1F52]"
+                  [ngClass]="c.leido ? 'bg-[#F3EEF6]' : 'bg-[#E5D6EE]'" title="Ver comunicado">
+              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </article>
+        } @empty {
+          <div class="bg-white rounded-2xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">
+            {{ comunicados().length ? 'No hay comunicados con esos filtros.' : 'Aún no hay comunicados para ti.' }}
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ======================= MENSAJES ======================= -->
+  @if (pestana() === 'mensajes') {
+    <button type="button" (click)="nuevoMensaje()"
+            class="w-full flex items-center gap-3 rounded-2xl border border-[#E3D5C4] bg-white px-4 py-3 text-left shadow-sm hover:shadow-md transition-shadow">
+      <span class="w-9 h-9 rounded-full bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4.5 h-4.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </span>
+      <span class="flex-1 text-[14.5px] text-[#241521]">Redactar un nuevo mensaje …</span>
+      <span class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#EFEAF3] text-[#4A1F52] text-[14px] font-semibold">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Crear
+      </span>
+    </button>
+
+    <div class="relative">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input type="text" placeholder="Buscar mensajes..." aria-label="Buscar mensajes"
+             [ngModel]="buscarMensaje()" (ngModelChange)="buscarMensaje.set($event)"
+             class="w-full pl-10 pr-3 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label class="relative flex items-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <select [ngModel]="anioMensaje()" (ngModelChange)="anioMensaje.set(+$event)" aria-label="Año"
+                class="pl-9 pr-8 py-2 rounded-xl border border-[#D9CDE0] bg-white text-[13.5px] font-semibold text-[#241521] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+          @for (a of aniosMensajes(); track a) { <option [ngValue]="a">{{ a }}</option> }
+          <option [ngValue]="0">Todos los años</option>
+        </select>
+      </label>
+      @for (b of [{ id: 'RECIBIDOS', t: 'Recibidos' }, { id: 'ENVIADOS', t: 'Enviados' }, { id: 'BORRADORES', t: 'Borradores' }]; track b.id) {
+        <button type="button" (click)="bandeja.set($any(b.id))"
+                class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium border transition-colors"
+                [ngClass]="bandeja() === b.id ? 'bg-[#EFEAF3] border-[#D9CDE0] text-[#4A1F52]' : 'bg-white border-[#E3D5C4] text-[#241521] hover:bg-[#FAF6EF]'">
+          @switch (b.id) {
+            @case ('RECIBIDOS') { <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg> }
+            @case ('ENVIADOS') { <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg> }
+            @default { <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> }
+          }
+          {{ b.t }}
+          @if (b.id === 'RECIBIDOS' && noLeidosRecibidos()) {
+            <span class="min-w-4 h-4 px-1 rounded-full bg-[#A62639] text-white text-[10px] flex items-center justify-center">{{ noLeidosRecibidos() }}</span>
+          }
+          @if (b.id === 'BORRADORES' && borradores().length) {
+            <span class="min-w-4 h-4 px-1 rounded-full bg-[#6B5A67] text-white text-[10px] flex items-center justify-center">{{ borradores().length }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    @if (errorMensajes()) {
+      <div class="flex items-center justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+        <span>{{ errorMensajes() }}</span>
+        <button type="button" (click)="cargarMensajes()" class="font-semibold underline">Reintentar</button>
+      </div>
+    }
+
+    @if (cargandoMensajes()) {
+      <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando mensajes...</div>
+    } @else {
+      <div class="space-y-3">
+        @for (f of filas(); track f.clave) {
+          <article class="flex items-start gap-4 rounded-2xl border p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                   [ngClass]="f.noLeido ? 'bg-[#F4ECF8] border-[#D9C6E3]' : 'bg-white border-[#E3D5C4]'"
+                   (click)="abrirFila(f)" (keydown.enter)="abrirFila(f)" tabindex="0" [attr.aria-label]="'Mensaje: ' + f.asunto">
+            <span class="overflow-hidden w-12 h-12 sm:w-14 sm:h-14 rounded-full font-semibold text-[16px] sm:text-[18px] flex items-center justify-center shrink-0"
+                  [ngClass]="f.bandeja === 'BORRADORES' ? 'bg-[#E3D5C4] text-[#4A1F52]' : 'bg-[#6B2C63] text-white'"><app-foto [usuarioId]="f.usuarioId">{{ iniciales(f.nombre) }}</app-foto></span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-3">
+                <p class="text-[16.5px] text-[#241521] truncate" [class.font-bold]="f.noLeido" [class.font-semibold]="!f.noLeido">
+                  @if (f.bandeja === 'ENVIADOS') { <span class="text-[#6B5A67] font-normal">Para: </span> }
+                  @if (f.bandeja === 'BORRADORES') { <span class="text-[#A62639] font-normal">Borrador · </span> }
+                  {{ f.nombre }}
+                </p>
+                <span class="text-[12.5px] text-[#6B5A67] whitespace-nowrap">{{ haceCuanto(f.fecha) }}</span>
+              </div>
+              @if (f.rol) { <p class="text-[11.5px] text-[#8B7A87] -mt-0.5">{{ etiquetaRol(f.rol) }}</p> }
+              <p class="text-[14.5px] text-[#241521] mt-1 truncate" [class.font-semibold]="f.noLeido">{{ f.asunto }}</p>
+              <div class="flex items-end justify-between gap-3">
+                <p class="text-[13.5px] text-[#6B5A67] truncate flex-1">{{ f.vista }}</p>
+                <div class="flex items-center gap-3 shrink-0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+                  @if (f.bandeja === 'RECIBIDOS' && puedeResponder(f.mensaje)) {
+                    <button type="button" (click)="responder(f.mensaje!)" class="text-[14px] font-semibold text-[#6B2C63] hover:underline">Responder</button>
+                  }
+                  @if (f.bandeja === 'BORRADORES') {
+                    <button type="button" (click)="editarBorrador(f.borrador!)" class="text-[14px] font-semibold text-[#6B2C63] hover:underline">Continuar</button>
+                  }
+                  @if (f.bandeja === 'ENVIADOS') {
+                    <span class="text-[11.5px]" [ngClass]="f.mensaje?.destinatarios?.[0]?.leido ? 'text-[#1E7A3B]' : 'text-[#8B7A87]'">{{ f.mensaje?.destinatarios?.[0]?.leido ? '✓✓ Leído' : '✓ Enviado' }}</span>
+                  }
+                  <button type="button" (click)="eliminarFila(f, $event)" class="text-[#6B2C63] hover:text-[#A62639]" title="Eliminar" aria-label="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M9 3h6l1 1h4v2H4V4h4l1-1ZM6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8Z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        } @empty {
+          <div class="bg-white rounded-2xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">
+            @switch (bandeja()) {
+              @case ('RECIBIDOS') { No tienes mensajes recibidos{{ buscarMensaje() ? ' que coincidan' : '' }}. }
+              @case ('ENVIADOS') { Aún no has enviado mensajes{{ buscarMensaje() ? ' que coincidan' : '' }}. }
+              @default { No tienes borradores. }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- ===================== Detalle del comunicado ===================== -->
+@if (detalle(); as c) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-[#241521]/45" (click)="detalle.set(null)"></div>
+    <aside class="relative w-full max-w-2xl h-full bg-white shadow-2xl flex flex-col" role="dialog" aria-modal="true" [attr.aria-label]="c.titulo">
+      <div class="flex items-start gap-4 px-6 pt-6 pb-4">
+        <span class="overflow-hidden w-14 h-14 rounded-full bg-[#6B2C63] text-white font-semibold text-[18px] flex items-center justify-center shrink-0"><app-foto [usuarioId]="c.autorId">{{ iniciales(c.autorNombre || 'Colegio') }}</app-foto></span>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-serif font-bold text-[22px] text-[#241521] leading-tight">{{ c.titulo }}</h3>
+          <p class="text-[13.5px] text-[#6B5A67] mt-1">Enviado por: {{ autor(c) }} • {{ haceCuanto(c.fechaCreacion) }}</p>
+        </div>
+        <button type="button" (click)="detalle.set(null)" class="text-[#6B5A67] hover:text-[#241521] text-[18px]" title="Cerrar" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 pb-4 space-y-5">
+        @if (c.imagen) {
+          <div class="rounded-xl border border-[#E3D5C4] p-1.5 shadow-sm">
+            <img [src]="c.imagen" alt="Imagen del comunicado" class="w-full max-h-[340px] object-cover rounded-lg" />
+          </div>
+        }
+        <div class="contenido-rico text-[14.5px] leading-relaxed text-[#241521]" [innerHTML]="c.contenido"></div>
+        <dl class="space-y-1 text-[14px] text-[#241521] border-t border-[#F0E6D8] pt-4">
+          <div><dt class="inline font-semibold">Fecha de envío: </dt><dd class="inline">{{ fechaLarga(c.fechaCreacion) }}.</dd></div>
+          <div><dt class="inline font-semibold">Tipo: </dt><dd class="inline">{{ c.anuncio ? 'Anuncio institucional' : 'Comunicado institucional' }}.</dd></div>
+          <div><dt class="inline font-semibold">Dirigido a: </dt><dd class="inline">{{ dirigidoA(c) }}.</dd></div>
+        </dl>
+      </div>
+      <div class="px-6 py-4 border-t border-[#F0E6D8] flex justify-end">
+        <button type="button" (click)="detalle.set(null)" class="px-6 py-2 rounded-xl border border-[#CDBBD6] text-[14px] text-[#241521] hover:bg-[#FAF6EF]">Cerrar</button>
+      </div>
+    </aside>
+  </div>
+}
+
+<!-- ===================== Leer un mensaje ===================== -->
+@if (leyendo(); as m) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/45" (click)="leyendo.set(null)"></div>
+    <div class="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col" role="dialog" aria-modal="true">
+      <div class="flex items-start gap-4 px-6 pt-6 pb-4 border-b border-[#F0E6D8]">
+        <span class="overflow-hidden w-12 h-12 rounded-full bg-[#6B2C63] text-white font-semibold text-[16px] flex items-center justify-center shrink-0">
+          <app-foto [usuarioId]="m.bandeja === 'RECIBIDO' ? m.remitente.usuarioId : m.destinatarios[0]?.usuarioId">{{ iniciales(m.bandeja === 'RECIBIDO' ? m.remitente.nombre : (m.destinatarios[0]?.nombre ?? '?')) }}</app-foto>
+        </span>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-serif font-bold text-[20px] text-[#241521] leading-tight">{{ asunto(m.asunto) }}</h3>
+          @if (m.bandeja === 'RECIBIDO') {
+            <p class="text-[13px] text-[#6B5A67] mt-1">De: <b class="text-[#241521]">{{ m.remitente.nombre }}</b> ({{ etiquetaRol(m.remitente.rol) }}) • {{ fechaLarga(m.fechaEnvio) }}</p>
+          } @else {
+            <p class="text-[13px] text-[#6B5A67] mt-1">Para: <b class="text-[#241521]">{{ m.destinatarios[0]?.nombre }}</b> ({{ etiquetaRol(m.destinatarios[0]?.rol) }}) • {{ fechaLarga(m.fechaEnvio) }}</p>
+          }
+        </div>
+        <button type="button" (click)="leyendo.set(null)" class="text-[#6B5A67] hover:text-[#241521] text-[18px]" title="Cerrar" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-6 py-5">
+        <div class="contenido-rico text-[14.5px] leading-relaxed text-[#241521]" [innerHTML]="m.contenido"></div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#F0E6D8] flex flex-wrap justify-end gap-2">
+        <button type="button" (click)="eliminarLeyendo()" class="px-4 py-2 rounded-xl border border-[#E8B4BC] text-[14px] text-[#A62639] hover:bg-[#FBE7E9]">Eliminar</button>
+        @if (puedeResponder(m)) {
+          <button type="button" (click)="responder(m)" class="px-5 py-2 rounded-xl bg-[#4A1F52] hover:bg-[#2E1233] text-white text-[14px] font-medium">Responder</button>
+        }
+        <button type="button" (click)="leyendo.set(null)" class="px-5 py-2 rounded-xl border border-[#CDBBD6] text-[14px] text-[#241521] hover:bg-[#FAF6EF]">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===================== Crear nuevo mensaje ===================== -->
+@if (redactando()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-[#241521]/45"></div>
+    <div class="relative w-full max-w-3xl max-h-[94vh] bg-white rounded-2xl shadow-2xl flex flex-col" role="dialog" aria-modal="true" aria-label="Crear nuevo mensaje">
+      <div class="flex items-center gap-3 px-6 pt-5 pb-3">
+        <span class="w-11 h-11 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </span>
+        <h3 class="flex-1 font-serif font-bold text-[22px] text-[#241521]">{{ respuestaAId ? 'Responder mensaje' : (borradorId ? 'Continuar borrador' : 'Crear Nuevo Mensaje') }}</h3>
+        <button type="button" (click)="cancelarRedaccion()" class="text-[#6B5A67] hover:text-[#241521] text-[20px]" title="Cerrar" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
+        <!-- Para -->
+        <div class="flex items-start gap-3">
+          <span class="pt-2.5 text-[15px] font-semibold text-[#241521] w-12 shrink-0">Para:</span>
+          <div class="flex-1 min-w-0">
+            @if (destino(); as d) {
+              <div class="flex items-center gap-3 rounded-xl border-2 border-[#4A1F52]/60 px-3 py-2">
+                <span class="overflow-hidden w-9 h-9 rounded-full bg-[#6B2C63] text-white font-semibold text-[13px] flex items-center justify-center shrink-0"><app-foto [usuarioId]="d.usuarioId">{{ iniciales(d.nombre) }}</app-foto></span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[14.5px] font-medium text-[#241521] truncate">{{ d.nombre }}</p>
+                  @if (d.detalle) { <p class="text-[12px] text-[#6B5A67] truncate">{{ d.detalle }}</p> }
+                </div>
+                <span class="px-3 py-1 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12.5px] font-medium">{{ etiquetaRol(d.rol) }}</span>
+                @if (!respuestaAId) {
+                  <button type="button" (click)="destino.set(null)" class="text-[#6B5A67] hover:text-[#A62639]" title="Cambiar destinatario" aria-label="Cambiar destinatario">✕</button>
+                }
+              </div>
+            } @else {
+              <div class="relative">
+                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+                <input type="text" placeholder="Buscar destinatarios por nombre, grado o sección..." aria-label="Buscar destinatario"
+                       [ngModel]="buscarDestino()" (ngModelChange)="buscarDestino.set($event)"
+                       class="w-full pl-11 pr-3 py-2.5 text-[14px] rounded-xl border-2 border-[#4A1F52]/50 bg-white focus:outline-none focus:border-[#4A1F52]" />
+              </div>
+              <ul class="mt-2 max-h-64 overflow-y-auto rounded-xl border border-[#E3D5C4] divide-y divide-[#F0E6D8]">
+                @for (c of contactosFiltrados(); track c.usuarioId) {
+                  <li>
+                    <button type="button" (click)="destino.set(c); errorRedactar.set(null)" class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#FAF6EF]">
+                      <span class="overflow-hidden w-10 h-10 rounded-full bg-[#EFEAF3] text-[#4A1F52] font-semibold text-[13px] flex items-center justify-center shrink-0"><app-foto [usuarioId]="c.usuarioId">{{ iniciales(c.nombre) }}</app-foto></span>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-[14.5px] text-[#241521] truncate">{{ c.nombre }}</p>
+                        @if (c.detalle) { <p class="text-[12px] text-[#6B5A67] truncate">{{ c.detalle }}</p> }
+                      </div>
+                      <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12.5px] font-medium shrink-0">
+                        @if (c.rol === 'Docente') {
+                          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M12 3 1 9l11 6 9-4.9V17h2V9L12 3Zm-6 9.2V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-3.8l-6 3.3-6-3.3Z"/></svg>
+                        }
+                        {{ etiquetaRol(c.rol) }}
+                      </span>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="px-4 py-6 text-center text-[13px] text-[#6B5A67]">
+                    {{ contactos().length ? 'Nadie coincide con la búsqueda.' : 'No hay profesores ni personal disponibles para escribir.' }}
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        <!-- Asunto -->
+        <div class="flex items-center gap-3">
+          <label for="asunto-nuevo" class="text-[15px] font-semibold text-[#241521] w-12 shrink-0">Asunto:</label>
+          <input id="asunto-nuevo" type="text" maxlength="200" placeholder="Ej. Consulta sobre la tarea de Matemática" [(ngModel)]="asuntoNuevo"
+                 class="flex-1 min-w-0 px-3 py-2.5 text-[14px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+        </div>
+
+        <!-- Mensaje -->
+        <div>
+          <p class="text-[16px] font-semibold text-[#241521] mb-2">Mensaje</p>
+          <app-editor-texto [contenido]="contenidoNuevo" (contenidoChange)="contenidoNuevo = $event" placeholder="Escriba su mensaje..." [alto]="180" />
+        </div>
+
+        @if (errorRedactar()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ errorRedactar() }}</div>
+        }
+      </div>
+
+      <div class="px-6 py-4 border-t border-[#F0E6D8] flex flex-wrap items-center justify-end gap-2">
+        <button type="button" (click)="guardarBorrador()" [disabled]="enviando()"
+                class="mr-auto flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[14px] text-[#4A1F52] hover:bg-[#EFEAF3] disabled:opacity-50">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5V3ZM8 3v5h7V3M8 21v-7h8v7"/></svg>
+          Guardar borrador
+        </button>
+        <button type="button" (click)="enviar()" [disabled]="enviando()"
+                class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#4A1F52] hover:bg-[#2E1233] text-white text-[15px] font-semibold shadow-sm disabled:opacity-60">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4.5 h-4.5"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg>
+          {{ enviando() ? 'Enviando...' : 'Enviar' }}
+        </button>
+        <button type="button" (click)="cancelarRedaccion()" [disabled]="enviando()"
+                class="px-6 py-2.5 rounded-xl border border-[#CDBBD6] text-[15px] text-[#4A1F52] hover:bg-[#FAF6EF] disabled:opacity-50">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

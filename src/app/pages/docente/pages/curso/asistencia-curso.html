@@ -1,0 +1,235 @@
+<section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5 space-y-5">
+  <!-- Encabezado -->
+  <div class="flex items-start gap-4 flex-wrap">
+    <span class="w-12 h-12 rounded-xl bg-[#E6EEFB] text-[#2563EB] flex items-center justify-center shrink-0">
+      <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2M14 17.5h2"/></svg>
+    </span>
+    <h3 class="font-serif font-bold text-[20px] text-[#241521] self-center flex-1 min-w-[180px]">Asistencia del curso</h3>
+    <div class="max-w-md">
+      <p class="rounded-lg bg-[#E6EEFB] border border-[#2563EB]/20 px-3 py-2 text-[12.5px] text-[#1E3A8A]">
+        Solo puedes generar asistencia durante el horario programado del curso.
+      </p>
+      @if (datos()?.mensaje) {
+        <p class="flex items-center gap-1.5 mt-1.5 text-[12px] text-[#6B5A67]">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          {{ datos()?.mensaje }}
+        </p>
+      }
+    </div>
+    <button type="button" (click)="generar()" [disabled]="!datos()?.puedeGenerar || generando()"
+            [title]="datos()?.puedeGenerar ? 'Generar la asistencia de hoy' : (datos()?.mensaje ?? '')"
+            class="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-semibold shadow-sm disabled:opacity-45 disabled:cursor-not-allowed">
+      <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>
+      {{ generando() ? 'Generando...' : 'Generar asistencia' }}
+    </button>
+  </div>
+
+  @if (error()) { <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div> }
+  @if (exito()) { <div class="bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">{{ exito() }}</div> }
+
+  <!-- Resumen -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="flex items-center gap-4 rounded-2xl border border-[#E3D5C4] px-5 py-4">
+      <span class="w-12 h-12 rounded-xl bg-[#E6EEFB] text-[#2563EB] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </span>
+      <div><p class="text-[12.5px] text-[#6B5A67]">Asistencias generadas</p><p class="font-serif font-bold text-[26px] text-[#1E3A8A] leading-none mt-1">{{ datos()?.generadas ?? '—' }}</p></div>
+    </div>
+    <div class="flex items-center gap-4 rounded-2xl border border-[#E3D5C4] px-5 py-4">
+      <span class="w-12 h-12 rounded-xl bg-[#E7F3EA] text-[#1E7A3B] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4-7 7Z"/></svg>
+      </span>
+      <div><p class="text-[12.5px] text-[#6B5A67]">Marcadas</p><p class="font-serif font-bold text-[26px] text-[#1E7A3B] leading-none mt-1">{{ datos()?.marcadas ?? '—' }}</p></div>
+    </div>
+    <div class="flex items-center gap-4 rounded-2xl border border-[#E3D5C4] px-5 py-4">
+      <span class="w-12 h-12 rounded-xl bg-[#FDF1DC] text-[#D99A00] flex items-center justify-center">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </span>
+      <div>
+        <p class="text-[12.5px] text-[#6B5A67]">Pendientes</p>
+        <p class="font-serif font-bold text-[26px] text-[#D99A00] leading-none mt-1">{{ datos()?.pendientes ?? '—' }}</p>
+      </div>
+      @if (datos()?.noGeneradas) {
+        <span class="ml-auto px-2.5 py-1 rounded-lg bg-[#FBE7E9] text-[11.5px] font-medium text-[#A62639]">{{ datos()?.noGeneradas }} sin generar</span>
+      }
+    </div>
+  </div>
+
+  @if (cargando() && !datos()) {
+    <p class="text-[13px] text-[#6B5A67] py-6 text-center">Cargando asistencia...</p>
+  } @else {
+    @for (g of grupos(); track g.clave) {
+      <div>
+        <button type="button" (click)="alternar(g.clave)" class="flex items-center gap-2 mb-2 text-left">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#4A1F52] transition-transform" [ngClass]="cerrados().has(g.clave) ? '' : 'rotate-90'"
+               stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+          <span class="font-serif font-bold text-[17px] text-[#241521]">{{ g.nombre }}</span>
+          <span class="text-[11.5px] text-[#6B5A67]">({{ g.sesiones.length }} clase{{ g.sesiones.length === 1 ? '' : 's' }})</span>
+        </button>
+        @if (!cerrados().has(g.clave)) {
+          <div class="rounded-xl border border-[#F0E6D8] overflow-x-auto">
+            <table class="w-full min-w-[560px] text-[13px]">
+              <thead class="bg-[#FAF6EF] text-[#241521]">
+                <tr>
+                  <th class="text-left font-semibold px-4 py-2.5">
+                    <button type="button" (click)="ordenAsc.set(!ordenAsc())" class="inline-flex items-center gap-1 hover:text-[#4A1F52]" title="Ordenar por fecha">
+                      Fecha <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"/></svg>
+                    </button>
+                  </th>
+                  <th class="text-left font-semibold px-4 py-2.5">Hora</th>
+                  <th class="text-left font-semibold px-4 py-2.5">Estado</th>
+                  <th class="text-center font-semibold px-4 py-2.5">Acción</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#F0E6D8]">
+                @for (s of g.sesiones; track s.fecha) {
+                  @let st = estado(s);
+                  <tr [ngClass]="s.estado === 'NO_GENERADA' ? 'bg-[#FFF7F8]' : ''">
+                    <td class="px-4 py-3 text-[#241521] font-medium">{{ dmy(s.fecha) }}</td>
+                    <td class="px-4 py-3 text-[#241521]">{{ horaAmPm(s.horaInicio) }}</td>
+                    <td class="px-4 py-3">
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium" [style.color]="st.color" [style.background]="st.fondo">
+                        <span class="w-2 h-2 rounded-full" [style.background]="st.color"></span>{{ st.texto }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-2.5">
+                      <div class="flex items-center justify-center gap-2">
+                        @switch (s.estado) {
+                          @case ('MARCADA') {
+                            <button type="button" (click)="abrir(s, true)" class="w-10 h-9 rounded-lg bg-[#E6EEFB] text-[#1D4ED8] hover:bg-[#D7E4FA] flex items-center justify-center" title="Ver asistencia">
+                              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                            @if (s.editable) {
+                              <button type="button" (click)="abrir(s, false)" class="w-10 h-9 rounded-lg bg-[#E6EEFB] text-[#1D4ED8] hover:bg-[#D7E4FA] flex items-center justify-center" title="Editar asistencia (hasta que termine la clase)">
+                                <svg viewBox="0 0 24 24" fill="none" class="w-4.5 h-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                              </button>
+                            } @else {
+                              <span class="w-10 h-9 rounded-lg bg-[#F5EEE3] text-[#9A8E97] flex items-center justify-center" title="Cerrada: la clase ya terminó">
+                                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                              </span>
+                            }
+                          }
+                          @case ('SIN_MARCAR') {
+                            @if (!s.editable) {
+                              <span class="text-[12px] font-medium text-[#A62639]">Cerrada sin marcar</span>
+                            } @else {
+                            <button type="button" (click)="abrir(s, false)" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[12.5px] font-semibold">
+                              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>
+                              Tomar asistencia
+                            </button>
+                            }
+                          }
+                          @case ('HOY') {
+                            <span class="text-[12px] text-[#6B5A67]">Genera la asistencia en la hora de clase</span>
+                          }
+                          @default {
+                            <span class="text-[12px] font-medium text-[#A62639]">No se generó</span>
+                          }
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="text-center py-10">
+        <p class="font-serif font-bold text-[16px] text-[#241521]">Sin clases registradas</p>
+        <p class="text-[13px] text-[#6B5A67] mt-1">Las clases aparecen aquí según el horario del curso y los bimestres del año.</p>
+      </div>
+    }
+  }
+</section>
+
+<!-- ===================== Modal: tomar asistencia ===================== -->
+@if (sesionModal(); as s) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+    <div class="absolute inset-0 bg-[#241521]/50" (click)="cerrarModal()"></div>
+    <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-24px)]">
+      <div class="flex items-center justify-between px-6 pt-5 pb-3">
+        <h3 class="font-serif font-bold text-[22px] text-[#241521]">{{ soloVer() ? 'Asistencia registrada' : 'Tomar asistencia' }}</h3>
+        <button type="button" (click)="cerrarModal()" class="text-[#6B5A67] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="mx-6 rounded-xl border border-[#2563EB]/20 bg-[#F1F5FD] px-4 py-3 flex gap-4">
+        <span class="w-11 h-11 rounded-xl bg-[#E6EEFB] text-[#2563EB] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        </span>
+        <div class="flex-1">
+          <p class="font-serif font-bold text-[17px] text-[#1E3A8A]">{{ nombrePeriodo(s.fecha) }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5 mt-1 text-[13px] text-[#241521]">
+            <span><span class="text-[#6B5A67]">Fecha:</span> <b class="font-medium">{{ dmy(s.fecha) }}</b></span>
+            <span><span class="text-[#6B5A67]">Hora:</span> <b class="font-medium">{{ horaAmPm(s.horaInicio) }}</b></span>
+            <span><span class="text-[#6B5A67]">Curso:</span> <b class="font-medium">{{ curso.curso }}</b></span>
+            <span><span class="text-[#6B5A67]">Sección:</span> <b class="font-medium">{{ salon() }}</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-6 py-3">
+        @if (!dia()) {
+          <p class="text-center text-[13px] text-[#6B5A67] py-8">{{ errorModal() ?? 'Cargando alumnos...' }}</p>
+        } @else {
+          <div class="flex items-center justify-between px-2 py-2 text-[12.5px] font-semibold text-[#241521] border-b border-[#F0E6D8]">
+            <span>Estudiante</span>
+            @if (!soloVer()) {
+              <button type="button" (click)="todosPresentes()" class="text-[12px] font-medium text-[#4A1F52] hover:underline">Marcar los que faltan como Presente</button>
+            } @else { <span>Asistencia</span> }
+          </div>
+          <ul class="divide-y divide-[#F0E6D8]">
+            @for (al of dia()!.alumnos; track al.estudianteId) {
+              <li class="flex items-center gap-3 py-2.5 px-1 flex-wrap">
+                <app-avatar-persona [nombre]="al.nombre" [foto]="al.foto" tam="w-11 h-11 text-[13px]" />
+                <span class="flex-1 min-w-[140px] text-[14px] font-medium text-[#241521]">{{ al.nombre }}</span>
+                <div class="flex flex-wrap gap-1.5">
+                  @for (e of estados; track e.id) {
+                    @let activo = marcas()[al.estudianteId] === e.id;
+                    <button type="button" (click)="marcar(al.estudianteId, e.id)" [disabled]="soloVer() && !activo"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-colors disabled:opacity-35"
+                            [style.color]="activo ? e.color : '#5B4A5E'" [style.background]="activo ? e.fondo : '#FFFFFF'"
+                            [style.border-color]="activo ? e.borde : '#E3D5C4'">
+                      <span class="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center" [style.border-color]="activo ? e.color : '#B9A9B5'" [style.background]="activo ? e.color : 'transparent'">
+                        @if (activo) { <span class="w-1.5 h-1.5 rounded-full bg-white"></span> }
+                      </span>
+                      {{ e.nombre }}
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      @if (errorModal() && dia()) {
+        <div class="mx-6 mb-2 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-2.5">{{ errorModal() }}</div>
+      }
+      <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-[#E3D5C4]">
+        <span class="text-[12.5px] text-[#6B5A67]">{{ marcadosModal() }} de {{ dia()?.alumnos?.length ?? 0 }} marcados</span>
+        <div class="flex gap-3">
+          <button type="button" (click)="cerrarModal()" class="px-5 py-2.5 rounded-xl border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F5EEE3]">{{ soloVer() ? 'Cerrar' : 'Cancelar' }}</button>
+          @if (soloVer()) {
+            @if (s.editable) {
+              <button type="button" (click)="soloVer.set(false)" class="px-5 py-2.5 rounded-xl bg-[#EFEAF3] text-[13.5px] font-semibold text-[#4A1F52] hover:bg-[#E5DCEC]">Editar</button>
+            } @else {
+              <span class="self-center flex items-center gap-1.5 text-[12.5px] text-[#6B5A67]">
+                <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                Cerrada: la clase terminó, ya no se puede editar
+              </span>
+            }
+          } @else {
+            <button type="button" (click)="guardar()" [disabled]="guardando() || !dia()"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-semibold disabled:opacity-60">
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM7 3v6h8V3M7 21v-7h10v7"/></svg>
+              {{ guardando() ? 'Guardando...' : 'Guardar asistencia' }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

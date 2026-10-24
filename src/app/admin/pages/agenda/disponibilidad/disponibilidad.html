@@ -1,0 +1,77 @@
+<div class="space-y-4 select-none">
+  <!-- Horario base -->
+  <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-3">
+    <span class="w-10 h-10 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center shrink-0">
+      <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>
+    </span>
+    <div>
+      <h3 class="font-serif font-bold text-[18px] text-[#241521]">Horario Base</h3>
+      <p class="text-[13px] text-[#6B5A67]">Define los bloques que se repiten <b class="text-[#241521]">todas las semanas</b>. Los padres solicitan citas en estos horarios y tus convocatorias se agendan dentro de ellos.</p>
+    </div>
+  </section>
+
+  @if (aviso()) {
+    <div class="flex justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ aviso() }}</span><button type="button" (click)="aviso.set(null)">✕</button>
+    </div>
+  }
+  @if (error()) {
+    <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
+  }
+
+  <!-- Disponibilidad semanal -->
+  <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm">
+    <div class="flex items-center gap-3 flex-wrap px-5 py-4 border-b border-[#F0E6D8]">
+      <span class="w-10 h-10 rounded-xl bg-[#E7F3EA] text-[#1E7A3B] flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </span>
+      <div class="flex-1 min-w-[220px]">
+        <h3 class="font-bold text-[15px] text-[#241521]">Disponibilidad semanal</h3>
+        <p class="text-[12.5px] text-[#6B5A67]">Haz clic o arrastra sobre la grilla para marcar bloques de 15 minutos disponibles. Clic en el nombre del día para marcarlo completo.</p>
+      </div>
+      <span class="px-2.5 py-1 rounded-lg bg-[#EFEAF3] text-[12px] text-[#4A1F52]">{{ horasSemana() }} h por semana</span>
+      <button type="button" (click)="descartar()" [disabled]="!cambios() || guardando()"
+              class="px-4 py-2 rounded-lg border border-[#E3D5C4] text-[13px] font-medium text-[#241521] hover:bg-[#F5EEE3] disabled:opacity-45">Descartar</button>
+      <button type="button" (click)="guardar()" [disabled]="!cambios() || guardando()"
+              class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13px] font-semibold disabled:opacity-45">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM7 3v6h8V3M7 21v-7h10v7"/></svg>
+        {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+
+    @if (cargando()) {
+      <p class="p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando disponibilidad...</p>
+    } @else {
+      <div class="overflow-x-auto p-3">
+        <div class="grid min-w-[720px]" style="grid-template-columns: 96px repeat(5, minmax(110px, 1fr));">
+          <div class="h-9 bg-[#FAF6EF] border-b border-r border-[#E3D5C4] rounded-tl-lg"></div>
+          @for (d of dias; track d.numero; let i = $index) {
+            <button type="button" (click)="alternarDia(d.numero)" title="Marcar o desmarcar el día completo"
+                    class="h-9 bg-[#FAF6EF] border-b border-[#E3D5C4] text-[13px] font-semibold text-[#241521] hover:bg-[#F3EEF6]"
+                    [ngClass]="i < 4 ? 'border-r' : 'rounded-tr-lg'">{{ d.nombre }}</button>
+          }
+          @for (t of filas(); track t) {
+            <div class="h-[18px] flex items-center justify-end pr-2 border-r border-[#E3D5C4] text-[10.5px] text-[#6B5A67]"
+                 [ngClass]="t % 60 === 0 ? 'font-semibold text-[#4A1F52]' : ''">{{ hora(t) }} - {{ hora(t + 15) }}</div>
+            @for (d of dias; track d.numero; let i = $index) {
+              <div (mousedown)="presionar(d.numero, t, $event)" (mouseenter)="pasar(d.numero, t)"
+                   class="h-[18px] cursor-pointer border-b transition-colors"
+                   [ngClass]="(marcada(d.numero, t) ? 'bg-[#7BC48C] hover:bg-[#6AB57C] border-[#9BD3A8] ' : 'bg-white hover:bg-[#F3EEF6] border-[#F3ECE1] ')
+                     + (i < 4 ? 'border-r border-r-[#EDE4D6] ' : '') + (t % 60 === 0 ? 'border-t border-t-[#E3D5C4]' : '')"></div>
+            }
+          }
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3 flex-wrap px-5 py-3 border-t border-[#F0E6D8]">
+        <button type="button" (click)="vaciar()" class="flex items-center gap-1.5 text-[13px] font-medium text-[#6B5A67] hover:text-[#A62639]">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Vaciar todo
+        </button>
+        <div class="flex items-center gap-4 text-[12px] text-[#6B5A67]">
+          <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-[#7BC48C]"></span>Disponible</span>
+          <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded border border-[#E3D5C4] bg-white"></span>Clic para marcar</span>
+        </div>
+      </div>
+    }
+  </section>
+</div>

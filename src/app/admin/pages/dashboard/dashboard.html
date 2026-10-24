@@ -1,0 +1,131 @@
+<div class="space-y-6">
+
+  <!-- Encabezado -->
+  <div>
+    <h2 class="font-serif font-bold text-2xl text-[#241521]">Panel de Administración</h2>
+    <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Gestión institucional — I.E. N.º 2092 Cristo Morado</p>
+  </div>
+
+  <div *ngIf="error()" class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+    {{ error() }}. Verifica que el servidor (API) esté encendido.
+  </div>
+
+  <!-- Tarjetas de estadísticas -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-5 flex items-center justify-between">
+      <div>
+        <p class="text-[13px] text-[#6B5A67]">Usuarios activos</p>
+        <p class="font-serif font-bold text-3xl text-[#241521] mt-1">{{ stats().usuariosActivos }}</p>
+      </div>
+      <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style="background:#EFEAF3">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="#4A1F52" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-5 flex items-center justify-between">
+      <div>
+        <p class="text-[13px] text-[#6B5A67]">Estudiantes</p>
+        <p class="font-serif font-bold text-3xl text-[#241521] mt-1">{{ stats().totalEstudiantes }}</p>
+      </div>
+      <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style="background:#FDF1DC">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="#B08900" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3 2 8l10 5 10-5-10-5ZM6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-5 flex items-center justify-between">
+      <div>
+        <p class="text-[13px] text-[#6B5A67]">Padres de familia</p>
+        <p class="font-serif font-bold text-3xl text-[#241521] mt-1">{{ stats().totalPadres }}</p>
+      </div>
+      <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style="background:#FBE7E9">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="#A62639" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-[#E3D5C4] p-5 flex items-center justify-between">
+      <div>
+        <p class="text-[13px] text-[#6B5A67]">Docentes</p>
+        <p class="font-serif font-bold text-3xl text-[#241521] mt-1">{{ stats().totalDocentes }}</p>
+      </div>
+      <div class="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style="background:#EFEAF3">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="#2E1233" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3 2 8l10 5 10-5-10-5ZM6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos rápidos (Directiva: solo con permiso de Gestión de Usuarios) -->
+  <ng-container *ngIf="puedeGestionarUsuarios">
+  <div>
+    <h3 class="font-serif font-bold text-[15px] text-[#241521] mb-3 flex items-center gap-1.5">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="#B08900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h6l-1 8 10-12h-6l1-8Z"/></svg>
+      Accesos rápidos
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <a *ngFor="let acceso of accesos" [routerLink]="acceso.ruta"
+         class="bg-white rounded-xl border border-[#E3D5C4] p-5 hover:shadow-md transition-shadow group">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-3" [style.background]="acceso.color">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path [attr.d]="acceso.icono"/>
+          </svg>
+        </div>
+        <p class="font-semibold text-[13.5px] text-[#241521]">{{ acceso.titulo }}</p>
+        <p class="text-[12px] text-[#6B5A67] mt-1 leading-snug">{{ acceso.descripcion }}</p>
+        <div class="mt-3 w-7 h-7 rounded-full flex items-center justify-center text-white text-[12px]"
+             [style.background]="acceso.color">
+          <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  </ng-container>
+
+  <!-- Actividad reciente -->
+  <div class="bg-white rounded-xl border border-[#E3D5C4]">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-[#E3D5C4]">
+      <h3 class="font-serif font-bold text-[15px] text-[#241521] flex items-center gap-1.5">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="#6B5A67" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Actividad reciente
+      </h3>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-[13px]">
+        <thead>
+          <tr class="text-left text-[#6B5A67] border-b border-[#E3D5C4]">
+            <th class="px-5 py-2.5 font-medium">Fecha y hora</th>
+            <th class="px-5 py-2.5 font-medium">Usuario</th>
+            <th class="px-5 py-2.5 font-medium">Acción</th>
+            <th class="px-5 py-2.5 font-medium">Módulo</th>
+            <th class="px-5 py-2.5 font-medium">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of actividad()" class="border-b border-[#F0E6D8] last:border-0">
+            <td class="px-5 py-3 text-[#6B5A67] whitespace-nowrap">{{ item.fecha | date:'d MMM y · HH:mm' }}</td>
+            <td class="px-5 py-3 text-[#241521] font-medium">{{ item.usuario }}</td>
+            <td class="px-5 py-3 text-[#241521]">{{ item.accion }}</td>
+            <td class="px-5 py-3 text-[#6B5A67]">{{ item.modulo }}</td>
+            <td class="px-5 py-3">
+              <span class="px-2 py-1 rounded-full text-[11px] font-medium" [ngClass]="claseEstado(item.estado)">
+                {{ item.estado }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando() && actividad().length === 0">
+            <td colspan="5" class="px-5 py-8 text-center text-[#6B5A67]">Aún no hay actividad registrada.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

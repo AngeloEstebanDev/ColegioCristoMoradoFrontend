@@ -1,0 +1,30 @@
+<div class="flex min-h-screen bg-[#F4EEE6]">
+
+  <!-- En pantallas grandes el menú queda fijo a la izquierda; en celular se abre con el botón ☰ -->
+  @if (menuMovil()) {
+    <div class="fixed inset-0 z-40 bg-[#241521]/50 lg:hidden" (click)="menuMovil.set(false)"></div>
+  }
+  <div class="fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0"
+       [class.-translate-x-full]="!menuMovil()">
+    <app-siderbar [items]="itemsMenu()" [rol]="usuario?.rol ?? ''" />
+  </div>
+
+  <div class="flex flex-col flex-1 min-w-0">
+    <app-navbar
+      [titulo]="tituloActivo()"
+      [usuarioNombre]="usuario?.nombre ?? ''"
+      [usuarioCorreo]="usuario?.usuario ?? ''"
+      [foto]="perfilService.foto()"
+      [notificaciones]="notificaciones.datos().total"
+      (abrirMenu)="menuMovil.set(true)"
+      [tabNotificaciones]="notificaciones.datos().comunicadosNoLeidos === 0 && notificaciones.datos().mensajesNoLeidos > 0 ? 'mensajes' : 'comunicados'"
+    />
+
+    <main class="flex-1 p-4 sm:p-6 overflow-y-auto min-w-0">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<!-- Al entrar a la cuenta: anuncios importantes y avisos del colegio sin leer -->
+@if (usuario) { <app-avisos-inicio /> }

@@ -1,0 +1,238 @@
+<div class="space-y-5">
+
+  <!-- Encabezado -->
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-serif font-bold text-2xl text-[#241521]">Grados y Secciones</h2>
+      <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Seleccione un grado para ver sus secciones</p>
+    </div>
+    <a routerLink="/home/admin/academico/catalogo-cursos"
+       class="flex items-center gap-2 bg-white border border-[#E3D5C4] hover:bg-[#FAF6EF] text-[#241521] text-[13.5px] font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-colors">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-[#4A1F52]"><path d="M12 6.5C10.4 5.3 8 4.5 5 4.5c-1 0-2 .1-3 .3v14c1-.2 2-.3 3-.3 3 0 5.4.8 7 2 1.6-1.2 4-2 7-2 1 0 2 .1 3 .3v-14c-1-.2-2-.3-3-.3-3 0-5.4.8-7 2Z"/></svg>
+      Catálogo de cursos
+    </a>
+  </div>
+
+  @if (aviso()) {
+    <div class="flex items-start justify-between gap-3 bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ aviso() }}</span>
+      <button type="button" (click)="aviso.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+  @if (error()) {
+    <div class="flex items-start justify-between gap-3 bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="error.set(null)" class="shrink-0 hover:opacity-70">✕</button>
+    </div>
+  }
+
+  <!-- Fila de grados -->
+  <div class="flex items-center gap-2">
+    <button type="button" (click)="desplazar(-1)" title="Anterior"
+            class="w-8 h-8 shrink-0 rounded-full bg-white border border-[#E3D5C4] flex items-center justify-center text-[#241521] hover:bg-[#FAF6EF] shadow-sm">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div #carrusel class="flex-1 flex gap-2.5 overflow-x-auto pt-1 pb-3 px-1 scroll-smooth">
+      @for (g of grados; track g.valor) {
+        <button type="button" (click)="elegirGrado(g)" [attr.data-activo]="g.valor === gradoSel().valor"
+                class="shrink-0 w-[84px] h-[84px] rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-colors shadow-sm"
+                [ngClass]="g.valor === gradoSel().valor
+                  ? 'border-2 border-[#4A1F52] bg-[#EFEAF3] text-[#4A1F52]'
+                  : 'border-[#E3D5C4] bg-white text-[#241521] hover:border-[#C9B8A6]'">
+          <span class="font-serif font-bold text-[22px] leading-none">{{ g.numero }}</span>
+          <span class="text-[11px]" [ngClass]="g.valor === gradoSel().valor ? 'font-semibold' : 'text-[#6B5A67]'">{{ g.nivel }}</span>
+        </button>
+      }
+    </div>
+    <button type="button" (click)="desplazar(1)" title="Siguiente"
+            class="w-8 h-8 shrink-0 rounded-full bg-white border border-[#E3D5C4] flex items-center justify-center text-[#241521] hover:bg-[#FAF6EF] shadow-sm">
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  <!-- Secciones del grado -->
+  <div class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5 sm:p-6 space-y-4">
+    <div class="flex items-end justify-between flex-wrap gap-3">
+      <div>
+        <p class="text-[11.5px] font-semibold tracking-wide text-[#6B5A67] uppercase">Grado seleccionado</p>
+        <h3 class="font-serif font-bold text-[21px] text-[#241521] leading-tight">{{ gradoSel().titulo }}</h3>
+      </div>
+      <button type="button" (click)="abrirNueva()" [disabled]="!cargando() && !seccionesLibres().length && !siguienteLetra()"
+              [title]="seccionesLibres().length ? '' : 'Las secciones predefinidas ya existen: puedes crear otra con la opción «Otros»'"
+              class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Nueva sección
+      </button>
+    </div>
+
+    @for (s of seccionesDelGrado(); track s.id) {
+      <div (click)="abrirSeccion(s)"
+           class="flex items-center gap-4 rounded-xl border border-[#E3D5C4] px-4 py-3.5 cursor-pointer hover:border-[#C9B8A6] hover:bg-[#FAF6EF]/60 transition-colors"
+           [ngClass]="s.estado === 'Inactiva' ? 'opacity-70' : ''">
+        <div class="w-12 h-12 rounded-full shrink-0 flex items-center justify-center font-serif font-bold text-[18px]"
+             [ngClass]="s.estado === 'Inactiva' ? 'bg-[#F0E6D8] text-[#6B5A67]' : 'bg-[#EFEAF3] text-[#4A1F52]'">{{ s.letra }}</div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-[15px] text-[#241521]">Sección {{ s.letra }}</p>
+          <p class="flex items-center flex-wrap gap-x-2.5 gap-y-0.5 text-[12.5px] text-[#6B5A67] mt-0.5">
+            <span class="flex items-center gap-1">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13Zm8 0c-.3 0-.6 0-1 .1 1.2.8 2 2 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg>
+              Cap. {{ s.capacidad }}
+            </span>
+            <span class="text-[#E3D5C4]">|</span>
+            <span class="flex items-center gap-1">
+              @if (turnoDe(s.grado, s.letra, s.turno) === 'Noche') {
+                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+              }
+              Turno: {{ turnoDe(s.grado, s.letra, s.turno) }}{{ horarioDe(s.grado, s.letra, s.turno) ? ' (' + horarioDe(s.grado, s.letra, s.turno) + ')' : '' }}
+            </span>
+          </p>
+        </div>
+        <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
+              [ngClass]="s.estado === 'Activa' ? 'bg-[#E7F3EA] text-[#1E7A3B]' : 'bg-[#F0E6D8] text-[#6B5A67]'">
+          <span class="w-2 h-2 rounded-full" [ngClass]="s.estado === 'Activa' ? 'bg-[#1E7A3B]' : 'bg-[#9A8E97]'"></span>
+          {{ s.estado }}
+        </span>
+        <button type="button" (click)="alternarEstado(s, $event)"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12.5px] font-medium transition-colors"
+                [ngClass]="s.estado === 'Activa'
+                  ? 'border-[#A62639]/40 text-[#A62639] bg-[#FBE7E9]/50 hover:bg-[#FBE7E9]'
+                  : 'border-[#1E7A3B]/40 text-[#1E7A3B] bg-[#E7F3EA]/50 hover:bg-[#E7F3EA]'">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"/></svg>
+          {{ s.estado === 'Activa' ? 'Desactivar' : 'Activar' }}
+        </button>
+        <span class="w-9 h-9 shrink-0 rounded-lg border border-[#E3D5C4] flex items-center justify-center text-[#241521]">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </div>
+    } @empty {
+      <div class="rounded-xl border border-dashed border-[#E3D5C4] px-4 py-10 text-center text-[13px] text-[#6B5A67]">
+        {{ cargando() ? 'Cargando secciones...' : gradoSel().titulo + ' aún no tiene secciones. Pulsa "Nueva sección" para crear la primera.' }}
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ===================== Panel lateral: Nueva sección ===================== -->
+@if (panelAbierto()) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-black/30" (click)="panelAbierto.set(false)"></div>
+    <div class="relative w-full max-w-md bg-[#FBF7F1] h-full shadow-xl flex flex-col">
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-[#E3D5C4]">
+        <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-[#4A1F52]"><path d="M3 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4h4a2 2 0 0 1 2 2v10h-8v-4h-2v4H3Zm3-14v2h2V7H6Zm4 0v2h2V7h-2Zm-4 4v2h2v-2H6Zm4 0v2h2v-2h-2Zm6 2v2h2v-2h-2ZM6 15v2h2v-2H6Z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-serif font-bold text-[16px] text-[#241521]">Nueva sección</h3>
+          <p class="text-[12px] text-[#6B5A67]">{{ gradoSel().titulo }}</p>
+        </div>
+        <button type="button" (click)="panelAbierto.set(false)" class="w-8 h-8 rounded-full flex items-center justify-center text-[#6B5A67] hover:bg-[#F0E6D8] hover:text-[#241521]" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+        <div>
+          <p class="flex items-center gap-1.5 text-[12.5px] font-medium text-[#241521] mb-2">
+            <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-[#6B5A67]" stroke="currentColor" stroke-width="1.8"><path d="M12 6.5C10.4 5.3 8 4.5 5 4.5c-1 0-2 .1-3 .3v14c1-.2 2-.3 3-.3 3 0 5.4.8 7 2 1.6-1.2 4-2 7-2 1 0 2 .1 3 .3v-14c-1-.2-2-.3-3-.3-3 0-5.4.8-7 2ZM12 6.5v14"/></svg>
+            Sección y horario *
+          </p>
+          <div class="space-y-2" role="radiogroup" aria-label="Sección y horario">
+            @for (t of seccionesLibres(); track t.letra) {
+              <button type="button" role="radio" [attr.aria-checked]="letra() === t.letra" (click)="letra.set(t.letra); errorPanel.set(null)"
+                      class="w-full flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors"
+                      [ngClass]="letra() === t.letra ? 'border-[#4A1F52] bg-[#EFEAF3] ring-1 ring-[#4A1F52]/30' : 'border-[#E3D5C4] bg-white hover:bg-[#FAF6EF]'">
+                <span class="w-10 h-10 rounded-full flex items-center justify-center font-serif font-bold text-[16px] shrink-0"
+                      [ngClass]="letra() === t.letra ? 'bg-[#4A1F52] text-white' : 'bg-[#EFEAF3] text-[#4A1F52]'">{{ t.letra }}</span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[13.5px] font-semibold text-[#241521]">Sección {{ t.letra }} · Turno {{ t.turno }}</span>
+                  <span class="block text-[12px] text-[#6B5A67]">{{ t.horario }} · recreo {{ t.recreo }}</span>
+                </span>
+                <span class="text-[10.5px] font-semibold uppercase tracking-wide text-[#1E7A3B] bg-[#E7F3EA] px-2 py-0.5 rounded-full">Predefinida</span>
+              </button>
+            }
+            @if (siguienteLetra()) {
+              <button type="button" role="radio" [attr.aria-checked]="letra() === OTRO" (click)="letra.set(OTRO); errorPanel.set(null)"
+                      class="w-full flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors"
+                      [ngClass]="letra() === OTRO ? 'border-[#4A1F52] bg-[#EFEAF3] ring-1 ring-[#4A1F52]/30' : 'border-dashed border-[#C9B8A6] bg-white hover:bg-[#FAF6EF]'">
+                <span class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                      [ngClass]="letra() === OTRO ? 'bg-[#4A1F52] text-white' : 'bg-[#F0E6D8] text-[#6B5A67]'">
+                  <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+                <span class="flex-1 min-w-0">
+                  <span class="block text-[13.5px] font-semibold text-[#241521]">Otros</span>
+                  <span class="block text-[12px] text-[#6B5A67]">Crear una sección adicional y elegir su turno</span>
+                </span>
+              </button>
+            }
+          </div>
+
+          @if (letra() === OTRO) {
+            <div class="mt-3 rounded-xl border border-[#E3D5C4] bg-white p-4 space-y-3">
+              <div class="grid grid-cols-[90px_1fr] gap-3">
+                <div>
+                  <label for="letraOtra" class="block text-[12px] font-medium text-[#241521] mb-1">Letra *</label>
+                  <input id="letraOtra" type="text" maxlength="1" [ngModel]="letraOtra()" (ngModelChange)="escribirLetraOtra($event)"
+                         class="w-full px-3 py-2.5 text-[15px] font-serif font-bold text-center uppercase rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+                </div>
+                <div>
+                  <p class="block text-[12px] font-medium text-[#241521] mb-1">Turno *</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    @for (tn of turnos; track tn) {
+                      <button type="button" (click)="turnoOtro.set(tn); errorPanel.set(null)" [attr.aria-pressed]="turnoOtro() === tn"
+                              class="px-3 py-2.5 rounded-lg border text-[13px] font-medium transition-colors"
+                              [ngClass]="turnoOtro() === tn ? 'border-[#4A1F52] bg-[#4A1F52] text-white' : 'border-[#E3D5C4] bg-white text-[#241521] hover:bg-[#FAF6EF]'">{{ tn }}</button>
+                    }
+                  </div>
+                </div>
+              </div>
+              @if (horarioOtro(); as h) {
+                <p class="text-[12px] text-[#6B5A67]">Horario: <span class="font-medium text-[#241521]">{{ h.horario }}</span> · recreo {{ h.recreo }}</p>
+              }
+            </div>
+          }
+        </div>
+
+        <div>
+          <label class="flex items-center gap-1.5 text-[12.5px] font-medium text-[#241521] mb-1.5">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-[#6B5A67]"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13Zm8 0c-.3 0-.6 0-1 .1 1.2.8 2 2 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg>
+            Capacidad de alumnos *
+          </label>
+          <input type="number" min="1" max="60" [ngModel]="capacidad()" (ngModelChange)="capacidad.set($event)"
+                 class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
+          <p class="mt-1 text-[11.5px] text-[#6B5A67]">Entre 1 y 60 alumnos</p>
+        </div>
+
+        <div class="flex items-start gap-3 rounded-xl border border-[#4A1F52]/15 bg-[#EFEAF3] p-4">
+          <div class="w-10 h-10 rounded-lg bg-[#2E1233] flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 24 24" fill="#E4C766" class="w-5 h-5"><path d="M10 2l1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8L10 2Zm8 10 .9 2.6L21.5 15.5l-2.6.9L18 19l-.9-2.6-2.6-.9 2.6-.9L18 12Z"/></svg>
+          </div>
+          <div>
+            <p class="text-[13.5px] font-semibold text-[#241521]">Generación automática</p>
+            <p class="text-[12.5px] text-[#6B5A67] leading-snug mt-0.5">
+              En las secciones predefinidas el turno y el horario se asignan solos según los horarios de la I.E.
+              Con «Otros» puedes crear más secciones (C, D…) eligiendo el turno Mañana o Tarde; el horario sale de ese turno.
+            </p>
+          </div>
+        </div>
+
+        @if (errorPanel()) {
+          <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[12.5px] rounded-lg px-3 py-2.5">{{ errorPanel() }}</div>
+        }
+      </div>
+
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-[#E3D5C4]">
+        <button type="button" (click)="panelAbierto.set(false)"
+                class="px-4 py-2.5 rounded-lg border border-[#E3D5C4] text-[13.5px] font-medium text-[#241521] hover:bg-[#F0E6D8] transition-colors">
+          Cancelar
+        </button>
+        <button type="button" (click)="guardar()" [disabled]="guardando() || !letra()"
+                class="flex items-center gap-2 bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13.5px] font-medium px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50">
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          {{ guardando() ? 'Creando...' : 'Crear sección' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

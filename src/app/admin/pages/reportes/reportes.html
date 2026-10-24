@@ -1,0 +1,258 @@
+<div class="space-y-5">
+  <!-- Encabezado -->
+  <div>
+    <h2 class="font-serif font-bold text-[26px] sm:text-[30px] text-[#2E1233] leading-tight">Centro de Control de Reportes</h2>
+    <p class="text-[14px] text-[#6B5A67] mt-1">Consulta y exporta información académica de los estudiantes.</p>
+  </div>
+
+  <!-- Pestañas -->
+  <div class="bg-white rounded-2xl border border-[#E3D5C4] p-1.5 grid grid-cols-1 sm:grid-cols-3 gap-1" role="tablist" aria-label="Tipos de reporte">
+    @for (t of [
+      { id: 'notas', nombre: 'Exportar notas', icono: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4' },
+      { id: 'alumno', nombre: 'Reporte por alumno', icono: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
+      { id: 'asistencia', nombre: 'Asistencia del alumno', icono: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 12 2 2 4-4' }
+    ]; track t.id) {
+      <button type="button" role="tab" [attr.aria-selected]="pestana() === t.id" (click)="elegir($any(t.id))"
+              class="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-[14.5px] font-semibold transition-colors border-b-[3px]"
+              [ngClass]="pestana() === t.id ? 'bg-[#F6F1F8] text-[#4A1F52] border-[#4A1F52]' : 'text-[#6B5A67] border-transparent hover:bg-[#FAF6EF]'">
+        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="t.icono" /></svg>
+        {{ t.nombre }}
+      </button>
+    }
+  </div>
+
+  <!-- Aviso -->
+  <div class="flex items-start gap-3 rounded-xl border border-[#E2D4EA] bg-[#F6F1F8] px-4 py-3">
+    <span class="w-6 h-6 rounded-full bg-[#4A1F52] text-white flex items-center justify-center text-[13px] font-bold shrink-0">i</span>
+    <p class="text-[13.5px] text-[#4A1F52]">
+      @switch (pestana()) {
+        @case ('notas') { Selecciona los filtros y genera un archivo con las notas de los estudiantes. Puedes elegir un grado, sección y periodo o «Todos» para exportarlo todo junto. }
+        @case ('alumno') { Consulta las notas por alumno, filtrando por grado, sección, periodo y curso. }
+        @case ('asistencia') { Consulta la asistencia por alumno, filtrando por grado, sección, periodo y curso. }
+      }
+    </p>
+  </div>
+
+  @if (cargandoOpciones()) {
+    <div class="bg-white rounded-2xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando filtros…</div>
+  } @else if (errorOpciones()) {
+    <div class="bg-white rounded-2xl border border-[#E3D5C4] p-8 text-center">
+      <p class="text-[13.5px] text-[#A62639]">{{ errorOpciones() }}</p>
+      <button type="button" (click)="cargarOpciones()" class="mt-3 px-4 py-2 rounded-lg bg-[#2E1233] hover:bg-[#4A1F52] text-white text-[13px] font-medium">Reintentar</button>
+    </div>
+  } @else {
+    <ng-template #selectorGrado let-todos="todos" let-err="err">
+      <label class="block">
+        <span class="block text-[13px] font-semibold text-[#241521] mb-1.5">Grado{{ todos ? '' : ' *' }}</span>
+        <span class="relative block">
+          <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-[#4A1F52] pointer-events-none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5ZM6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" /></svg>
+          <select aria-label="Grado" [ngModel]="f().grado" (ngModelChange)="cambiar('grado', $event)"
+                  class="w-full appearance-none pl-10 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                  [ngClass]="err ? 'border-[#A62639]/60' : 'border-[#E3D5C4]'">
+            <option [ngValue]="null">{{ todos ? 'Todos los grados' : 'Seleccionar grado' }}</option>
+            @for (g of opciones()?.grados ?? []; track g) { <option [ngValue]="g">{{ g }}</option> }
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+        @if (err) { <span class="block mt-1 text-[11.5px] text-[#A62639]">Selecciona el grado.</span> }
+      </label>
+    </ng-template>
+
+    <ng-template #selectorSeccion let-todos="todos" let-err="err">
+      <label class="block">
+        <span class="block text-[13px] font-semibold text-[#241521] mb-1.5">Sección{{ todos ? '' : ' *' }}</span>
+        <span class="relative block">
+          <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-[#4A1F52] pointer-events-none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+          <select aria-label="Sección" [ngModel]="f().seccionId" (ngModelChange)="cambiar('seccionId', $event)"
+                  class="w-full appearance-none pl-10 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                  [ngClass]="err ? 'border-[#A62639]/60' : 'border-[#E3D5C4]'">
+            <option [ngValue]="null">{{ todos ? 'Todas las secciones' : 'Seleccionar sección' }}</option>
+            @for (s of secciones(); track s.id) { <option [ngValue]="s.id">{{ f().grado ? 'Sección ' + s.letra : s.nombre }}</option> }
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+        @if (err) { <span class="block mt-1 text-[11.5px] text-[#A62639]">Selecciona la sección.</span> }
+      </label>
+    </ng-template>
+
+    <ng-template #selectorPeriodo let-todos="todos" let-err="err">
+      <label class="block">
+        <span class="block text-[13px] font-semibold text-[#241521] mb-1.5">Periodo académico{{ todos ? '' : ' *' }}</span>
+        <span class="relative block">
+          <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-[#4A1F52] pointer-events-none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>
+          <select aria-label="Periodo académico" [ngModel]="f().periodoId" (ngModelChange)="cambiar('periodoId', $event)"
+                  class="w-full appearance-none pl-10 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30"
+                  [ngClass]="err ? 'border-[#A62639]/60' : 'border-[#E3D5C4]'">
+            <option [ngValue]="null">{{ todos ? 'Todos los periodos' : 'Seleccionar periodo' }}</option>
+            @for (p of opciones()?.periodos ?? []; track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }}{{ p.id === opciones()?.periodoActivo ? ' (en curso)' : '' }}</option>
+            }
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+        @if (err) { <span class="block mt-1 text-[11.5px] text-[#A62639]">Selecciona el periodo académico.</span> }
+      </label>
+    </ng-template>
+
+    @if (pestana() === 'notas') {
+      <!-- ============ Exportar notas ============ -->
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] p-5">
+        <h3 class="font-serif font-bold text-[19px] text-[#2E1233] mb-4">Filtros de reporte</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ng-container *ngTemplateOutlet="selectorGrado; context: { todos: true, err: false }" />
+          <ng-container *ngTemplateOutlet="selectorSeccion; context: { todos: true, err: false }" />
+          <ng-container *ngTemplateOutlet="selectorPeriodo; context: { todos: true, err: false }" />
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] p-5">
+        <h3 class="font-serif font-bold text-[19px] text-[#2E1233] mb-4">Exportar reporte</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button type="button" (click)="descargarExcel()" [disabled]="!!descargando()"
+                  class="flex items-center gap-5 text-left px-6 py-5 rounded-xl bg-[#1E7A3B] hover:bg-[#17652F] text-white transition-colors disabled:opacity-60">
+            <svg viewBox="0 0 48 48" class="w-12 h-12 shrink-0" aria-hidden="true"><rect x="13" y="6" width="29" height="36" rx="3" fill="#fff" fill-opacity=".9"/><path d="M28 14h10M28 21h10M28 28h10M28 35h10" stroke="#1E7A3B" stroke-width="2.5"/><rect x="5" y="11" width="22" height="26" rx="2.5" fill="#fff"/><path d="m11 18 10 12M21 18 11 30" stroke="#1E7A3B" stroke-width="3" stroke-linecap="round"/></svg>
+            <span>
+              <span class="block text-[19px] font-bold">{{ descargando() === 'excel' ? 'Generando Excel…' : 'Descargar en Excel' }}</span>
+              <span class="block text-[13.5px] text-white/85 mt-0.5">Genera un archivo .xlsx con las notas</span>
+            </span>
+          </button>
+          <button type="button" (click)="descargarPdf()" [disabled]="!!descargando()"
+                  class="flex items-center gap-5 text-left px-6 py-5 rounded-xl bg-[#C8243B] hover:bg-[#A61D31] text-white transition-colors disabled:opacity-60">
+            <svg viewBox="0 0 48 48" fill="none" class="w-12 h-12 shrink-0" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><path d="M28 5H13a3 3 0 0 0-3 3v32a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3V15L28 5Z"/><path d="M28 5v10h10"/><rect x="6" y="22" width="30" height="12" rx="2" fill="#fff" stroke="none"/><text x="21" y="31.5" text-anchor="middle" font-size="9" font-weight="700" fill="#C8243B" stroke="none" font-family="Arial">PDF</text></svg>
+            <span>
+              <span class="block text-[19px] font-bold">{{ descargando() === 'pdf' ? 'Generando PDF…' : 'Descargar en PDF' }}</span>
+              <span class="block text-[13.5px] text-white/85 mt-0.5">Genera un archivo .pdf con las notas</span>
+            </span>
+          </button>
+        </div>
+        @if (error()) { <p class="mt-4 text-[13px] text-[#A62639]" role="alert">{{ error() }}</p> }
+      </section>
+    } @else {
+      <!-- ============ Reporte por alumno / Asistencia ============ -->
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] p-5">
+        <h3 class="font-serif font-bold text-[19px] text-[#2E1233] mb-4">{{ pestana() === 'alumno' ? 'Reporte por alumno' : 'Asistencia del alumno' }}</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <ng-container *ngTemplateOutlet="selectorGrado; context: { todos: true, err: false }" />
+          <ng-container *ngTemplateOutlet="selectorSeccion; context: { todos: true, err: false }" />
+          <label class="block">
+            <span class="block text-[13px] font-semibold text-[#241521] mb-1.5">Alumno</span>
+            <span class="relative block">
+              <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-[#4A1F52] pointer-events-none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /></svg>
+              <select aria-label="Alumno" [ngModel]="f().estudianteId" (ngModelChange)="cambiar('estudianteId', $event)"
+                      class="w-full appearance-none pl-10 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border border-[#E3D5C4] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+                <option [ngValue]="null">Todos los alumnos</option>
+                @for (a of alumnos(); track a.id) { <option [ngValue]="a.id">{{ a.nombre }}{{ f().seccionId ? '' : ' — ' + a.grado + ' ' + a.letra }}</option> }
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </label>
+          <ng-container *ngTemplateOutlet="selectorPeriodo; context: { todos: true, err: false }" />
+          <label class="block">
+            <span class="block text-[13px] font-semibold text-[#241521] mb-1.5">Curso</span>
+            <span class="relative block">
+              <svg viewBox="0 0 24 24" fill="none" class="w-[18px] h-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-[#4A1F52] pointer-events-none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h14v14H6a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h14" /></svg>
+              <select aria-label="Curso" [ngModel]="f().cursoId" (ngModelChange)="cambiar('cursoId', $event)"
+                      class="w-full appearance-none pl-10 pr-9 py-2.5 text-[13.5px] text-[#241521] rounded-lg border border-[#E3D5C4] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30">
+                <option [ngValue]="null">Todos los cursos</option>
+                @for (c of opciones()?.cursos ?? []; track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </label>
+          <div class="flex items-end gap-2">
+            <button type="button" (click)="procesar()" [disabled]="procesando()"
+                    class="flex-1 flex items-center justify-center gap-2 h-[44px] px-4 rounded-lg bg-[#4A1F52] hover:bg-[#2E1233] text-white text-[14.5px] font-semibold transition-colors disabled:opacity-60">
+              <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              {{ procesando() ? 'Procesando…' : 'Procesar datos' }}
+            </button>
+            <button type="button" (click)="descargarExcel()" [disabled]="!!descargando()" title="Descargar en Excel" aria-label="Descargar en Excel"
+                    class="w-[48px] h-[44px] flex items-center justify-center rounded-lg bg-[#1E7A3B] hover:bg-[#17652F] disabled:opacity-60">
+              @if (descargando() === 'excel') { <span class="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> }
+              @else { <svg viewBox="0 0 48 48" class="w-7 h-7" aria-hidden="true"><rect x="13" y="6" width="29" height="36" rx="3" fill="#fff" fill-opacity=".9"/><path d="M28 14h10M28 21h10M28 28h10M28 35h10" stroke="#1E7A3B" stroke-width="2.5"/><rect x="5" y="11" width="22" height="26" rx="2.5" fill="#fff"/><path d="m11 18 10 12M21 18 11 30" stroke="#1E7A3B" stroke-width="3" stroke-linecap="round"/></svg> }
+            </button>
+            <button type="button" (click)="descargarPdf()" [disabled]="!!descargando()" title="Descargar en PDF" aria-label="Descargar en PDF"
+                    class="w-[48px] h-[44px] flex items-center justify-center rounded-lg bg-[#C8243B] hover:bg-[#A61D31] disabled:opacity-60">
+              @if (descargando() === 'pdf') { <span class="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> }
+              @else { <svg viewBox="0 0 48 48" fill="none" class="w-7 h-7" stroke="#fff" stroke-width="2.8" stroke-linejoin="round" aria-hidden="true"><path d="M28 5H13a3 3 0 0 0-3 3v32a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3V15L28 5Z"/><path d="M28 5v10h10"/><rect x="6" y="22" width="30" height="12" rx="2" fill="#fff" stroke="none"/><text x="21" y="31.5" text-anchor="middle" font-size="9" font-weight="700" fill="#C8243B" stroke="none" font-family="Arial">PDF</text></svg> }
+            </button>
+          </div>
+        </div>
+        @if (error()) { <p class="mt-4 text-[13px] text-[#A62639]" role="alert">{{ error() }}</p> }
+      </section>
+
+      <!-- Vista previa -->
+      <section class="bg-white rounded-2xl border border-[#E3D5C4] overflow-hidden">
+        <div class="px-5 pt-5 pb-3 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h3 class="font-serif font-bold text-[19px] text-[#2E1233]">{{ pestana() === 'alumno' ? 'Vista previa del reporte' : 'Vista previa de la asistencia' }}</h3>
+            @if (tabla(); as t) { <p class="text-[12.5px] text-[#6B5A67] mt-0.5">{{ t.subtitulo }}</p> }
+          </div>
+          @if (desactualizado()) {
+            <span class="text-[12px] px-3 py-1.5 rounded-lg bg-[#FDF1DC] text-[#8A6A00]">Cambiaste los filtros: pulsa «Procesar datos» para actualizar.</span>
+          }
+        </div>
+
+        @if (tabla(); as t) {
+          @if (indicadores().length) {
+            <div class="px-5 pb-3 flex flex-wrap gap-2">
+              @for (i of indicadores(); track i.etiqueta) {
+                <span class="text-[12.5px] px-3 py-1.5 rounded-lg bg-[#FAF6EF] border border-[#EFE5D8] text-[#241521]">
+                  <span class="text-[#6B5A67]">{{ i.etiqueta }}:</span> <strong class="ml-1">{{ i.valor }}</strong>{{ i.detalle ? ' (' + i.detalle + ')' : '' }}
+                </span>
+              }
+            </div>
+          }
+          @if (limite(); as l) {
+            <p class="mx-5 mb-3 text-[12.5px] px-3 py-2 rounded-lg bg-[#FDF1DC] text-[#8A6A00]">Se muestran {{ l.valor }} registros. {{ l.detalle }}</p>
+          }
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[820px] text-[13px]">
+              <thead>
+                <tr class="bg-[#F6F1F8] text-[#2E1233]">
+                  @for (c of t.columnas; track $index) { <th class="px-3 py-2.5 font-semibold text-center whitespace-nowrap">{{ c }}</th> }
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of filasPagina(); track $index) {
+                  <tr class="border-t border-[#F1ECE4] hover:bg-[#FAF6EF]">
+                    @for (v of fila; track $index; let j = $index) {
+                      @if (t.columnas[j] === 'Estado de asistencia') {
+                        <td class="px-3 py-2 text-center">
+                          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12.5px] font-medium" [ngClass]="claseEstado(v)">
+                            <span class="w-2 h-2 rounded-full" [ngClass]="puntoEstado(v)"></span>{{ v }}
+                          </span>
+                        </td>
+                      } @else if (t.columnas[j] === 'Nota') {
+                        <td class="px-3 py-2 text-center" [ngClass]="claseNota(v)">{{ formato(v) }}</td>
+                      } @else {
+                        <td class="px-3 py-2" [ngClass]="t.columnas[j] === 'Alumno' || t.columnas[j] === 'Curso' || t.columnas[j] === 'Actividad / Evaluación' ? 'text-left' : 'text-center whitespace-nowrap'">{{ formato(v) }}</td>
+                      }
+                    }
+                  </tr>
+                } @empty {
+                  <tr><td [attr.colspan]="t.columnas.length" class="px-3 py-10 text-center text-[13.5px] text-[#6B5A67]">No hay registros con los filtros elegidos.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (t.filas.length > porPagina) {
+            <div class="px-5 py-3 border-t border-[#F1ECE4] flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-[#6B5A67]">
+              <span>Mostrando {{ (pagina() - 1) * porPagina + 1 }}–{{ (pagina() - 1) * porPagina + filasPagina().length }} de {{ t.filas.length }} registros</span>
+              <div class="flex items-center gap-1">
+                <button type="button" (click)="irPagina(1)" [disabled]="pagina() === 1" class="px-2.5 py-1 rounded-md border border-[#E3D5C4] disabled:opacity-40">«</button>
+                <button type="button" (click)="irPagina(pagina() - 1)" [disabled]="pagina() === 1" class="px-2.5 py-1 rounded-md border border-[#E3D5C4] disabled:opacity-40">Anterior</button>
+                <span class="px-2 text-[#241521] font-medium">Página {{ pagina() }} de {{ totalPaginas() }}</span>
+                <button type="button" (click)="irPagina(pagina() + 1)" [disabled]="pagina() === totalPaginas()" class="px-2.5 py-1 rounded-md border border-[#E3D5C4] disabled:opacity-40">Siguiente</button>
+                <button type="button" (click)="irPagina(totalPaginas())" [disabled]="pagina() === totalPaginas()" class="px-2.5 py-1 rounded-md border border-[#E3D5C4] disabled:opacity-40">»</button>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="px-5 pb-10 pt-6 text-center text-[13.5px] text-[#6B5A67]">
+            Elige los filtros y pulsa <strong class="text-[#4A1F52]">Procesar datos</strong> para ver la vista previa.
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
