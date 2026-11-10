@@ -85,7 +85,7 @@
                   class="relative z-10 m-[3px] flex flex-col justify-start rounded-lg px-2.5 py-1.5 text-left shadow-sm overflow-hidden hover:brightness-105 hover:shadow-md transition"
                   [class.opacity-60]="b.estadoCurso === 'Inactivo'"
                   [style.background]="b.color" [style.color]="textoSobre(b.color)"
-                  [style.grid-row]="filaDe(b.horaInicio) + ' / ' + filaDe(b.horaFin)" [style.grid-column]="b.dia + 1"
+                  [style.grid-row]="filaDe(b.horaInicio) + ' / ' + filaDe(b.horaFin, true)" [style.grid-column]="b.dia + 1"
                   [title]="b.curso + ' · ' + b.horaInicio + ' - ' + b.horaFin + (b.docente ? ' · ' + b.docente : '')">
             <span class="block font-semibold text-[13px] leading-tight truncate">{{ b.curso }}</span>
             @if (filasDe(b) >= 2) {

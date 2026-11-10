@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { SeccionService } from '../../../../../core/services/seccion.service';
-import { BloqueHorario, DIAS_SEMANA, Horario, aHora, aMinutos } from '../../../../../core/models/horario.model';
+import { BloqueHorario, DIAS_SEMANA, Horario, aHora, aMinutos, FilaHorario, filasHorario, filaDeHora } from '../../../../../core/models/horario.model';
 import { CursoSeccion, infoGrado } from '../../../../../core/models/seccion.model';
 import { ConfirmService } from '../../../../../core/services/confirm.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 
-interface Fila { inicio: number; fin: number; receso: boolean; }
 
 interface FormBloque {
   indice: number | null;          // null = bloque nuevo
@@ -56,19 +55,10 @@ export class HorarioEditor implements OnInit {
   titulo = computed(() => infoGrado(this.horario()?.grado)?.titulo ?? this.horario()?.grado ?? '');
 
   /** Filas del cuadro: bloques de 15 min y una fila para el receso. */
-  filas = computed<Fila[]>(() => {
+  filas = computed<FilaHorario[]>(() => {
     const h = this.horario();
-    if (!h) return [];
-    const paso = h.minutosBloque || 15;
-    const ini = aMinutos(h.inicio), fin = aMinutos(h.fin);
-    const rIni = aMinutos(h.recesoInicio), rFin = aMinutos(h.recesoFin);
-    const filas: Fila[] = [];
-    for (let t = ini; t < fin;) {
-      if (t === rIni) { filas.push({ inicio: rIni, fin: rFin, receso: true }); t = rFin; continue; }
-      filas.push({ inicio: t, fin: t + paso, receso: false });
-      t += paso;
-    }
-    return filas;
+    if (!h?.inicio || !h.fin) return [];
+    return filasHorario(h, this.bloques());
   });
 
   /** grid-template-rows: cabecera + filas (el receso un poco más alto). */
@@ -76,8 +66,8 @@ export class HorarioEditor implements OnInit {
 
   cursosActivos = computed(() => this.cursos().filter(c => c.estado === 'Activo'));
 
-  /** Horas de inicio posibles (sin el receso). */
-  opcionesInicio = computed(() => this.filas().filter(f => !f.receso).map(f => aHora(f.inicio)));
+  /** Horas de inicio posibles (dentro del turno y sin el receso). */
+  opcionesInicio = computed(() => this.filas().filter(f => !f.receso && !f.fuera).map(f => aHora(f.inicio)));
 
   /** Horas de fin posibles para el inicio elegido: hasta el receso o el fin del turno. */
   opcionesFin = computed(() => {
@@ -87,7 +77,7 @@ export class HorarioEditor implements OnInit {
     const res: string[] = [];
     for (const fila of this.filas()) {
       if (fila.inicio < ini) continue;
-      if (fila.receso) break;
+      if (fila.receso || fila.fuera) break;
       res.push(aHora(fila.fin));
     }
     return res;
@@ -116,10 +106,8 @@ export class HorarioEditor implements OnInit {
   // ---------------- Cuadro ----------------
 
   /** Fila (en el grid) donde empieza / termina una hora. La fila 1 es la cabecera. */
-  filaDe(hora: string): number {
-    const m = aMinutos(hora);
-    const i = this.filas().findIndex(f => f.inicio === m);
-    return (i < 0 ? this.filas().length : i) + 2;
+  filaDe(hora: string, esFin = false): number {
+    return filaDeHora(this.filas(), hora, esFin) + 2;
   }
 
   /** Blanco o negro según el color del curso, para que se lea bien. */
@@ -140,8 +128,8 @@ export class HorarioEditor implements OnInit {
 
   // ---------------- Ventana "Editar bloque" ----------------
 
-  nuevoBloque(dia: number, fila: Fila): void {
-    if (fila.receso || this.ocupado(dia, fila.inicio)) return;
+  nuevoBloque(dia: number, fila: FilaHorario): void {
+    if (fila.receso || fila.fuera || this.ocupado(dia, fila.inicio)) return;
     if (!this.cursosActivos().length) {
       this.error.set('Esta sección no tiene cursos activos. Agrégalos en la pestaña "Cursos" de la sección.');
       return;
@@ -151,7 +139,7 @@ export class HorarioEditor implements OnInit {
     let fin = ini;
     for (const f of this.filas()) {
       if (f.inicio < ini) continue;
-      if (f.receso || this.ocupado(dia, f.inicio) || f.fin - ini > 45) break;
+      if (f.receso || f.fuera || this.ocupado(dia, f.inicio) || f.fin - ini > 45) break;
       fin = f.fin;
     }
     this.errorForm.set(null);

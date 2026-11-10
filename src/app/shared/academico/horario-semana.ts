@@ -2,9 +2,8 @@ import { Component, computed, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MiHorario } from '../../core/models/mi-horario.model';
-import { BloqueHorario, DIAS_SEMANA, aHora, aMinutos } from '../../core/models/horario.model';
+import { BloqueHorario, DIAS_SEMANA, aHora, aMinutos, FilaHorario, filasHorario, filaDeHora } from '../../core/models/horario.model';
 
-interface Fila { inicio: number; fin: number; receso: boolean; }
 
 /**
  * Horario semanal de una sección (solo lectura), igual al del dashboard del alumno.
@@ -58,7 +57,7 @@ interface Fila { inicio: number; fin: number; receso: boolean; }
             <button type="button" (click)="seleccionado.set(b)"
                     class="relative z-10 m-[3px] flex flex-col justify-start rounded-lg px-2.5 py-1.5 text-left shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-px transition"
                     [style.background]="b.color" [style.color]="textoSobre(b.color)"
-                    [style.grid-row]="filaDe(b.horaInicio) + ' / ' + filaDe(b.horaFin)" [style.grid-column]="b.dia + 1"
+                    [style.grid-row]="filaDe(b.horaInicio) + ' / ' + filaDe(b.horaFin, true)" [style.grid-column]="b.dia + 1"
                     [title]="b.curso + ' · ' + b.horaInicio + ' - ' + b.horaFin + (b.docente ? ' · ' + b.docente : '')">
               <span class="block font-semibold text-[12.5px] leading-tight truncate">{{ b.curso }}</span>
               @if (filasDe(b) >= 2) { <span class="block text-[11px] opacity-90">{{ b.horaInicio }} - {{ b.horaFin }}</span> }
@@ -107,27 +106,16 @@ export class HorarioSemana {
 
   hayHorario = computed(() => !!this.datos()?.matriculado && (this.datos()?.bloques.length ?? 0) > 0 && this.filas().length > 0);
 
-  filas = computed<Fila[]>(() => {
+  filas = computed<FilaHorario[]>(() => {
     const h = this.datos();
     if (!h?.inicio || !h.fin) return [];
-    const paso = h.minutosBloque || 15;
-    const ini = aMinutos(h.inicio), fin = aMinutos(h.fin);
-    const rIni = h.recesoInicio ? aMinutos(h.recesoInicio) : -1, rFin = h.recesoFin ? aMinutos(h.recesoFin) : -1;
-    const filas: Fila[] = [];
-    for (let t = ini; t < fin;) {
-      if (t === rIni && rFin > rIni) { filas.push({ inicio: rIni, fin: rFin, receso: true }); t = rFin; continue; }
-      filas.push({ inicio: t, fin: t + paso, receso: false });
-      t += paso;
-    }
-    return filas;
+    return filasHorario({ inicio: h.inicio!, fin: h.fin!, recesoInicio: h.recesoInicio, recesoFin: h.recesoFin, minutosBloque: h.minutosBloque }, this.datos()?.bloques ?? []);
   });
 
   plantillaFilas = computed(() => ['40px', ...this.filas().map(f => f.receso ? '36px' : '28px')].join(' '));
 
-  filaDe(hora: string): number {
-    const m = aMinutos(hora);
-    const i = this.filas().findIndex(f => f.inicio === m);
-    return (i < 0 ? this.filas().length : i) + 2;
+  filaDe(hora: string, esFin = false): number {
+    return filaDeHora(this.filas(), hora, esFin) + 2;
   }
 
   filasDe(b: BloqueHorario): number {

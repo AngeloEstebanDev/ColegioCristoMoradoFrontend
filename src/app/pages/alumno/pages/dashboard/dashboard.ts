@@ -6,10 +6,9 @@ import { AulaService } from '../../../../core/services/aula.service';
 import { AuthService } from '../../../../services/auth';
 import { MiHorario } from '../../../../core/models/mi-horario.model';
 import { Actividad } from '../../../../core/models/aula.model';
-import { BloqueHorario, DIAS_SEMANA, aHora, aMinutos } from '../../../../core/models/horario.model';
+import { BloqueHorario, DIAS_SEMANA, aHora, aMinutos, FilaHorario, filasHorario, filaDeHora } from '../../../../core/models/horario.model';
 import { infoGrado } from '../../../../core/models/seccion.model';
 
-interface Fila { inicio: number; fin: number; receso: boolean; }
 
 /**
  * Dashboard del alumno: bienvenida, resumen (cursos, actividades pendientes, salón)
@@ -44,18 +43,10 @@ export class AlumnoDashboard implements OnInit {
   totalCursos = computed(() => this.datos()?.cursos.length ?? 0);
   /** Tareas y cuestionarios que aún puede entregar (en plazo y sin entregar). */
   pendientes = computed(() => this.actividades().filter(a => a.situacion === 'PENDIENTE' && !a.vencida));
-  filas = computed<Fila[]>(() => {
+  filas = computed<FilaHorario[]>(() => {
     const h = this.datos();
-    if (!h?.inicio || !h.fin || !h.recesoInicio || !h.recesoFin) return [];
-    const paso = h.minutosBloque || 15;
-    const ini = aMinutos(h.inicio), fin = aMinutos(h.fin), rIni = aMinutos(h.recesoInicio), rFin = aMinutos(h.recesoFin);
-    const filas: Fila[] = [];
-    for (let t = ini; t < fin;) {
-      if (t === rIni) { filas.push({ inicio: rIni, fin: rFin, receso: true }); t = rFin; continue; }
-      filas.push({ inicio: t, fin: t + paso, receso: false });
-      t += paso;
-    }
-    return filas;
+    if (!h?.inicio || !h.fin) return [];
+    return filasHorario({ inicio: h.inicio!, fin: h.fin!, recesoInicio: h.recesoInicio, recesoFin: h.recesoFin, minutosBloque: h.minutosBloque }, this.datos()?.bloques ?? []);
   });
 
   plantillaFilas = computed(() => ['40px', ...this.filas().map(f => f.receso ? '40px' : '30px')].join(' '));
@@ -71,10 +62,8 @@ export class AlumnoDashboard implements OnInit {
     });
   }
 
-  filaDe(hora: string): number {
-    const m = aMinutos(hora);
-    const i = this.filas().findIndex(f => f.inicio === m);
-    return (i < 0 ? this.filas().length : i) + 2;
+  filaDe(hora: string, esFin = false): number {
+    return filaDeHora(this.filas(), hora, esFin) + 2;
   }
 
   filasDe(b: BloqueHorario): number {
