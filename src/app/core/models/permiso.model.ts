@@ -1,10 +1,5 @@
-/**
- * Tipo Permiso: describe la forma de los datos de «permiso». Es lo que viaja en JSON entre el backend
- * y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export type Permiso = 'COMUNICADOS' | 'REPORTES' | 'ACADEMICO' | 'USUARIOS' | 'PERMISOS';
 
-/** Permisos que el administrador puede dar a cada miembro de la Directiva. */
 export const PERMISOS: { valor: Permiso; titulo: string; descripcion: string; sensible: boolean }[] = [
   { valor: 'COMUNICADOS', titulo: 'Crear comunicados', sensible: false,
     descripcion: 'Publicar comunicados institucionales visibles para toda la comunidad.' },

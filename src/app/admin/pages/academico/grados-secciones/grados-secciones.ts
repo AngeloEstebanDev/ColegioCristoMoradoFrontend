@@ -7,10 +7,6 @@ import { GRADOS_ACADEMICOS, GradoInfo, Seccion, TURNOS, TurnoNombre, horarioDe, 
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
-/**
- * Académico > Grados y Secciones.
- * Fila de grados (1° Primaria a 5° Secundaria) y las secciones del grado elegido.
- */
 @Component({
   selector: 'app-grados-secciones',
   standalone: true,
@@ -18,16 +14,11 @@ import { ToastService } from '../../../../core/services/toast.service';
   templateUrl: './grados-secciones.html',
 })
 export class GradosSecciones implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
-  /** Servicio SeccionService (inyectado por Angular). */
   private seccionService = inject(SeccionService);
-  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
-  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
 
   readonly grados = GRADOS_ACADEMICOS;
@@ -35,52 +26,34 @@ export class GradosSecciones implements OnInit {
   readonly turnoDe = turnoDe;
   readonly recreoDe = recreoDe;
   readonly turnos = TURNOS;
-  /** Valor del combo para crear una sección adicional. */
   readonly OTRO = 'OTRO';
-  /** Referencia a un elemento de la vista (carrusel). */
   private carrusel = viewChild<ElementRef<HTMLElement>>('carrusel');
 
-  /** Estado (signal): secciones. */
   secciones = signal<Seccion[]>([]);
-  /** Estado (signal): grado sel. */
   gradoSel = signal<GradoInfo>(GRADOS_ACADEMICOS[0]);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
-  // Panel "Nueva sección"
   panelAbierto = signal(false);
-  /** Letra de una sección predefinida o 'OTRO'. */
   letra = signal<string | null>(null);
-  /** Sección adicional ("Otros"): su letra y su turno. */
   letraOtra = signal('');
-  /** Estado (signal): turno otro. */
   turnoOtro = signal<TurnoNombre>('Mañana');
-  /** Estado (signal): capacidad. */
   capacidad = signal(35);
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): error panel. */
   errorPanel = signal<string | null>(null);
 
-  /** Valor calculado (computed): secciones del grado. Se actualiza solo. */
   seccionesDelGrado = computed(() => this.secciones()
     .filter(s => s.grado === this.gradoSel().valor)
     .sort((a, b) => a.letra.localeCompare(b.letra)));
 
-  /** Secciones permitidas (según horarios fijos) que el grado elegido todavía no tiene. */
   seccionesLibres = computed(() => {
     const usadas = new Set(this.seccionesDelGrado().map(s => s.letra));
     return seccionesDelGrado(this.gradoSel().valor).filter(t => !usadas.has(t.letra));
   });
 
-  /** Letras que ya usa el grado elegido. */
   private letrasUsadas = computed(() => new Set(this.seccionesDelGrado().map(s => s.letra.toUpperCase())));
 
-  /** Primera letra libre para una sección adicional (después de las predefinidas). */
   siguienteLetra = computed(() => {
     const predef = new Set(seccionesDelGrado(this.gradoSel().valor).map(t => t.letra));
     for (let c = 65; c <= 90; c++) {
@@ -90,25 +63,15 @@ export class GradosSecciones implements OnInit {
     return '';
   });
 
-  /** Horario que tendrá la sección adicional con el turno elegido. */
   horarioOtro = computed(() => horarioTurno(this.gradoSel().valor, this.turnoOtro()));
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void {
     const g = this.grados.find(x => x.valor === this.route.snapshot.queryParamMap.get('grado'));
     if (g) this.gradoSel.set(g);
     this.cargar();
-    // Lleva a la vista el grado elegido al volver del detalle
     setTimeout(() => this.centrarGrado(), 0);
   }
 
-  /**
-   * Carga los datos de esta pantalla. Pide los datos al backend con seccionService.listar() y
-   * actualiza la pantalla cuando llega la respuesta.
-   */
   cargar(): void {
     this.cargando.set(true);
     this.seccionService.listar().subscribe({
@@ -117,32 +80,24 @@ export class GradosSecciones implements OnInit {
     });
   }
 
-  /** Elige grado. Al terminar, lleva al usuario a otra página (router.navigate). */
   elegirGrado(g: GradoInfo): void {
     this.gradoSel.set(g);
     this.router.navigate([], { relativeTo: this.route, queryParams: { grado: g.valor }, replaceUrl: true });
   }
 
-  /** Desplaza los datos de esta pantalla. */
   desplazar(dir: number): void {
     this.carrusel()?.nativeElement.scrollBy({ left: dir * 320, behavior: 'smooth' });
   }
 
-  /** Realiza la acción «centrar grado» de esta pantalla. */
   private centrarGrado(): void {
     const el = this.carrusel()?.nativeElement.querySelector<HTMLElement>('[data-activo="true"]');
     el?.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
 
-  /** Abre sección. Al terminar, lleva al usuario a otra página (router.navigate). */
   abrirSeccion(s: Seccion): void {
     this.router.navigate(['/home/admin/academico/grados-secciones', s.id]);
   }
 
-  /**
-   * Muestra u oculta estado. Pide los datos al backend con seccionService.cambiarEstado() y actualiza
-   * la pantalla cuando llega la respuesta. Antes pide confirmación al usuario.
-   */
   async alternarEstado(s: Seccion, ev: Event): Promise<void> {
     ev.stopPropagation();
     const activar = s.estado === 'Inactiva';
@@ -153,8 +108,6 @@ export class GradosSecciones implements OnInit {
     });
   }
 
-  // ---------------- Nueva sección ----------------
-
   abrirNueva(): void {
     this.letra.set(this.seccionesLibres()[0]?.letra ?? this.OTRO);
     this.letraOtra.set(this.siguienteLetra());
@@ -164,13 +117,11 @@ export class GradosSecciones implements OnInit {
     this.panelAbierto.set(true);
   }
 
-  /** Escribe letra otra. */
   escribirLetraOtra(v: string): void {
     this.letraOtra.set((v ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 1).toUpperCase());
     this.errorPanel.set(null);
   }
 
-  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     const opcion = this.letra();
     if (!opcion) { this.errorPanel.set('Selecciona la sección.'); return; }

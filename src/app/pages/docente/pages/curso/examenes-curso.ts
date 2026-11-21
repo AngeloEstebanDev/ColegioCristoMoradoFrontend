@@ -13,10 +13,8 @@ import { AvatarPersona, ChipVisible, EstiloItem, IconoItem } from './curso-ui';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
-/** Modelo Bloque: describe la forma de los datos de «bloque». */
 interface Bloque { periodo: Periodo; registro: RegistroNotas | null; participacion: Participacion | null; }
 
-/** Constante COLORES: valor fijo (colores) que se reutiliza en varias partes. */
 const COLORES: { color: string; fondo: string }[] = [
   { color: '#DC2626', fondo: '#FDE8E8' },
   { color: '#2563EB', fondo: '#E6EEFB' },
@@ -24,11 +22,6 @@ const COLORES: { color: string; fondo: string }[] = [
   { color: '#0D9488', fondo: '#DDF3F1' },
 ];
 
-/**
- * Docente > curso > Exámenes.
- * Por bimestre: "Participación" (promedio automático de las tareas y cuestionarios, desde la primera
- * actividad) y los exámenes presenciales que el docente agrega (Examen mensual, bimestral, Comportamiento...).
- */
 @Component({
   selector: 'app-examenes-curso',
   standalone: true,
@@ -36,11 +29,8 @@ const COLORES: { color: string; fondo: string }[] = [
   templateUrl: './examenes-curso.html',
 })
 export class ExamenesCurso implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
-  /** Servicio NotaService (inyectado por Angular). */
   private notas = inject(NotaService);
 
   @Input({ required: true }) curso!: CursoAula;
@@ -52,53 +42,32 @@ export class ExamenesCurso implements OnInit {
   readonly romanos = ROMANOS;
   readonly estiloParticipacion: EstiloItem = { etiqueta: 'Participación', color: '#7C3AED', fondo: '#F0EAFD', icono: 'examen' };
 
-  /** Estado (signal): bloques. */
   bloques = signal<Bloque[]>([]);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): éxito. */
   exito = signal<string | null>(null);
-  /** Estado (signal): cerrados. */
   cerrados = signal<Set<number>>(new Set());
-  /** Estado (signal): menú. */
   menu = signal<number | null>(null);
 
-  /** Vista abierta: participación de un bimestre o un examen. */
   vistaParticipacion = signal<Bloque | null>(null);
-  /** Estado (signal): alumno participación. */
   alumnoParticipacion = signal<number | null>(null);
-  /** Estado (signal): vista examen. */
   vistaExamen = signal<{ bloque: Bloque; evaluacion: EvaluacionNota } | null>(null);
-  /** Estado (signal): valores. */
   valores = signal<Record<number, string>>({});
-  /** Estado (signal): guardando. */
   guardando = signal(false);
 
-  /** Estado (signal): modal. */
   modal = signal<{ id: number | null; nombre: string; periodoId: number | null } | null>(null);
-  /** Estado (signal): error modal. */
   errorModal = signal<string | null>(null);
-  /** Estado (signal): guardando modal. */
   guardandoModal = signal(false);
 
-  /** Valor calculado (computed): periodo activo. Se actualiza solo. */
   periodoActivo = computed(() => this.periodos.find(p => p.activo) ?? null);
   detalleAlumno = computed<ParticipacionAlumno | null>(() =>
     this.vistaParticipacion()?.participacion?.alumnos.find(a => a.estudianteId === this.alumnoParticipacion()) ?? null);
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void { this.cargar(); }
 
-  /** Cierra menú. */
   @HostListener('document:click')
   cerrarMenu(): void { this.menu.set(null); }
 
-  /** Carga los datos de esta pantalla. */
   cargar(): void {
     const anio = new Date().getFullYear();
     const pers = this.periodos.filter(p => p.anio === anio).sort((a, b) => a.bimestre - b.bimestre);
@@ -112,7 +81,6 @@ export class ExamenesCurso implements OnInit {
       next: (r) => {
         this.bloques.set(pers.map((p, i) => ({ periodo: p, registro: r[i].registro, participacion: r[i].participacion })));
         this.cargando.set(false);
-        // Bimestres sin nada y que no son el actual, cerrados al inicio.
         const c = new Set<number>();
         this.bloques().forEach(b => { if (!b.periodo.activo && !this.tieneAlgo(b)) c.add(b.periodo.id); });
         this.cerrados.set(c);
@@ -122,7 +90,6 @@ export class ExamenesCurso implements OnInit {
     });
   }
 
-  /** Realiza la acción «refrescar vistas» de esta pantalla. */
   private refrescarVistas(): void {
     const vp = this.vistaParticipacion();
     if (vp) this.vistaParticipacion.set(this.bloques().find(b => b.periodo.id === vp.periodo.id) ?? null);
@@ -134,48 +101,38 @@ export class ExamenesCurso implements OnInit {
     }
   }
 
-  /** Indica si tiene algo (devuelve verdadero o falso). */
   tieneAlgo(b: Bloque): boolean {
     return (b.participacion?.actividades ?? 0) > 0 || (b.registro?.evaluaciones.length ?? 0) > 0;
   }
 
-  /** Devuelve el nombre de los datos de esta pantalla. */
   nombre(p: Periodo): string { return `${ROMANOS[p.bimestre]} Bimestre - ${p.anio}`; }
 
-  /** Muestra u oculta los datos de esta pantalla. */
   alternar(id: number): void {
     this.cerrados.update(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
 
-  /** Devuelve el estilo de examen. */
   estiloExamen(i: number): EstiloItem {
     const c = COLORES[i % COLORES.length];
     return { etiqueta: 'Evaluación', color: c.color, fondo: c.fondo, icono: 'examen' };
   }
 
-  /** Muestra u oculta menú. */
   alternarMenu(id: number, ev: Event): void {
     ev.stopPropagation();
     this.menu.update(m => m === id ? null : id);
   }
 
-  /** Devuelve «pastilla». */
   pastilla(v: number | null | undefined): { texto: string; color: string; fondo: string } {
     if (v === null || v === undefined) return { texto: '—', color: '#6B5A67', fondo: '#F0E6D8' };
     return { texto: `${Math.round(v + 1e-9)}/20`, ...colorNota(v) };
   }
-
-  // ---------------- Participación ----------------
 
   abrirParticipacion(b: Bloque): void {
     this.vistaParticipacion.set(b);
     this.alumnoParticipacion.set(b.participacion?.alumnos[0]?.estudianteId ?? null);
   }
 
-  /** Devuelve la etiqueta de tipo. */
   etiquetaTipo(tipo: string): string { return tipo === 'CUESTIONARIO' ? 'Cuestionario' : 'Archivo/Tarea'; }
 
-  /** Devuelve «nota detalle». */
   notaDetalle(d: { nota: number | null; estado: string }): { texto: string; color: string; fondo: string } {
     switch (d.estado) {
       case 'CALIFICADA': return this.pastilla(d.nota);
@@ -184,8 +141,6 @@ export class ExamenesCurso implements OnInit {
       default: return { texto: 'Pendiente', color: '#9A6B00', fondo: '#FDF1DC' };
     }
   }
-
-  // ---------------- Examen ----------------
 
   abrirExamen(b: Bloque, ev: EvaluacionNota): void {
     this.vistaExamen.set({ bloque: b, evaluacion: ev });
@@ -199,13 +154,8 @@ export class ExamenesCurso implements OnInit {
     this.error.set(null);
   }
 
-  /** Cambia valor. */
   cambiarValor(id: number, valor: string): void { this.valores.update(v => ({ ...v, [id]: valor })); }
 
-  /**
-   * Guarda notas. Pide los datos al backend con notas.guardarNotas() y actualiza la pantalla cuando
-   * llega la respuesta. Muestra un aviso (toast) con el resultado.
-   */
   guardarNotas(): void {
     const ve = this.vistaExamen();
     if (!ve) return;
@@ -234,22 +184,18 @@ export class ExamenesCurso implements OnInit {
     });
   }
 
-  // ---------------- Crear / editar / eliminar ----------------
-
   nuevo(): void {
     if (!this.periodoActivo()) { this.error.set('No hay un bimestre activo. Pide a la administración que active el bimestre actual.'); return; }
     this.errorModal.set(null);
     this.modal.set({ id: null, nombre: '', periodoId: this.periodoActivo()!.id });
   }
 
-  /** Edita los datos de esta pantalla. */
   editar(ev: EvaluacionNota, b: Bloque): void {
     this.menu.set(null);
     this.errorModal.set(null);
     this.modal.set({ id: ev.id, nombre: ev.nombre, periodoId: b.periodo.id });
   }
 
-  /** Guarda modal. */
   guardarModal(): void {
     const m = this.modal();
     if (!m) return;
@@ -271,10 +217,6 @@ export class ExamenesCurso implements OnInit {
     });
   }
 
-  /**
-   * Elimina los datos de esta pantalla. Pide los datos al backend con notas.eliminarEvaluacion() y
-   * actualiza la pantalla cuando llega la respuesta. Antes pide confirmación al usuario.
-   */
   async eliminar(ev: EvaluacionNota): Promise<void> {
     this.menu.set(null);
     if (!await this.confirmar.pedir(`¿Eliminar "${ev.nombre}"? Se borrarán sus ${ev.notasRegistradas} nota(s) registradas.`)) return;
@@ -287,7 +229,6 @@ export class ExamenesCurso implements OnInit {
     });
   }
 
-  /** Vuelve a los datos de esta pantalla. */
   volver(): void {
     this.vistaParticipacion.set(null);
     this.vistaExamen.set(null);

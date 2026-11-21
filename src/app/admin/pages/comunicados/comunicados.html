@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «comunicados», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en comunicados.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="mx-auto space-y-4" [ngClass]="pestana() === 'mensajes' ? 'max-w-6xl' : 'max-w-3xl'">
 
-  <!-- Encabezado -->
   <div class="flex items-center gap-3">
     <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center">
       @if (pestana() === 'comunicados') {
@@ -22,7 +14,6 @@
     </div>
   </div>
 
-  <!-- Pestañas -->
   <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#EDE6DB]">
     <button type="button" (click)="pestana.set('comunicados')"
             class="flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
@@ -44,8 +35,6 @@
     </button>
   </div>
 
-  <!-- Ambas pestañas quedan cargadas para que el anuncio grande
-       aparezca aunque se entre directo a Mensajes. -->
   <div [class.hidden]="pestana() !== 'comunicados'"><app-lista-comunicados /></div>
   <div [class.hidden]="pestana() !== 'mensajes'"><app-bandeja-mensajes /></div>
 </div>

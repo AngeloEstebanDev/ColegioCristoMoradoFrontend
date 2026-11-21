@@ -1,17 +1,9 @@
-<!--
-  Vista (HTML) de «examenes curso», que se muestra en el panel del docente.
-  La lógica (datos, eventos y llamadas al backend) está en examenes-curso.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <ng-template #flecha let-abierta>
   <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 shrink-0 text-[#4A1F52] transition-transform" [ngClass]="abierta ? 'rotate-90' : ''"
        stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
 </ng-template>
 
 @if (vistaParticipacion(); as b) {
-  <!-- ===================== Participación ===================== -->
   <div class="space-y-4">
     <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-4 flex-wrap">
       <button type="button" (click)="volver()" title="Volver a Exámenes"
@@ -106,7 +98,6 @@
     </div>
   </div>
 } @else if (vistaExamen(); as ve) {
-  <!-- ===================== Registro de notas de un examen ===================== -->
   <div class="space-y-4">
     <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-4 flex-wrap">
       <button type="button" (click)="volver()" title="Volver a Exámenes"
@@ -181,7 +172,6 @@
     </section>
   </div>
 } @else {
-  <!-- ===================== Lista por bimestre ===================== -->
   <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
     <div class="flex items-center justify-between gap-3 mb-4">
       <h3 class="font-serif font-bold text-[20px] text-[#241521]">Exámenes</h3>
@@ -275,7 +265,6 @@
   </section>
 }
 
-<!-- ===================== Modal: crear / editar examen ===================== -->
 @if (modal(); as m) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/50" (click)="modal.set(null)"></div>

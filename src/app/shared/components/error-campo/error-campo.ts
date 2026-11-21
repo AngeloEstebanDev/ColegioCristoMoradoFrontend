@@ -3,11 +3,6 @@ import { AbstractControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { mensajeError } from '../../../core/utils/validadores';
 
-/**
- * Muestra bajo un campo el mensaje de su primer error, solo cuando el usuario
- * ya lo tocó o escribió en él. Uso: <app-error-campo [control]="form.get('telefono')" />
- * Escucha los eventos del control (valor, estado, tocado), así se actualiza al instante.
- */
 @Component({
   selector: 'app-error-campo',
   template: `
@@ -17,13 +12,10 @@ import { mensajeError } from '../../../core/utils/validadores';
   `,
 })
 export class ErrorCampo {
-  /** Dato de entrada «control» que envía el componente padre. */
   control = input<AbstractControl | null | undefined>(null);
-  /** Estado (signal): mensaje. */
   protected mensaje = signal<string | null>(null);
   private sub?: Subscription;
 
-  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor() {
     inject(DestroyRef).onDestroy(() => this.sub?.unsubscribe());
     effect(() => {
@@ -34,7 +26,6 @@ export class ErrorCampo {
     });
   }
 
-  /** Actualiza los datos de esta pantalla. */
   private actualizar(c: AbstractControl | null | undefined): void {
     this.mensaje.set(c && c.invalid && (c.touched || c.dirty) ? mensajeError(c) : null);
   }

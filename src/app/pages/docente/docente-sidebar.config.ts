@@ -1,9 +1,5 @@
 import { SidebarEntry } from '../../shared/layout/siderbar/siderbar';
 
-/**
- * Menú lateral del rol Docente: Dashboard, Comunicados, Mi Agenda (Mis Citas y
- * Disponibilidad), Mis Cursos y Mi Cuenta (Mi Perfil y Configuración). Mismo formato que admin-sidebar.config.ts.
- */
 export const DOCENTE_SIDEBAR_ITEMS: SidebarEntry[] = [
   {
     type: 'link',

@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «students», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en students.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
   <div class="flex items-start justify-between flex-wrap gap-3">
@@ -24,7 +17,6 @@
     {{ error() }}
   </div>
 
-  <!-- Filtros -->
   <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 flex flex-wrap gap-3 items-center">
     <div class="relative flex-1 min-w-[220px]">
       <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
@@ -39,7 +31,6 @@
     </select>
   </div>
 
-  <!-- Tabla -->
   <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-[13px]">
@@ -122,7 +113,6 @@
   </div>
 </div>
 
-<!-- Panel: Ver estudiante -->
 <div *ngIf="panelVerAbierto() && estudianteSeleccionado() as est" class="fixed inset-0 z-50 flex justify-end">
   <div class="absolute inset-0 bg-black/30" (click)="cerrarPaneles()"></div>
 
@@ -148,7 +138,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="flex border-b border-[#E3D5C4] px-6">
       <button type="button" (click)="pestanaActiva.set('general')"
               class="px-3 py-3 text-[12.5px] font-medium border-b-2 -mb-px transition-colors"
@@ -169,7 +158,6 @@
 
     <div class="p-6 space-y-5">
 
-      <!-- Información general -->
       <div *ngIf="pestanaActiva() === 'general'" class="space-y-5">
         <div>
           <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide mb-2.5">Información personal</h4>
@@ -224,7 +212,6 @@
         </div>
       </div>
 
-      <!-- Padres de familia -->
       <div *ngIf="pestanaActiva() === 'padres'" class="space-y-3">
         <div *ngIf="!est.padres.length" class="text-[13px] text-[#6B5A67]">Este estudiante aún no tiene padres/apoderados vinculados.</div>
         <div *ngFor="let p of est.padres" class="rounded-lg border border-[#E3D5C4] p-3.5 bg-white flex items-center justify-between">
@@ -236,7 +223,6 @@
         </div>
       </div>
 
-      <!-- Historial -->
       <div *ngIf="pestanaActiva() === 'historial'" class="space-y-3">
         <div class="flex items-start gap-3 text-[13px]">
           <div class="w-2 h-2 rounded-full bg-[#4A1F52] mt-1.5 shrink-0"></div>
@@ -266,7 +252,6 @@
   </div>
 </div>
 
-<!-- Panel: Crear / Editar estudiante -->
 <div *ngIf="panelEditarAbierto()" class="fixed inset-0 z-50 flex justify-end">
   <div class="absolute inset-0 bg-black/30" (click)="cerrarPaneles()"></div>
 
@@ -353,7 +338,6 @@
         </select>
       </div>
 
-      <!-- Cuenta de acceso: usuario ALU + N.º de documento (automático) -->
       <div class="pt-2 border-t border-[#E3D5C4] space-y-4">
         <div class="pt-3">
           <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cuenta de acceso</h4>

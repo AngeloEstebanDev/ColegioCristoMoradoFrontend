@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «login», que se muestra en la pantalla de inicio de sesión.
-  La lógica (datos, eventos y llamadas al backend) está en login.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="flex items-center justify-center min-h-screen py-12 px-5
             bg-[radial-gradient(circle_at_50%_0%,rgba(228,199,102,0.10),transparent_55%),repeating-linear-gradient(135deg,rgba(255,255,255,0.018)_0px,rgba(255,255,255,0.018)_1px,transparent_1px,transparent_34px),linear-gradient(180deg,#2E1233_0%,#200D24_100%)]">
   <div class="relative w-full max-w-[420px]">
@@ -13,7 +6,6 @@
                 px-6 pt-[88px] pb-8 rounded-t-[170px] rounded-b-[14px]
                 sm:px-10 sm:pt-24 sm:pb-10 sm:rounded-t-[210px]">
 
-      <!-- Escudo central -->
       <div class="absolute left-1/2 -translate-x-1/2 flex items-center justify-center rounded-full
                   border-[3px] border-[#C9A227] bg-[#FBF7F1]
                   shadow-[0_0_0_6px_#FBF7F1,0_0_0_8px_rgba(201,162,39,0.4),0_14px_24px_-10px_rgba(0,0,0,0.5)]
@@ -23,7 +15,6 @@
              class="w-[74%] h-[74%] object-contain" />
       </div>
 
-      <!-- Laureles -->
       <svg class="absolute -top-8 w-[34px] opacity-90 z-[2] left-[calc(50%-86px)] sm:left-[calc(50%-108px)]"
            viewBox="0 0 40 90" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M30 5C18 15 10 30 10 45s8 30 20 40" stroke="#C9A227" stroke-width="1.4" fill="none"/>
@@ -41,7 +32,6 @@
         <ellipse cx="16" cy="72" rx="6" ry="3" fill="#C9A227" transform="rotate(30 16 72)"/>
       </svg>
 
-      <!-- Ribbon (con puntas triangulares via before/after) -->
       <div class="relative mx-auto mt-6 mb-1 w-fit bg-[#A62639] text-[#FBF7F1] font-serif
                   font-semibold text-[12.5px] tracking-[0.06em] px-5 py-1.5 rounded-[3px]
                   before:content-[''] before:absolute before:top-full before:left-0
@@ -65,7 +55,6 @@
       </div>
 
       @if (modo() === 'login') {
-        <!-- ===================== INICIAR SESIÓN ===================== -->
         <form (ngSubmit)="onSubmit()" novalidate autocomplete="on">
           @if (aviso()) {
             <div class="mb-4 rounded-lg border border-[#1E7A3B]/30 bg-[#E7F3EA] px-3 py-2 text-center text-[12.5px] text-[#1E7A3B]">{{ aviso() }}</div>
@@ -144,7 +133,6 @@
           </button>
         </form>
       } @else {
-        <!-- ===================== RECUPERAR CONTRASEÑA ===================== -->
         <div class="space-y-4">
           @if (pasoRecuperar() === 1) {
             <p class="text-[13px] text-[#6B5A67] leading-relaxed">

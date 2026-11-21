@@ -23,42 +23,27 @@ import { Val, limpiarTexto, soloDigitos } from '../../../core/utils/validadores'
 import { FotoService } from '../../../core/services/foto.service';
 import { mensajeHttp } from '../../../core/utils/error-http';
 
-/**
- * Vista "Mi perfil". La usan los 4 roles (admin/docente/alumno/padre):
- * se enruta el mismo componente desde app.routes.ts en cada sección,
- * y aquí siempre se trabaja con el usuario logeado (AuthService).
- */
 @Component({
   imports: [ErrorCampo, FiltroEntrada, CommonModule, ReactiveFormsModule, FormsModule],
   selector: 'app-perfil',
   templateUrl: './perfil.html',
 })
 export class Perfil implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
-  /** Servicio FotoService (inyectado por Angular). */
   private fotos = inject(FotoService);
 
-  /** Estado (signal): perfil. */
   perfil = signal<PerfilModel | null>(null);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): guardado ok. */
   guardadoOk = signal(false);
-  /** Estado (signal): editando. */
   editando = signal(false);
 
   etiquetaRol = etiquetaRol;
 
   form: FormGroup;
 
-  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -66,7 +51,6 @@ export class Perfil implements OnInit {
   ) {
     this.form = this.fb.group({
       nombre: ['', [Val.nombreCompleto()]],
-      // Directiva: nombres y apellidos por separado
       nombres: ['', [Val.letras('tus nombres', 100, true)]],
       apellidoPaterno: ['', [Val.letras('el apellido paterno', 60, true)]],
       apellidoMaterno: ['', [Val.letras('el apellido materno', 60)]],
@@ -80,18 +64,10 @@ export class Perfil implements OnInit {
     });
   }
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void {
     this.cargar();
   }
 
-  /**
-   * Carga los datos de esta pantalla. Pide los datos al backend con perfilService.obtener() y
-   * actualiza la pantalla cuando llega la respuesta.
-   */
   cargar(): void {
     const usuario = this.authService.obtenerUsuario();
 
@@ -115,7 +91,6 @@ export class Perfil implements OnInit {
     });
   }
 
-  /** Llena formulario. */
   private llenarFormulario(p: PerfilModel): void {
     this.form.reset({
       nombre: p.nombre,
@@ -132,38 +107,28 @@ export class Perfil implements OnInit {
     });
   }
 
-  /** Administrador (cuenta sin registro de docente, padre o directiva). */
   esCuentaSola(p: PerfilModel): boolean {
     return !p.docente && !p.padre && !p.personal && !p.estudiante;
   }
 
-  // ------------------------------------------------------------------
-  // Foto de perfil
-  // ------------------------------------------------------------------
-
   subiendoFoto = signal(false);
-  /** Estado (signal): selector foto. */
   selectorFoto = signal(false);
   gruposAvatares = GRUPOS_AVATARES;
   rutaAvatar = rutaAvatar;
 
-  /** Abre selector foto. */
   abrirSelectorFoto(): void {
     this.error.set(null);
     this.selectorFoto.set(true);
   }
 
-  /** Cierra selector foto. */
   cerrarSelectorFoto(): void {
     if (!this.subiendoFoto()) this.selectorFoto.set(false);
   }
 
-  /** Elige avatar. */
   elegirAvatar(id: string): void {
     this.guardarFoto({ foto: rutaAvatar(id) });
   }
 
-  /** Elige foto. */
   elegirFoto(ev: Event): void {
     const input = ev.target as HTMLInputElement;
     const archivo = input.files?.[0];
@@ -177,17 +142,12 @@ export class Perfil implements OnInit {
     lector.readAsDataURL(archivo);
   }
 
-  /** Quita foto. Antes pide confirmación al usuario. */
   async quitarFoto(): Promise<void> {
     if (!await this.confirmar.pedir('¿Quitar tu foto de perfil?')) return;
     this.selectorFoto.set(false);
     this.guardarFoto({ quitarFoto: true });
   }
 
-  /**
-   * Guarda foto. Pide los datos al backend con perfilService.actualizar() y actualiza la pantalla
-   * cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
-   */
   private guardarFoto(datos: { foto?: string; quitarFoto?: boolean }): void {
     const p = this.perfil();
     if (!p) return;
@@ -203,7 +163,6 @@ export class Perfil implements OnInit {
     });
   }
 
-  /** Devuelve las iniciales de los datos de esta pantalla. */
   iniciales(nombre: string): string {
     return nombre
       .split(' ')
@@ -214,30 +173,17 @@ export class Perfil implements OnInit {
       .toUpperCase();
   }
 
-  // ------------------------------------------------------------------
-  // Gmail: vincular / verificar con código
-  // ------------------------------------------------------------------
-
   gmailAbierto = signal(false);
-  /** Estado (signal): gmail paso. */
   gmailPaso = signal<'correo' | 'codigo'>('correo');
-  /** Estado (signal): gmail input. */
   gmailInput = signal('');
-  /** Estado (signal): gmail código. */
   gmailCodigo = signal('');
-  /** Estado (signal): gmail enmascarado. */
   gmailEnmascarado = signal('');
-  /** Estado (signal): gmail error. */
   gmailError = signal<string | null>(null);
-  /** Estado (signal): gmail ok. */
   gmailOk = signal(false);
-  /** Estado (signal): gmail cargando. */
   gmailCargando = signal(false);
-  /** Estado (signal): segundos reenvio. */
   segundosReenvio = signal(0);
   private temporizador?: ReturnType<typeof setInterval>;
 
-  /** Abre gmail. */
   abrirGmail(): void {
     const p = this.perfil();
     this.gmailInput.set(p?.correo && !p.correoVerificado ? p.correo : '');
@@ -248,16 +194,11 @@ export class Perfil implements OnInit {
     this.gmailAbierto.set(true);
   }
 
-  /** Cancela gmail. */
   cancelarGmail(): void {
     this.gmailAbierto.set(false);
     this.detenerTemporizador();
   }
 
-  /**
-   * Envía código gmail. Pide los datos al backend con perfilService.enviarCodigoCorreo() y actualiza
-   * la pantalla cuando llega la respuesta.
-   */
   enviarCodigoGmail(): void {
     const p = this.perfil();
     const correo = this.gmailInput().trim();
@@ -282,10 +223,6 @@ export class Perfil implements OnInit {
     });
   }
 
-  /**
-   * Verifica gmail. Pide los datos al backend con perfilService.verificarCorreo() y actualiza la
-   * pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
-   */
   verificarGmail(): void {
     const p = this.perfil();
     if (!p) return;
@@ -315,7 +252,6 @@ export class Perfil implements OnInit {
     });
   }
 
-  /** Inicia temporizador. */
   private iniciarTemporizador(segundos: number): void {
     this.detenerTemporizador();
     this.segundosReenvio.set(segundos);
@@ -326,23 +262,19 @@ export class Perfil implements OnInit {
     }, 1000);
   }
 
-  /** Realiza la acción «detener temporizador» de esta pantalla. */
   private detenerTemporizador(): void {
     if (this.temporizador) clearInterval(this.temporizador);
     this.temporizador = undefined;
   }
 
-  /** Nombres legibles de los permisos del panel. */
   permisosInfo(permisos: string[] | null | undefined): string[] {
     return (permisos ?? []).map(v => PERMISOS.find(x => x.valor === v)?.titulo ?? v);
   }
 
-  /** Edad a partir de la fecha de nacimiento (AAAA-MM-DD). */
   nombreDoc(tipo: string | null | undefined): string {
     return infoDocumento(tipo).nombre;
   }
 
-  /** Calcula «edad» (devuelve un número). */
   edad(fecha: string | null | undefined): number | null {
     if (!fecha) return null;
     const n = new Date(fecha + 'T00:00:00');
@@ -353,24 +285,20 @@ export class Perfil implements OnInit {
     return e;
   }
 
-  /** "12 de abril de 2014" */
   fecha(f: string | null | undefined): string {
     if (!f) return '—';
     return new Date(f.length === 10 ? f + 'T00:00:00' : f)
       .toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
-  /** Activa edicion. */
   activarEdicion(): void {
     const p = this.perfil();
     if (!p?.puedeEditar) return;
     this.llenarFormulario(p);
-    // Directiva: nombres + apellidos. Resto: nombre completo.
     for (const c of ['nombres', 'apellidoPaterno', 'apellidoMaterno']) {
       if (p.personal) this.form.get(c)?.enable(); else this.form.get(c)?.disable();
     }
     if (p.personal) this.form.get('nombre')?.disable(); else this.form.get('nombre')?.enable();
-    // Docente y padre: nombre y apellido. Administrador: solo letras. Padre: teléfono obligatorio.
     this.form.get('nombre')?.setValidators(p.docente || p.padre ? [Val.nombreCompleto()] : [Val.letras('tu nombre', 100, true)]);
     this.form.get('telefono')?.setValidators([Val.telefono(!!p.padre)]);
     this.form.get('nombre')?.updateValueAndValidity();
@@ -379,16 +307,11 @@ export class Perfil implements OnInit {
     this.editando.set(true);
   }
 
-  /** Cancela edicion. */
   cancelarEdicion(): void {
     this.editando.set(false);
     this.cargar();
   }
 
-  /**
-   * Guarda los datos de esta pantalla. Pide los datos al backend con perfilService.actualizar() y
-   * actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
-   */
   guardar(): void {
     const p = this.perfil();
 
@@ -431,8 +354,6 @@ export class Perfil implements OnInit {
         this.editando.set(false);
         this.toast.exito('Tus datos se guardaron correctamente.');
 
-        // Mantiene sincronizado el navbar
-        // (nombre/correo mostrados arriba).
         const usuario = this.authService.obtenerUsuario();
 
         if (usuario) {

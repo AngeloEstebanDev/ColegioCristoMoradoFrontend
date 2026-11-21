@@ -1,30 +1,21 @@
 import { Injectable, signal } from '@angular/core';
 
-/** Modelo OpcionesConfirmacion: describe la forma de los datos de «opciones confirmacion». */
 export interface OpcionesConfirmacion {
   titulo?: string;
   aceptar?: string;
   cancelar?: string;
-  /** Acción que borra o desactiva algo (botón rojo). Se deduce del texto si no se indica. */
   peligro?: boolean;
 }
 
-/** Modelo Pedido: describe la forma de los datos de «pedido». */
 interface Pedido extends Required<OpcionesConfirmacion> {
   texto: string;
   resolver: (ok: boolean) => void;
 }
 
-/**
- * Ventana de confirmación del sistema (reemplaza al confirm() del navegador).
- * Uso: if (!(await this.confirmar.pedir('¿Enviar tu entrega?'))) return;
- */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
-  /** Estado (signal): actual. */
   readonly actual = signal<Pedido | null>(null);
 
-  /** Pide los datos de esta pantalla. */
   pedir(texto: string, op: OpcionesConfirmacion = {}): Promise<boolean> {
     this.actual()?.resolver(false);
     const peligro = op.peligro ?? /^¿?\s*(eliminar|desactivar|quitar|retirar|vaciar|cerrar sesi)/i.test(texto);
@@ -37,7 +28,6 @@ export class ConfirmService {
     }));
   }
 
-  /** Responde los datos de esta pantalla. */
   responder(ok: boolean): void {
     const p = this.actual();
     if (!p) return;

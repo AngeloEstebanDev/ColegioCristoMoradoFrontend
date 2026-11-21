@@ -15,11 +15,6 @@ import { PerfilService } from '../../../core/services/perfil.service';
 import { FotoService } from '../../../core/services/foto.service';
 import { AvisosInicio } from '../../components/avisos-inicio/avisos-inicio';
 
-/**
- * Componente «layout» compartido (lo usan varias pantallas y roles). Se usa en el HTML con la etiqueta
- * <app-layout>. Su vista está en layout.html; aquí (en el .ts) va la lógica: los datos que se
- * muestran, lo que pasa al hacer clic y las llamadas a los servicios.
- */
 @Component({
   imports: [CommonModule, RouterOutlet, Siderbar, Navbar, AvisosInicio],
   selector: 'app-layout',
@@ -28,28 +23,18 @@ import { AvisosInicio } from '../../components/avisos-inicio/avisos-inicio';
 })
 export class Layout {
 
-  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
-  /** Servicio AuthService (inyectado por Angular). */
   private authService = inject(AuthService);
 
-  /** Servicio NotificacionService (inyectado por Angular). */
   readonly notificaciones = inject(NotificacionService);
-  /** Servicio PerfilService (inyectado por Angular). */
   readonly perfilService = inject(PerfilService);
 
   usuario = this.authService.obtenerUsuario();
 
-  /** Menú lateral abierto en pantallas pequeñas (se cierra al navegar). */
   menuMovil = signal(false);
 
-  /** Permisos del panel (Directiva). Se refrescan al entrar por si el admin los cambió. */
   permisos = signal<string[]>(this.usuario?.permisos ?? []);
 
-  /**
-   * Constructor: Angular le entrega (inyecta) los servicios que usa. Pide los datos al backend con
-   * perfilService.obtener() y actualiza la pantalla cuando llega la respuesta.
-   */
   constructor() {
     inject(FotoService).cargar();
     if (this.usuario) {
@@ -60,7 +45,6 @@ export class Layout {
         },
       });
     }
-    // Contador de la campana: al cambiar de página y cada 60 segundos.
     this.notificaciones.refrescar();
     const sub = this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
@@ -69,15 +53,11 @@ export class Layout {
     inject(DestroyRef).onDestroy(() => { sub.unsubscribe(); clearInterval(timer); });
   }
 
-  // Menú lateral según el rol logeado: cada rol tiene su propio archivo
-  // de configuración (ver admin-sidebar.config.ts, docente-sidebar.config.ts,
-  // etc). Agrega un nuevo 'if' aquí cuando sumes otro rol.
   itemsMenu = computed<SidebarEntry[]>(() => {
     const rol = (this.usuario?.rol ?? '').toLowerCase();
     if (rol === 'administrador' || rol === 'admin') {
       return ADMIN_SIDEBAR_ITEMS;
     }
-    // Directiva: mismo menú del administrador, solo con los módulos permitidos.
     if (rol === 'directivo' || rol === 'directiva' || rol === 'director') {
       const permisos = this.permisos();
       return ADMIN_SIDEBAR_ITEMS.filter(item => !item.permiso || permisos.includes(item.permiso));
@@ -94,11 +74,6 @@ export class Layout {
     return [];
   });
 
-  // Título del navbar: se toma del `data.titulo` de la ruta hoja activa
-  // (definido en app.routes.ts). Usamos el snapshot completo del Router
-  // (no this.route.firstChild) porque las rutas sin componente como
-  // 'admin' no siempre tienen su ActivatedRoute.snapshot listo en el
-  // momento exacto en que Layout se construye.
   private obtenerTitulo(): string {
     let snapshot = this.router.routerState.snapshot.root;
     while (snapshot.firstChild) {

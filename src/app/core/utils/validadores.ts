@@ -1,32 +1,19 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-/**
- * Reglas de validación de campos del sistema. Son las mismas que aplica el backend
- * (útil/Campos.java), así el usuario ve el error antes de enviar el formulario.
- *
- * Cada validador devuelve { campo: 'mensaje' } para que <app-error-campo> lo muestre.
- */
-
 const LETRAS = /^[\p{L}][\p{L} .'’-]*$/u;
-/** Constante CORREO: valor fijo (correo) que se reutiliza en varias partes. */
 const CORREO = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
-/** Función vacio: vacío. */
 const vacio = (v: unknown) => v === null || v === undefined || String(v).trim() === '';
-/** Err. */
 const err = (mensaje: string): ValidationErrors => ({ campo: mensaje });
 
-/** Solo los dígitos de un teléfono (quita espacios y guiones). */
 export function soloDigitos(v: string | null | undefined): string {
   return (v ?? '').replace(/\D/g, '');
 }
 
-/** Quita espacios al inicio y al final y deja uno solo entre palabras. */
 export function limpiarTexto(v: string | null | undefined): string {
   return (v ?? '').trim().replace(/\s+/g, ' ');
 }
 
-/** Edad cumplida en años a partir de una fecha ISO (yyyy-MM-dd). */
 export function edad(iso: string): number {
   const [a, m, d] = iso.split('-').map(Number);
   const hoy = new Date();
@@ -35,9 +22,7 @@ export function edad(iso: string): number {
   return e;
 }
 
-/** Val. */
 export const Val = {
-  /** Celular de 9 dígitos que empieza con 9. */
   telefono(obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const t = String(c.value ?? '').replace(/[\s-]/g, '');
@@ -49,7 +34,6 @@ export const Val = {
     };
   },
 
-  /** Nombre completo de persona: nombre y apellido, solo letras, 5 a 100 caracteres. */
   nombreCompleto(): ValidatorFn {
     return (c: AbstractControl) => {
       const n = limpiarTexto(c.value);
@@ -61,7 +45,6 @@ export const Val = {
     };
   },
 
-  /** Nombres, un apellido, nacionalidad…: solo letras, 2 a max caracteres. */
   letras(etiqueta: string, max: number, obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const v = limpiarTexto(c.value);
@@ -72,7 +55,6 @@ export const Val = {
     };
   },
 
-  /** Correo con formato usuario@dominio.ext (hasta 150 caracteres). */
   correo(obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const v = String(c.value ?? '').trim();
@@ -82,7 +64,6 @@ export const Val = {
     };
   },
 
-  /** Texto libre con longitud mínima y máxima. */
   texto(etiqueta: string, min: number, max: number, obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const v = String(c.value ?? '').trim();
@@ -93,7 +74,6 @@ export const Val = {
     };
   },
 
-  /** Fecha de nacimiento: no futura y edad entre min y max años. */
   fechaNacimiento(min: number, max: number, obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const v = c.value as string;
@@ -106,7 +86,6 @@ export const Val = {
     };
   },
 
-  /** Fecha que no puede ser futura. */
   noFutura(etiqueta: string): ValidatorFn {
     return (c: AbstractControl) => {
       const v = c.value as string;
@@ -117,7 +96,6 @@ export const Val = {
     };
   },
 
-  /** Fecha que no puede ser pasada (hoy o después). */
   noPasada(etiqueta: string): ValidatorFn {
     return (c: AbstractControl) => {
       const v = c.value as string;
@@ -128,7 +106,6 @@ export const Val = {
     };
   },
 
-  /** Número (entero si entero = true) entre min y max. */
   numero(etiqueta: string, min: number, max: number, obligatorio = false, entero = true): ValidatorFn {
     return (c: AbstractControl) => {
       const v = c.value;
@@ -141,7 +118,6 @@ export const Val = {
     };
   },
 
-  /** Contraseña: 4 a 64 caracteres y sin espacios (vacía se acepta si no es obligatoria). */
   password(obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const v = String(c.value ?? '');
@@ -153,7 +129,6 @@ export const Val = {
     };
   },
 
-  /** Usuario de acceso (administración): 3 a 30 letras, números, punto, guion o guion bajo. */
   usuario(): ValidatorFn {
     return (c: AbstractControl) => {
       const v = String(c.value ?? '').trim();
@@ -163,7 +138,6 @@ export const Val = {
     };
   },
 
-  /** Enlace web que empieza con http:// o https:// (hasta 500 caracteres). */
   enlace(obligatorio = false): ValidatorFn {
     return (c: AbstractControl) => {
       const v = String(c.value ?? '').trim();
@@ -174,12 +148,10 @@ export const Val = {
   },
 };
 
-/** Función may: may. */
 function may(s: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
-/** Primer mensaje de error de un control (para mostrarlo bajo el campo). */
 export function mensajeError(c: AbstractControl | null | undefined): string | null {
   const e = c?.errors;
   if (!e) return null;
@@ -194,11 +166,6 @@ export function mensajeError(c: AbstractControl | null | undefined): string | nu
   return 'Revisa este campo.';
 }
 
-/**
- * Para formularios hechos con signals/ngModel: aplica los validadores a un valor
- * y devuelve el primer mensaje de error (o null si está bien).
- *   const e = revisar(f.telefono, Val.telefono());
- */
 export function revisar(valor: unknown, ...reglas: ValidatorFn[]): string | null {
   const c = { value: valor } as AbstractControl;
   for (const r of reglas) {
@@ -208,7 +175,6 @@ export function revisar(valor: unknown, ...reglas: ValidatorFn[]): string | null
   return null;
 }
 
-/** Revisa varios campos en orden y devuelve el primer error encontrado. */
 export function primerError(...resultados: (string | null)[]): string | null {
   return resultados.find(r => !!r) ?? null;
 }

@@ -21,19 +21,14 @@ import { ExamenesCurso } from './examenes-curso';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
-/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'contenido' | 'actividades' | 'asistencia' | 'examenes';
 
-/** Material o actividad dentro de una carpeta. */
 interface Item { clave: string; fecha: string; material?: Material; actividad?: Actividad; }
 
-/** Modelo CarpetaVista: describe la forma de los datos de «carpeta vista». */
 interface CarpetaVista { carpeta: Carpeta | null; clave: string; nombre: string; items: Item[]; }
 
-/** Modelo Bimestre: describe la forma de los datos de «bimestre». */
 interface Bimestre { clave: string; periodo: Periodo | null; nombre: string; desde: string | null; hasta: string | null; carpetas: CarpetaVista[]; }
 
-/** Modelo Formulario: describe la forma de los datos de «formulario». */
 interface Formulario {
   carpetaId: number | null;
   carpetaNombre: string;
@@ -42,13 +37,6 @@ interface Formulario {
   tipo: TipoContenido;
 }
 
-/**
- * Docente > Mis Cursos > un curso.
- * Contenido: carpetas por bimestre (las nuevas se crean en el bimestre actual) con textos, archivos,
- * actividades y cuestionarios; cada elemento se puede ocultar, editar o eliminar.
- * Actividades: entregas y calificación. Asistencia: solo durante la hora de clase.
- * Exámenes: Participación (automática) y los exámenes presenciales que registre el docente.
- */
 @Component({
   selector: 'app-curso-docente',
   standalone: true,
@@ -57,21 +45,13 @@ interface Formulario {
   templateUrl: './curso-docente.html',
 })
 export class CursoDocente implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
-  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
-  /** Servicio PeriodoService (inyectado por Angular). */
   private periodoService = inject(PeriodoService);
-  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
-  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
-  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
-  /** Servicio DestroyRef (inyectado por Angular). */
   private destroyRef = inject(DestroyRef);
 
   readonly dmy = dmy;
@@ -91,80 +71,47 @@ export class CursoDocente implements OnInit {
   ];
 
   id = 0;
-  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('contenido');
-  /** Estado (signal): curso. */
   curso = signal<CursoAula | null>(null);
-  /** Estado (signal): materiales. */
   materiales = signal<Material[]>([]);
-  /** Estado (signal): actividades. */
   actividades = signal<Actividad[]>([]);
-  /** Estado (signal): carpetas. */
   carpetas = signal<Carpeta[]>([]);
-  /** Estado (signal): participantes. */
   participantes = signal<Participantes | null>(null);
-  /** Estado (signal): periodos. */
   periodos = signal<Periodo[]>([]);
-  /** Estado (signal): periodos listos. */
   periodosListos = signal(false);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
-  /** Estado (signal): abiertas. */
   abiertas = signal<Set<string>>(new Set());
-  /** Estado (signal): ver estructura. */
   verEstructura = signal(true);
-  /** Estado (signal): ver profesor. */
   verProfesor = signal(true);
-  /** Estado (signal): ver participantes. */
   verParticipantes = signal(true);
-  /** Menú ⋮ abierto (clave del elemento). */
   menu = signal<string | null>(null);
 
-  /** Estado (signal): formulario. */
   formulario = signal<Formulario | null>(null);
-  /** Estado (signal): carpeta modal. */
   carpetaModal = signal<{ id: number | null; nombre: string } | null>(null);
-  /** Estado (signal): guardando carpeta. */
   guardandoCarpeta = signal(false);
-  /** Estado (signal): error carpeta. */
   errorCarpeta = signal<string | null>(null);
-  /** Actividad abierta en la pestaña Actividades (entregas y calificación). */
   actividadDetalle = signal<Actividad | null>(null);
 
-  // Panel de un material
   material = signal<Material | null>(null);
 
-  /** Valor calculado (computed): categoría. Se actualiza solo. */
   categoria = computed(() => categoriaDe(this.curso()?.categoria));
-  /** Valor calculado (computed): salon. Se actualiza solo. */
   salon = computed(() => {
     const c = this.curso();
     return c ? `${infoGrado(c.grado)?.titulo ?? c.grado} “${c.letra}”` : '';
   });
-  /** Valor calculado (computed): nivel. Se actualiza solo. */
   nivel = computed(() => (this.curso()?.grado ?? '').includes('Secundaria') ? 'Secundaria' : 'Primaria');
-  /** Valor calculado (computed): periodo activo. Se actualiza solo. */
   periodoActivo = computed(() => this.periodos().find(p => p.activo) ?? null);
 
-  /** Bimestres del año (más los que tengan carpetas de otros años), cada uno con sus carpetas. */
   bimestres = computed<Bimestre[]>(() => this.agrupar(false));
   bimestresActividades = computed<Bimestre[]>(() => this.agrupar(true));
 
-  /** La fecha límite ya pasó (se muestra en rojo). */
   vencio(fecha: string | null | undefined): boolean {
     return !!fecha && new Date(fecha).getTime() <= Date.now();
   }
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales. Pide los datos al backend con aula.curso(), aula.participantes(),
-   * periodoService.listar() y actualiza la pantalla cuando llega la respuesta.
-   */
   ngOnInit(): void {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
     const tab = this.route.snapshot.queryParamMap.get('tab') as Pestana | null;
@@ -182,7 +129,6 @@ export class CursoDocente implements OnInit {
     this.recargar(true);
   }
 
-  /** Vuelve a pedir carpetas, materiales y actividades. */
   recargar(primeraVez = false): void {
     let pendientes = 3;
     const fin = () => {
@@ -197,15 +143,12 @@ export class CursoDocente implements OnInit {
     this.aula.actividades(this.id).subscribe({ next: (a) => { this.actividades.set(a); fin(); }, error: () => fin() });
   }
 
-  /** Cambia pestaña. Al terminar, lleva al usuario a otra página (router.navigate). */
   cambiarPestana(p: Pestana): void {
     this.pestana.set(p);
     this.actividadDetalle.set(null);
     this.menu.set(null);
     this.router.navigate([], { queryParams: { tab: p === 'contenido' ? null : p }, queryParamsHandling: 'merge', replaceUrl: true });
   }
-
-  // ---------------- Agrupar ----------------
 
   private agrupar(soloActividades: boolean): Bimestre[] {
     const periodos = this.periodos();
@@ -225,7 +168,6 @@ export class CursoDocente implements OnInit {
         suyos.forEach(i => usados.add(i.clave));
         return { carpeta: c, clave: 'f' + c.id, nombre: c.nombre, items: suyos };
       });
-      // Contenido anterior a las carpetas (sin carpeta): se ubica por su fecha.
       const sueltos = items.filter(i => !usados.has(i.clave) && !carpetas.some(c => c.id === carpetaDe(i))
         && i.fecha.substring(0, 10) >= p.fechaInicio && i.fecha.substring(0, 10) <= p.fechaFin);
       sueltos.forEach(i => usados.add(i.clave));
@@ -246,10 +188,8 @@ export class CursoDocente implements OnInit {
     return lista;
   }
 
-  /** Devuelve «items de». */
   itemsDe(b: Bimestre): Item[] { return b.carpetas.flatMap(c => c.items); }
 
-  /** Al entrar: se abre el bimestre actual y su última carpeta. */
   private abrirPorDefecto(): void {
     if (this.cargando() || !this.periodos().length) return;
     const hoy = aIso(new Date());
@@ -265,10 +205,8 @@ export class CursoDocente implements OnInit {
     this.abiertas.set(s);
   }
 
-  /** Indica si está abierta (devuelve verdadero o falso). */
   estaAbierta(clave: string): boolean { return this.abiertas().has(clave); }
 
-  /** Abre los datos de esta pantalla. */
   abrir(clave: string, forzar = false): void {
     this.abiertas.update(s => {
       const n = new Set(s);
@@ -277,32 +215,23 @@ export class CursoDocente implements OnInit {
     });
   }
 
-  /** Devuelve el estilo de los datos de esta pantalla. */
   estilo(i: Item): EstiloItem { return i.actividad ? estiloActividad(i.actividad) : estiloMaterial(i.material!); }
-  /** Devuelve el texto de «título». */
   titulo(i: Item): string { return i.actividad ? i.actividad.titulo : i.material!.titulo; }
-  /** Indica «visible» (devuelve verdadero o falso). */
   visible(i: Item): boolean { return i.actividad ? i.actividad.visible !== false : i.material!.visible !== false; }
 
-  /** Etiqueta del final de la fila: tipo de archivo o de entrega. */
   detalleItem(i: Item): string {
     if (i.actividad) return i.actividad.tipo === 'CUESTIONARIO' ? 'Cuestionario' : 'Archivo/Tarea';
     const m = i.material!;
     return m.archivo ? 'Documento ' + extension(m.archivo.nombre) : m.enlace ? 'Enlace' : 'Texto';
   }
 
-  // ---------------- Menú ⋮ ----------------
-
   alternarMenu(clave: string, ev: Event): void {
     ev.stopPropagation();
     this.menu.update(m => m === clave ? null : clave);
   }
 
-  /** Cierra menú. */
   @HostListener('document:click')
   cerrarMenu(): void { this.menu.set(null); }
-
-  // ---------------- Carpetas ----------------
 
   nuevaCarpeta(): void {
     if (!this.periodoActivo()) {
@@ -313,14 +242,12 @@ export class CursoDocente implements OnInit {
     this.carpetaModal.set({ id: null, nombre: '' });
   }
 
-  /** Realiza la acción «renombrar» de esta pantalla. */
   renombrar(c: Carpeta): void {
     this.menu.set(null);
     this.errorCarpeta.set(null);
     this.carpetaModal.set({ id: c.id, nombre: c.nombre });
   }
 
-  /** Guarda carpeta. Muestra un aviso (toast) con el resultado. */
   guardarCarpeta(): void {
     const m = this.carpetaModal();
     if (!m) return;
@@ -341,11 +268,6 @@ export class CursoDocente implements OnInit {
     });
   }
 
-  /**
-   * Realiza la acción «visible carpeta» de esta pantalla. Pide los datos al backend con
-   * aula.visibleCarpeta() y actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast)
-   * con el resultado.
-   */
   visibleCarpeta(c: Carpeta): void {
     this.menu.set(null);
     this.aula.visibleCarpeta(c.id, !c.visible).subscribe({
@@ -354,11 +276,6 @@ export class CursoDocente implements OnInit {
     });
   }
 
-  /**
-   * Elimina carpeta. Pide los datos al backend con aula.eliminarCarpeta() y actualiza la pantalla
-   * cuando llega la respuesta. Muestra un aviso (toast) con el resultado. Antes pide confirmación al
-   * usuario.
-   */
   async eliminarCarpeta(c: Carpeta): Promise<void> {
     this.menu.set(null);
     if (!await this.confirmar.pedir(`¿Eliminar la carpeta "${c.nombre}"?`)) return;
@@ -368,14 +285,11 @@ export class CursoDocente implements OnInit {
     });
   }
 
-  // ---------------- Contenido ----------------
-
   agregarEn(c: Carpeta, ev?: Event): void {
     ev?.stopPropagation();
     this.formulario.set({ carpetaId: c.id, carpetaNombre: c.nombre, material: null, actividad: null, tipo: 'TEXTO' });
   }
 
-  /** Edita los datos de esta pantalla. */
   editar(i: Item): void {
     this.menu.set(null);
     const carpetaId = (i.material ? i.material.carpetaId : i.actividad!.carpetaId) ?? null;
@@ -385,13 +299,11 @@ export class CursoDocente implements OnInit {
     });
   }
 
-  /** Realiza la acción «al guardar» de esta pantalla. */
   alGuardar(): void {
     this.formulario.set(null);
     this.recargar();
   }
 
-  /** Muestra u oculta visible. Muestra un aviso (toast) con el resultado. */
   alternarVisible(i: Item): void {
     this.menu.set(null);
     if (i.material) {
@@ -411,10 +323,6 @@ export class CursoDocente implements OnInit {
     }
   }
 
-  /**
-   * Elimina los datos de esta pantalla. Muestra un aviso (toast) con el resultado. Antes pide
-   * confirmación al usuario.
-   */
   async eliminar(i: Item): Promise<void> {
     this.menu.set(null);
     const nombre = this.titulo(i);
@@ -434,7 +342,6 @@ export class CursoDocente implements OnInit {
     });
   }
 
-  /** Abre item. Al terminar, lleva al usuario a otra página (router.navigate). */
   abrirItem(i: Item): void {
     if (i.actividad) {
       this.pestana.set('actividades');
@@ -445,29 +352,22 @@ export class CursoDocente implements OnInit {
     }
   }
 
-  /** Abre actividad. */
   abrirActividad(a: Actividad): void { this.actividadDetalle.set(a); }
 
-  /** Muestra aviso. Muestra un aviso (toast) con el resultado. */
   private mostrarAviso(texto: string): void {
     this.toast.error(texto);
   }
-
-  // ---------------- Panel de material ----------------
 
   abrirMaterial(m: Material): void {
     this.material.set(m);
   }
 
-  /** Descarga los datos de esta pantalla. */
   descargar(m: Material): void { if (m.archivo) this.archivos.descargar(m.archivo); }
 
-  /** Cierra panel. */
   cerrarPanel(): void {
     this.material.set(null);
   }
 
-  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     if (this.formulario()) return;

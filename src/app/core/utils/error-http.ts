@@ -1,8 +1,3 @@
-/**
- * Convierte un error de una petición HTTP en un mensaje entendible para el usuario.
- * - Si el backend respondió, usa su mensaje ({ mensaje: '...' }).
- * - Si no hubo respuesta (status 0): el backend está apagado (local) o despertando (Render gratis).
- */
 export function mensajeHttp(err: any, porDefecto: string): string {
   const mensaje = err?.error?.mensaje;
   if (typeof mensaje === 'string' && mensaje.trim()) return mensaje;

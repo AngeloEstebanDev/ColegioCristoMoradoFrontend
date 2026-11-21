@@ -12,10 +12,6 @@ import { dmy, dmyHora } from '../../../alumno/pages/cursos/curso-detalle';
 import { AvatarPersona, ChipVisible, IconoItem, estiloActividad } from './curso-ui';
 import { ToastService } from '../../../../core/services/toast.service';
 
-/**
- * Docente > curso > Actividades > una actividad: lista de entregas de los alumnos,
- * calificación (nota sobre 20 y comentario), respuesta del alumno y su archivo con vista previa.
- */
 @Component({
   selector: 'app-entregas-actividad',
   standalone: true,
@@ -23,11 +19,8 @@ import { ToastService } from '../../../../core/services/toast.service';
   templateUrl: './entregas-actividad.html',
 })
 export class EntregasActividad implements OnChanges {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
-  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
 
   @Input({ required: true }) actividad!: Actividad;
@@ -45,36 +38,23 @@ export class EntregasActividad implements OnChanges {
   readonly colorNota = colorNota;
   readonly letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-  /** Estado (signal): datos. */
   datos = signal<Entregas | null>(null);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): éxito. */
   exito = signal<string | null>(null);
-  /** Estado (signal): seleccion. */
   seleccion = signal<number | null>(null);
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): menú. */
   menu = signal(false);
   nota: number | null = null;
   comentario = '';
 
-  /** Envío elegido en las pestañas "Entrega 1", "Entrega 2"... (null = el último). */
   envioSel = signal<number | null>(null);
-  /** Estado (signal): cambiando tardía. */
   cambiandoTardia = signal(false);
 
-  /** Valor calculado (computed): estilo. Se actualiza solo. */
   estilo = computed(() => estiloActividad(this.datos()?.actividad ?? this.actividad));
-  /** Valor calculado (computed): enviados. Se actualiza solo. */
   enviados = computed(() => (this.datos()?.alumnos ?? []).filter(f => !!f.entrega).length);
   fila = computed<FilaEntrega | null>(() => (this.datos()?.alumnos ?? []).find(f => f.estudianteId === this.seleccion()) ?? null);
-  /** Valor calculado (computed): es cuestionario. Se actualiza solo. */
   esCuestionario = computed(() => this.actividad.tipo === 'CUESTIONARIO');
-  /** Lo que se muestra: el envío elegido del historial o la entrega vigente. */
   vista = computed<Envio | null>(() => {
     const e = this.fila()?.entrega;
     if (!e) return null;
@@ -83,20 +63,12 @@ export class EntregasActividad implements OnChanges {
     const v = envios.find(x => x.numero === sel) ?? envios[envios.length - 1];
     return v ?? actual(e);
   });
-  /** Valor calculado (computed): salon. Se actualiza solo. */
   salon = computed(() => `${infoGrado(this.actividad.grado)?.titulo ?? this.actividad.grado} “${this.actividad.letra}”`);
 
-  /**
-   * Se ejecuta cuando cambia alguno de los datos que recibe el componente desde su padre (@Input).
-   */
   ngOnChanges(c: SimpleChanges): void {
     if (c['actividad'] && (c['actividad'].firstChange || c['actividad'].previousValue?.id !== this.actividad.id)) this.cargar();
   }
 
-  /**
-   * Carga los datos de esta pantalla. Pide los datos al backend con aula.entregas() y actualiza la
-   * pantalla cuando llega la respuesta.
-   */
   private cargar(seleccionar: number | null = null): void {
     this.cargando.set(true);
     this.aula.entregas(this.actividad.id).subscribe({
@@ -110,7 +82,6 @@ export class EntregasActividad implements OnChanges {
     });
   }
 
-  /** Elige los datos de esta pantalla. */
   elegir(id: number | null): void {
     this.seleccion.set(id);
     this.exito.set(null);
@@ -121,7 +92,6 @@ export class EntregasActividad implements OnChanges {
     this.envioSel.set(null);
   }
 
-  /** Activa / desactiva "aceptar entregas tardías" desde la misma actividad. */
   alternarTardia(): void {
     const a = this.datos()?.actividad ?? this.actividad;
     this.cambiandoTardia.set(true);
@@ -137,7 +107,6 @@ export class EntregasActividad implements OnChanges {
     });
   }
 
-  /** Pastilla de nota de cada alumno: nota, "Por calificar" o 0/20 si no envió y ya venció. */
   pastilla(f: FilaEntrega): { texto: string; color: string; fondo: string } {
     const e = f.entrega;
     if (e?.estado === 'CALIFICADA') { const c = colorNota(e.nota20); return { texto: `${num(e.nota20, 1)}/20`, ...c }; }
@@ -146,7 +115,6 @@ export class EntregasActividad implements OnChanges {
     return { texto: '—/20', color: '#6B5A67', fondo: '#F0E6D8' };
   }
 
-  /** Guarda nota. Muestra un aviso (toast) con el resultado. */
   guardarNota(): void {
     const e = this.fila()?.entrega;
     if (!e) return;
@@ -164,7 +132,6 @@ export class EntregasActividad implements OnChanges {
         this.datos.set(d);
         this.toast.exito('Nota guardada. También se actualizó la Participación del alumno.');
         this.cambio.emit();
-        // Pasa al siguiente alumno que envió y no tiene nota.
         const sig = d.alumnos.find(f => f.entrega && f.entrega.estado !== 'CALIFICADA');
         if (sig) setTimeout(() => this.elegir(sig.estudianteId), 900);
       },
@@ -172,7 +139,6 @@ export class EntregasActividad implements OnChanges {
     });
   }
 
-  /** Clase de una opción en la respuesta del cuestionario (elegida / correcta). */
   claseOpcion(pi: number, k: number): string {
     const a = this.datos()?.actividad;
     const v = this.vista();
@@ -186,21 +152,17 @@ export class EntregasActividad implements OnChanges {
     return 'border-[#E3D5C4] bg-white text-[#6B5A67]';
   }
 
-  /** Indica «marcada» (devuelve verdadero o falso). */
   marcada(pi: number, k: number): boolean {
     return (this.vista()?.selecciones?.[pi] ?? []).includes(k);
   }
 
-  /** Descarga los datos de esta pantalla. */
   descargar(a: ArchivoInfo): void { this.archivos.descargar(a); }
 }
 
-/** La entrega vigente como un "envío" (entregas antiguas sin historial). */
 function actual(e: Entrega): Envio {
   const sel = e.selecciones ?? e.respuestas.map(r => [r]);
   return { numero: e.intentos || 1, fecha: e.fechaEntrega, tardia: e.tardia, texto: e.texto, enlace: e.enlace,
            archivo: e.archivo, puntaje: e.puntaje, selecciones: sel };
 }
 
-/** Función round1: round 1. */
 function round1(v: number): number { return Math.round(v * 10) / 10; }

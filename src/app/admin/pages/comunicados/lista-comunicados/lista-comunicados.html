@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «lista comunicados», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en lista-comunicados.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-4">
 
-  <!-- Redactar (administración y docentes) -->
   @if (puedeCrear) {
     <button type="button" (click)="abrirCrear()"
             class="w-full flex items-center justify-between gap-3 bg-[#FAF6EF] hover:bg-[#F0E6D8] border border-[#E3D5C4]
@@ -29,14 +21,12 @@
     <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
   }
 
-  <!-- Buscar -->
   <div class="relative">
     <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
     <input type="text" placeholder="Buscar comunicados..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
            class="w-full pl-9 pr-3 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
   </div>
 
-  <!-- Año + filtros -->
   <div class="flex flex-wrap items-center gap-2">
     <div class="relative">
       <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67] pointer-events-none" stroke="currentColor" stroke-width="1.8"><path d="M7 3v4M17 3v4M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/></svg>
@@ -62,7 +52,6 @@
     </button>
   </div>
 
-  <!-- Lista -->
   @if (cargando()) {
     <p class="text-center text-[13px] text-[#6B5A67] py-10">Cargando comunicados...</p>
   } @else if (filtrados().length === 0) {
@@ -137,7 +126,6 @@
   }
 </div>
 
-<!-- ===================== Panel lateral: detalle ===================== -->
 @if (detalle(); as d) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarDetalle()"></div>
@@ -187,7 +175,6 @@
   </div>
 }
 
-<!-- ===================== Anuncio grande ===================== -->
 @if (anuncioActual(); as a) {
   <div class="fixed inset-0 z-[60] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/60 backdrop-blur-[2px]"></div>
@@ -213,7 +200,6 @@
   </div>
 }
 
-<!-- ===================== Modal crear / editar ===================== -->
 @if (modalAbierto()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarModal()"></div>
@@ -237,7 +223,6 @@
         </div>
 
         @if (esDocente && !esAdmin) {
-          <!-- Docente: destinatario y clase -->
           @if (seccionesDisponibles().length) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label class="block">
@@ -271,7 +256,6 @@
             </div>
           }
         } @else {
-        <!-- Destinatarios (selección múltiple) -->
         <div class="relative">
           <label class="block text-[13px] font-medium text-[#241521] mb-1.5">Destinatarios</label>
           <button type="button" (click)="selectorGruposAbierto.set(!selectorGruposAbierto())"
@@ -298,10 +282,8 @@
           }
         </div>
 
-
         }
 
-        <!-- Imagen opcional -->
         <div>
           <label class="block text-[13px] font-medium text-[#241521] mb-1.5">Imagen (opcional)</label>
           @if (fImagen(); as img) {
@@ -321,7 +303,6 @@
           }
         </div>
 
-        <!-- Mensaje -->
         <div>
           <label class="block text-[15px] font-medium text-[#241521] mb-1.5">Mensaje *</label>
           <div [ngClass]="errores()['mensaje'] ? 'rounded-lg ring-2 ring-[#A62639]/60' : ''">
@@ -330,7 +311,6 @@
           @if (errores()['mensaje']) { <p class="mt-1 text-[12px] text-[#A62639]">{{ errores()['mensaje'] }}</p> }
         </div>
 
-        <!-- Anuncio grande (solo administración) -->
         @if (esAdmin) {
         <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
                [ngClass]="fAnuncio() ? 'border-[#B08900]/40 bg-[#FDF1DC]' : 'border-[#E3D5C4] hover:bg-[#FAF6EF]'">

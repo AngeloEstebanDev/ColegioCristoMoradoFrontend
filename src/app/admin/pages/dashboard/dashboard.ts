@@ -5,7 +5,6 @@ import { AuthService } from '../../../services/auth';
 import { DashboardService } from '../../../core/services/dashboard.service';
 import { ActividadReciente, DashboardStats } from '../../../core/models/dashboard.model';
 
-/** Modelo AccesoRapido: describe la forma de los datos de «acceso rápido». */
 interface AccesoRapido {
   titulo: string;
   descripcion: string;
@@ -14,11 +13,6 @@ interface AccesoRapido {
   color: string;
 }
 
-/**
- * Componente «dashboard» del panel de Administración (administrador y directiva). Se usa en el HTML
- * con la etiqueta <app-dashboard>. Su vista está en dashboard.html; aquí (en el .ts) va la lógica: los
- * datos que se muestran, lo que pasa al hacer clic y las llamadas a los servicios.
- */
 @Component({
   imports: [CommonModule, RouterLink, DatePipe],
   selector: 'app-dashboard',
@@ -26,12 +20,9 @@ interface AccesoRapido {
 })
 export class Dashboard implements OnInit {
 
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
 
-  /** Estado (signal): stats. */
   stats = signal<DashboardStats>({
     usuariosActivos: 0,
     totalEstudiantes: 0,
@@ -39,10 +30,8 @@ export class Dashboard implements OnInit {
     totalDocentes: 0,
   });
 
-  /** Estado (signal): actividad. */
   actividad = signal<ActividadReciente[]>([]);
 
-  /** Los accesos rápidos son de "Gestión de Usuarios": la Directiva solo los ve con ese permiso. */
   readonly puedeGestionarUsuarios = inject(AuthService).tienePermiso('USUARIOS');
 
   accesos: AccesoRapido[] = [
@@ -76,14 +65,8 @@ export class Dashboard implements OnInit {
     },
   ];
 
-  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(private dashboardService: DashboardService) {}
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales. Pide los datos al backend con dashboardService.obtenerStats() y actualiza la
-   * pantalla cuando llega la respuesta.
-   */
   ngOnInit(): void {
     this.cargando.set(true);
     this.dashboardService.obtenerStats().subscribe({
@@ -93,7 +76,6 @@ export class Dashboard implements OnInit {
     this.cargarActividad();
   }
 
-  /** Últimas acciones del sistema (inicios de sesión, registros, ediciones y eliminaciones). */
   cargarActividad(): void {
     this.cargando.set(true);
     this.dashboardService.obtenerActividadReciente().subscribe({
@@ -102,7 +84,6 @@ export class Dashboard implements OnInit {
     });
   }
 
-  /** Devuelve las clases CSS de estado. */
   claseEstado(estado: string): string {
     switch (estado) {
       case 'Exitoso': return 'bg-[#E7F3EA] text-[#1E7A3B]';

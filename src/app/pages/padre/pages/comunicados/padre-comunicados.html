@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «padre comunicados», que se muestra en el panel del padre de familia.
-  La lógica (datos, eventos y llamadas al backend) está en padre-comunicados.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="mx-auto max-w-4xl space-y-4">
 
-  <!-- Encabezado -->
   <div class="flex items-center gap-3">
     <div class="w-11 h-11 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center">
       @if (pestana() === 'comunicados') {
@@ -22,7 +14,6 @@
     </div>
   </div>
 
-  <!-- Pestañas -->
   <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#EDE6DB]" role="tablist">
     <button type="button" role="tab" (click)="cambiarPestana('comunicados')" [attr.aria-selected]="pestana() === 'comunicados'"
             class="flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all"
@@ -44,7 +35,6 @@
     </button>
   </div>
 
-  <!-- ======================= COMUNICADOS ======================= -->
   @if (pestana() === 'comunicados') {
     <div class="relative">
       <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
@@ -114,7 +104,6 @@
     }
   }
 
-  <!-- ======================= MENSAJES ======================= -->
   @if (pestana() === 'mensajes') {
     <button type="button" (click)="nuevoMensaje()"
             class="w-full flex items-center gap-3 rounded-2xl border border-[#E3D5C4] bg-white px-4 py-3 text-left shadow-sm hover:shadow-md transition-shadow">
@@ -224,7 +213,6 @@
   }
 </div>
 
-<!-- ===================== Detalle del comunicado ===================== -->
 @if (detalle(); as c) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-[#241521]/45" (click)="detalle.set(null)"></div>
@@ -257,7 +245,6 @@
   </div>
 }
 
-<!-- ===================== Leer un mensaje ===================== -->
 @if (leyendo(); as m) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/45" (click)="leyendo.set(null)"></div>
@@ -290,7 +277,6 @@
   </div>
 }
 
-<!-- ===================== Crear nuevo mensaje ===================== -->
 @if (redactando()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/45"></div>
@@ -304,7 +290,6 @@
       </div>
 
       <div class="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
-        <!-- Para -->
         <div class="flex items-start gap-3">
           <span class="pt-2.5 text-[15px] font-semibold text-[#241521] w-12 shrink-0">Para:</span>
           <div class="flex-1 min-w-0">
@@ -354,14 +339,12 @@
           </div>
         </div>
 
-        <!-- Asunto -->
         <div class="flex items-center gap-3">
           <label for="asunto-nuevo" class="text-[15px] font-semibold text-[#241521] w-12 shrink-0">Asunto:</label>
           <input id="asunto-nuevo" type="text" maxlength="200" placeholder="Ej. Consulta sobre la tarea de Matemática" [(ngModel)]="asuntoNuevo"
                  class="flex-1 min-w-0 px-3 py-2.5 text-[14px] rounded-xl border border-[#E3D5C4] focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
         </div>
 
-        <!-- Mensaje -->
         <div>
           <p class="text-[16px] font-semibold text-[#241521] mb-2">Mensaje</p>
           <app-editor-texto [contenido]="contenidoNuevo" (contenidoChange)="contenidoNuevo = $event" placeholder="Escriba su mensaje..." [alto]="180" />

@@ -19,7 +19,6 @@ import { FiltroEntrada } from '../../../shared/components/error-campo/filtro-ent
 import { Val } from '../../../core/utils/validadores';
 import { mensajeHttp } from '../../../core/utils/error-http';
 
-/** Función coincideConNueva: coincide con nueva. */
 export function coincideConNueva(control: AbstractControl): ValidationErrors | null {
   const nueva = control.get('passwordNueva')?.value;
   const confirmar = control.get('confirmarPassword')?.value;
@@ -29,46 +28,29 @@ export function coincideConNueva(control: AbstractControl): ValidationErrors | n
     : null;
 }
 
-/**
- * Vista "Configuración": cambiar la contraseña. Por seguridad pide un
- * código enviado al Gmail verificado del usuario. La usan los 4 roles.
- */
 @Component({
   imports: [ErrorCampo, FiltroEntrada, CommonModule, ReactiveFormsModule, RouterLink, CampoPassword],
   selector: 'app-configuracion',
   templateUrl: './configuracion.html',
 })
 export class Configuracion implements OnInit, OnDestroy {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
-  /** Servicio FormBuilder (inyectado por Angular). */
   private fb = inject(FormBuilder);
-  /** Servicio AuthService (inyectado por Angular). */
   private authService = inject(AuthService);
-  /** Servicio PerfilService (inyectado por Angular). */
   private perfilService = inject(PerfilService);
 
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): éxito. */
   exito = signal(false);
 
-  // Gmail
   correo = signal<string | null>(null);
-  /** Estado (signal): correo verificado. */
   correoVerificado = signal(false);
   rutaPerfil: string[] = ['/home', this.rolPath(), 'perfil'];
 
-  // Código
   enviandoCodigo = signal(false);
-  /** Estado (signal): código enviado a. */
   codigoEnviadoA = signal<string | null>(null);
-  /** Estado (signal): segundos reenvio. */
   segundosReenvio = signal(0);
   private temporizador?: ReturnType<typeof setInterval>;
 
@@ -81,11 +63,6 @@ export class Configuracion implements OnInit, OnDestroy {
     validators: coincideConNueva
   });
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales. Pide los datos al backend con perfilService.obtener() y actualiza la pantalla
-   * cuando llega la respuesta.
-   */
   ngOnInit(): void {
     const usuario = this.authService.obtenerUsuario();
     if (!usuario) return;
@@ -102,18 +79,10 @@ export class Configuracion implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Se ejecuta al salir de la pantalla (cuando Angular destruye el componente): limpia temporizadores
-   * y suscripciones.
-   */
   ngOnDestroy(): void {
     this.detenerTemporizador();
   }
 
-  /**
-   * Envía código. Pide los datos al backend con perfilService.enviarCodigoPassword() y actualiza la
-   * pantalla cuando llega la respuesta.
-   */
   enviarCodigo(): void {
     const usuario = this.authService.obtenerUsuario();
     if (!usuario) return;
@@ -132,7 +101,6 @@ export class Configuracion implements OnInit, OnDestroy {
     });
   }
 
-  /** Cambia contraseña. Muestra un aviso (toast) con el resultado. */
   cambiarPassword(): void {
     this.error.set(null);
     this.exito.set(false);
@@ -179,7 +147,6 @@ export class Configuracion implements OnInit, OnDestroy {
     });
   }
 
-  /** Inicia temporizador. */
   private iniciarTemporizador(segundos: number): void {
     this.detenerTemporizador();
     this.segundosReenvio.set(segundos);
@@ -190,13 +157,11 @@ export class Configuracion implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  /** Realiza la acción «detener temporizador» de esta pantalla. */
   private detenerTemporizador(): void {
     if (this.temporizador) clearInterval(this.temporizador);
     this.temporizador = undefined;
   }
 
-  /** Segmento /home/{rol}/... del usuario logeado. */
   private rolPath(): string {
     const rol = (this.authService.obtenerRol() ?? '').toLowerCase();
     if (['docente', 'profesor'].includes(rol)) return 'docente';

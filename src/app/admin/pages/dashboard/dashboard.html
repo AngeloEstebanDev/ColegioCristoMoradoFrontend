@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «dashboard», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en dashboard.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-6">
 
-  <!-- Encabezado -->
   <div>
     <h2 class="font-serif font-bold text-2xl text-[#241521]">Panel de Administración</h2>
     <p class="text-[13.5px] text-[#6B5A67] mt-0.5">Gestión institucional — I.E. N.º 2092 Cristo Morado</p>
@@ -17,7 +9,6 @@
     {{ error() }}. Verifica que el servidor (API) esté encendido.
   </div>
 
-  <!-- Tarjetas de estadísticas -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
     <div class="bg-white rounded-xl border border-[#E3D5C4] p-5 flex items-center justify-between">
@@ -69,7 +60,6 @@
     </div>
   </div>
 
-  <!-- Accesos rápidos (Directiva: solo con permiso de Gestión de Usuarios) -->
   <ng-container *ngIf="puedeGestionarUsuarios">
   <div>
     <h3 class="font-serif font-bold text-[15px] text-[#241521] mb-3 flex items-center gap-1.5">
@@ -96,7 +86,6 @@
 
   </ng-container>
 
-  <!-- Actividad reciente -->
   <div class="bg-white rounded-xl border border-[#E3D5C4]">
     <div class="flex items-center justify-between px-5 py-4 border-b border-[#E3D5C4]">
       <h3 class="font-serif font-bold text-[15px] text-[#241521] flex items-center gap-1.5">

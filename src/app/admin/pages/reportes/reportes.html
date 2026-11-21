@@ -1,18 +1,9 @@
-<!--
-  Vista (HTML) de «reportes», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en reportes.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
-  <!-- Encabezado -->
   <div>
     <h2 class="font-serif font-bold text-[26px] sm:text-[30px] text-[#2E1233] leading-tight">Centro de Control de Reportes</h2>
     <p class="text-[14px] text-[#6B5A67] mt-1">Consulta y exporta información académica de los estudiantes.</p>
   </div>
 
-  <!-- Pestañas -->
   <div class="bg-white rounded-2xl border border-[#E3D5C4] p-1.5 grid grid-cols-1 sm:grid-cols-3 gap-1" role="tablist" aria-label="Tipos de reporte">
     @for (t of [
       { id: 'notas', nombre: 'Exportar notas', icono: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4' },
@@ -28,7 +19,6 @@
     }
   </div>
 
-  <!-- Aviso -->
   <div class="flex items-start gap-3 rounded-xl border border-[#E2D4EA] bg-[#F6F1F8] px-4 py-3">
     <span class="w-6 h-6 rounded-full bg-[#4A1F52] text-white flex items-center justify-center text-[13px] font-bold shrink-0">i</span>
     <p class="text-[13.5px] text-[#4A1F52]">
@@ -102,7 +92,6 @@
     </ng-template>
 
     @if (pestana() === 'notas') {
-      <!-- ============ Exportar notas ============ -->
       <section class="bg-white rounded-2xl border border-[#E3D5C4] p-5">
         <h3 class="font-serif font-bold text-[19px] text-[#2E1233] mb-4">Filtros de reporte</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -135,7 +124,6 @@
         @if (error()) { <p class="mt-4 text-[13px] text-[#A62639]" role="alert">{{ error() }}</p> }
       </section>
     } @else {
-      <!-- ============ Reporte por alumno / Asistencia ============ -->
       <section class="bg-white rounded-2xl border border-[#E3D5C4] p-5">
         <h3 class="font-serif font-bold text-[19px] text-[#2E1233] mb-4">{{ pestana() === 'alumno' ? 'Reporte por alumno' : 'Asistencia del alumno' }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -187,7 +175,6 @@
         @if (error()) { <p class="mt-4 text-[13px] text-[#A62639]" role="alert">{{ error() }}</p> }
       </section>
 
-      <!-- Vista previa -->
       <section class="bg-white rounded-2xl border border-[#E3D5C4] overflow-hidden">
         <div class="px-5 pt-5 pb-3 flex flex-wrap items-end justify-between gap-3">
           <div>

@@ -1,12 +1,8 @@
-/**
- * Modelo Usuario: describe la forma de los datos de «usuario». Es lo que viaja en JSON entre el
- * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Usuario {
   id: number;
   nombre: string;
   usuario: string;
-  correo: string | null;          // Gmail vinculado por el propio usuario
+  correo: string | null;
   correoVerificado: boolean;
   rol: string;
   estado: boolean;
@@ -14,29 +10,22 @@ export interface Usuario {
   vinculadoA: 'Alumno' | 'Docente' | 'Apoderado' | 'Directiva' | null;
 }
 
-/**
- * Modelo UsuarioRequest: describe la forma de los datos de «usuario request». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface UsuarioRequest {
   nombre: string;
-  usuario?: string | null;   // solo Administración
-  dni?: string | null;       // solo Directiva (usuario = DIR + DNI)
+  usuario?: string | null;
+  dni?: string | null;
   password?: string | null;
   rol: string;
   estado: boolean;
 }
 
-/** Prefijos del nombre de usuario institucional (PREFIJO + DNI). */
 export const PREFIJO_USUARIO = { ALUMNO: 'ALU', DOCENTE: 'DOC', APODERADO: 'APO', DIRECTIVA: 'DIR' } as const;
 
-/** Vista previa del usuario que se generará, p.ej. usuarioConDni('ALU', '87654321') = 'ALU87654321'. */
 export function usuarioConDni(prefijo: string, dni: string | null | undefined): string {
   const limpio = (dni ?? '').replace(/\s/g, '').toUpperCase();
   return prefijo + (limpio || '········');
 }
 
-/** Roles administrables desde "Usuarios y Roles". */
 export const ROLES_SISTEMA = [
   { valor: 'ADMIN', etiqueta: 'Administrador', descripcion: 'Acceso total al sistema' },
   { valor: 'DOCENTE', etiqueta: 'Docente', descripcion: 'Gestiona su información y la de sus cursos' },
@@ -45,7 +34,6 @@ export const ROLES_SISTEMA = [
   { valor: 'DIRECTIVO', etiqueta: 'Directivo', descripcion: 'Gestiona la institución y el personal' },
 ] as const;
 
-/** Devuelve la etiqueta de rol. */
 export function etiquetaRol(rol: string): string {
   const encontrado = ROLES_SISTEMA.find(r => r.valor.toLowerCase() === (rol ?? '').toLowerCase());
   return encontrado?.etiqueta ?? rol;

@@ -1,7 +1,6 @@
 import { FormControl } from '@angular/forms';
 import { Val, mensajeError, revisar, soloDigitos } from '../core/utils/validadores';
 
-/** Pruebas complementarias de las reglas de validación de los formularios (core/utils/validadores.ts). */
 describe('VC – Validadores de formularios (frontend)', () => {
   const msg = (valor: unknown, regla: ReturnType<typeof Val.telefono>) => mensajeError(new FormControl(valor, regla));
 

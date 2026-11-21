@@ -1,5 +1,3 @@
-/** Calificaciones (HU-16, 17, 19, 20, 21). Escala vigesimal 0 a 20. */
-
 export interface PeriodoCorto {
   id: number;
   nombre: string;
@@ -8,20 +6,12 @@ export interface PeriodoCorto {
   activo: boolean;
 }
 
-/**
- * Modelo Promedio: describe la forma de los datos de «promedio». Es lo que viaja en JSON entre el
- * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Promedio {
   valor: number | null;
   redondeado: number | null;
   literal: 'AD' | 'A' | 'B' | 'C' | null;
 }
 
-/**
- * Modelo EvaluacionNota: describe la forma de los datos de «evaluación nota». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface EvaluacionNota {
   id: number;
   nombre: string;
@@ -32,11 +22,6 @@ export interface EvaluacionNota {
   notasRegistradas: number;
 }
 
-/**
- * Modelo EvaluacionRequest: describe la forma de los datos de «evaluación request». Es lo que viaja en
- * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
- * campo.
- */
 export interface EvaluacionRequest {
   periodoId: number | null;
   nombre: string;
@@ -45,19 +30,16 @@ export interface EvaluacionRequest {
   fecha: string | null;
 }
 
-/** Las claves de los mapas llegan como texto (JSON). */
 export interface FilaNotas {
   estudianteId: number;
   nombre: string;
   notas: Record<string, number>;
   comentarios: Record<string, string>;
   promedio: Promedio;
-  /** Promedio de tareas, cuestionarios y actividades (null si aún no hay ninguna calificada). */
   participacion: number | null;
   foto: string | null;
 }
 
-/** Participación: promedio automático de las actividades del bimestre. */
 export interface ParticipacionDetalle {
   actividadId: number;
   titulo: string;
@@ -67,11 +49,6 @@ export interface ParticipacionDetalle {
   fecha: string | null;
 }
 
-/**
- * Modelo ParticipacionAlumno: describe la forma de los datos de «participación alumno». Es lo que
- * viaja en JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa
- * mal un campo.
- */
 export interface ParticipacionAlumno {
   estudianteId: number;
   nombre: string;
@@ -80,10 +57,6 @@ export interface ParticipacionAlumno {
   detalle: ParticipacionDetalle[];
 }
 
-/**
- * Modelo Participacion: describe la forma de los datos de «participación». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Participacion {
   seccionCursoId: number;
   periodo: PeriodoCorto | null;
@@ -92,10 +65,6 @@ export interface Participacion {
   alumnos: ParticipacionAlumno[];
 }
 
-/**
- * Modelo RegistroNotas: describe la forma de los datos de «registro notas». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface RegistroNotas {
   seccionCursoId: number;
   curso: string;
@@ -112,10 +81,6 @@ export interface RegistroNotas {
   sinNotas: number;
 }
 
-/**
- * Modelo CambioNota: describe la forma de los datos de «cambio nota». Es lo que viaja en JSON entre el
- * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface CambioNota {
   evaluacionId: number;
   estudianteId: number;
@@ -123,11 +88,6 @@ export interface CambioNota {
   comentario: string | null;
 }
 
-/**
- * Modelo CambioHistorial: describe la forma de los datos de «cambio historial». Es lo que viaja en
- * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
- * campo.
- */
 export interface CambioHistorial {
   id: number;
   evaluacion: string;
@@ -139,10 +99,6 @@ export interface CambioHistorial {
   fecha: string;
 }
 
-/**
- * Modelo NotaDetalle: describe la forma de los datos de «nota detalle». Es lo que viaja en JSON entre
- * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface NotaDetalle {
   evaluacion: string;
   tipo: string;
@@ -152,10 +108,6 @@ export interface NotaDetalle {
   comentario: string | null;
 }
 
-/**
- * Modelo CursoBoleta: describe la forma de los datos de «curso boleta». Es lo que viaja en JSON entre
- * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface CursoBoleta {
   seccionCursoId: number;
   curso: string;
@@ -166,10 +118,6 @@ export interface CursoBoleta {
   promedioAnual: Promedio;
 }
 
-/**
- * Modelo Boleta: describe la forma de los datos de «boleta». Es lo que viaja en JSON entre el backend
- * y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Boleta {
   estudianteId: number;
   nombre: string;
@@ -185,10 +133,6 @@ export interface Boleta {
   cursosDesaprobados: number;
 }
 
-/**
- * Modelo AnioHistorial: describe la forma de los datos de «año historial». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface AnioHistorial {
   anio: number;
   grado: string | null;
@@ -204,10 +148,6 @@ export interface AnioHistorial {
   situacion: string;
 }
 
-/**
- * Modelo Historial: describe la forma de los datos de «historial». Es lo que viaja en JSON entre el
- * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Historial {
   estudianteId: number;
   nombre: string;
@@ -217,9 +157,6 @@ export interface Historial {
   anios: AnioHistorial[];
 }
 
-/**
- * Constante TIPOS_EVALUACION: valor fijo (tipos evaluación) que se reutiliza en varias partes.
- */
 export const TIPOS_EVALUACION: { valor: string; etiqueta: string }[] = [
   { valor: 'EXAMEN', etiqueta: 'Examen' },
   { valor: 'PRACTICA', etiqueta: 'Práctica' },
@@ -231,12 +168,10 @@ export const TIPOS_EVALUACION: { valor: string; etiqueta: string }[] = [
   { valor: 'OTRO', etiqueta: 'Otro' },
 ];
 
-/** Devuelve la etiqueta de evaluación. */
 export function etiquetaEvaluacion(tipo: string): string {
   return TIPOS_EVALUACION.find(t => t.valor === tipo)?.etiqueta ?? tipo;
 }
 
-/** Equivalencia literal (escala de logro): AD 18-20, A 14-17, B 11-13, C 0-10. */
 export const ESCALA_LITERAL = [
   { literal: 'AD', rango: '18 - 20', nombre: 'Logro destacado', color: '#1E7A3B', fondo: '#E7F3EA' },
   { literal: 'A', rango: '14 - 17', nombre: 'Logro esperado', color: '#2563EB', fondo: '#E6EEFB' },
@@ -244,7 +179,6 @@ export const ESCALA_LITERAL = [
   { literal: 'C', rango: '0 - 10', nombre: 'En inicio', color: '#A62639', fondo: '#FBE7E9' },
 ];
 
-/** Devuelve el color de nota. */
 export function colorNota(valor: number | null | undefined): { color: string; fondo: string } {
   if (valor === null || valor === undefined) return { color: '#9A8E97', fondo: 'transparent' };
   const r = Math.round(valor + 1e-9);

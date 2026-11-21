@@ -8,10 +8,8 @@ import { guardarBlob } from '../../../core/services/archivo.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { descargarPdf, nombreArchivo } from '../../../core/utils/pdf-reporte';
 
-/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'notas' | 'alumno' | 'asistencia';
 
-/** Filtros de una pestaña (null = todos). */
 interface Filtros {
   grado: string | null;
   seccionId: number | null;
@@ -20,67 +18,41 @@ interface Filtros {
   cursoId: number | null;
 }
 
-/** Constante VACIO: valor fijo (vacío) que se reutiliza en varias partes. */
 const VACIO: Filtros = { grado: null, seccionId: null, estudianteId: null, periodoId: null, cursoId: null };
 
-/**
- * HU-30 Generación de reportes y HU-31 Exportación (Excel y PDF).
- * Centro de Control de Reportes con tres pestañas:
- *  - Exportar notas: registro de notas por grado, sección y periodo (cada filtro admite "Todos").
- *  - Reporte por alumno: cada nota por grado, sección, alumno, periodo y curso, con vista previa.
- *  - Asistencia del alumno: cada registro de asistencia con los mismos filtros, con vista previa.
- */
 @Component({
   imports: [CommonModule, FormsModule],
   selector: 'app-reportes',
   templateUrl: './reportes.html',
 })
 export class Reportes implements OnInit {
-  /** Servicio ReporteService (inyectado por Angular). */
   private servicio = inject(ReporteService);
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
   readonly porPagina = 25;
 
-  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('notas');
-  /** Estado (signal): opciones. */
   opciones = signal<OpcionesReporte | null>(null);
-  /** Estado (signal): cargando opciones. */
   cargandoOpciones = signal(true);
-  /** Estado (signal): error opciones. */
   errorOpciones = signal<string | null>(null);
 
-  /** Filtros de cada pestaña (se conservan al cambiar de pestaña). */
   filtros = signal<Record<Pestana, Filtros>>({ notas: { ...VACIO }, alumno: { ...VACIO }, asistencia: { ...VACIO } });
-  /** Resultado procesado de cada pestaña con vista previa. */
   tablas = signal<Record<Pestana, TablaReporte | null>>({ notas: null, alumno: null, asistencia: null });
-  /** Estado (signal): página. */
   pagina = signal(1);
-  /** Filtros con los que se generó cada vista previa (para saber si quedó desactualizada). */
   private claves = signal<Partial<Record<Pestana, string>>>({});
 
-  /** Estado (signal): procesando. */
   procesando = signal(false);
-  /** Estado (signal): descargando. */
   descargando = signal<'excel' | 'pdf' | null>(null);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
 
-  /** Valor calculado (computed): f. Se actualiza solo. */
   f = computed(() => this.filtros()[this.pestana()]);
-  /** Valor calculado (computed): tabla. Se actualiza solo. */
   tabla = computed(() => this.tablas()[this.pestana()]);
-  /** true si se cambiaron los filtros después de procesar. */
   desactualizado = computed(() => !!this.tabla() && this.claves()[this.pestana()] !== JSON.stringify(this.parametros()));
 
-  /** Valor calculado (computed): secciones. Se actualiza solo. */
   secciones = computed(() => {
     const o = this.opciones(), g = this.f().grado;
     return (o?.secciones ?? []).filter(s => !g || s.grado === g);
   });
-  /** Valor calculado (computed): alumnos. Se actualiza solo. */
   alumnos = computed(() => {
     const o = this.opciones(), f = this.f();
     return (o?.alumnos ?? [])
@@ -88,39 +60,26 @@ export class Reportes implements OnInit {
       .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   });
 
-  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil((this.tabla()?.filas.length ?? 0) / this.porPagina)));
-  /** Valor calculado (computed): filas página. Se actualiza solo. */
   filasPagina = computed(() => {
     const t = this.tabla();
     if (!t) return [];
     const i = (this.pagina() - 1) * this.porPagina;
     return t.filas.slice(i, i + this.porPagina);
   });
-  /** Indicadores sin el aviso de límite (ese se muestra aparte). */
   indicadores = computed(() => (this.tabla()?.indicadores ?? []).filter(i => i.etiqueta !== 'Filas mostradas'));
-  /** Valor calculado (computed): limite. Se actualiza solo. */
   limite = computed(() => (this.tabla()?.indicadores ?? []).find(i => i.etiqueta === 'Filas mostradas') ?? null);
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void {
     this.cargarOpciones();
   }
 
-  /**
-   * Carga opciones. Pide los datos al backend con servicio.opciones() y actualiza la pantalla cuando
-   * llega la respuesta.
-   */
   cargarOpciones(): void {
     this.cargandoOpciones.set(true);
     this.errorOpciones.set(null);
     this.servicio.opciones().subscribe({
       next: (o) => {
         this.opciones.set(o);
-        // Exportar notas empieza con el periodo activo; los otros reportes con "Todos los periodos".
         this.filtros.update(x => ({ ...x, notas: { ...x.notas, periodoId: o.periodoActivo ?? o.periodos[0]?.id ?? null } }));
         this.cargandoOpciones.set(false);
       },
@@ -131,14 +90,12 @@ export class Reportes implements OnInit {
     });
   }
 
-  /** Elige los datos de esta pantalla. */
   elegir(p: Pestana): void {
     this.pestana.set(p);
     this.pagina.set(1);
     this.error.set(null);
   }
 
-  /** Cambia un filtro y limpia los que dependen de él (grado -> sección -> alumno). */
   cambiar(campo: keyof Filtros, valor: string | number | null): void {
     const p = this.pestana();
     this.filtros.update(x => {
@@ -158,12 +115,10 @@ export class Reportes implements OnInit {
     this.error.set(null);
   }
 
-  /** Devuelve «tipo». */
   private tipo(p: Pestana = this.pestana()): TipoReporte {
     return p === 'notas' ? 'notas' : p === 'alumno' ? 'notas-alumno' : 'asistencia-alumno';
   }
 
-  /** Devuelve «parametros». */
   private parametros(p: Pestana = this.pestana()): ParametrosReporte {
     const f = this.filtros()[p];
     return p === 'notas'
@@ -171,12 +126,10 @@ export class Reportes implements OnInit {
       : { grado: f.grado, seccionId: f.seccionId, estudianteId: f.estudianteId, periodoId: f.periodoId, cursoId: f.cursoId };
   }
 
-  /** Exportar notas: grado, sección y periodo admiten "Todos", así que siempre se puede exportar. */
   private notasCompletas(): boolean {
     return true;
   }
 
-  /** Reporte por alumno / Asistencia: genera la vista previa. */
   procesar(): void {
     const p = this.pestana();
     this.procesando.set(true);
@@ -194,7 +147,6 @@ export class Reportes implements OnInit {
     });
   }
 
-  /** Descarga excel. Muestra un aviso (toast) con el resultado. */
   descargarExcel(): void {
     if (this.descargando() || !this.notasCompletas()) return;
     const p = this.pestana();
@@ -213,14 +165,12 @@ export class Reportes implements OnInit {
     });
   }
 
-  /** Descarga pdf. Muestra un aviso (toast) con el resultado. */
   async descargarPdf(): Promise<void> {
     if (this.descargando() || !this.notasCompletas()) return;
     const p = this.pestana();
     this.descargando.set('pdf');
     this.error.set(null);
     try {
-      // Usa la vista previa si ya se procesó con los mismos filtros; si no, la genera.
       let t = p === 'notas' ? null : this.tablas()[p];
       if (!t || this.claves()[p] !== JSON.stringify(this.parametros(p))) {
         t = await firstValueFrom(this.servicio.generar(this.tipo(p), this.parametros(p)));
@@ -235,14 +185,12 @@ export class Reportes implements OnInit {
     }
   }
 
-  /** Guarda tabla. */
   private guardarTabla(p: Pestana, t: TablaReporte): void {
     this.tablas.update(x => ({ ...x, [p]: t }));
     this.claves.update(x => ({ ...x, [p]: JSON.stringify(this.parametros(p)) }));
     this.pagina.set(1);
   }
 
-  /** Devuelve el texto de «título». */
   private titulo(p: Pestana): string {
     const f = this.filtros()[p];
     const s = this.opciones()?.secciones.find(x => x.id === f.seccionId);
@@ -250,23 +198,19 @@ export class Reportes implements OnInit {
     return (p === 'alumno' ? 'Reporte de notas por alumno ' : 'Reporte de asistencia por alumno ') + (s?.nombre ?? f.grado ?? '');
   }
 
-  /** Navega a página. */
   irPagina(n: number): void {
     this.pagina.set(Math.min(this.totalPaginas(), Math.max(1, n)));
   }
 
-  /** Devuelve el texto de «formato». */
   formato(v: unknown): string {
     if (typeof v === 'number') return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0$/, '');
     return String(v ?? '');
   }
 
-  /** Color de la nota (rojo si es desaprobatoria, menor a 11). */
   claseNota(v: unknown): string {
     return typeof v === 'number' && v < 10.5 ? 'text-[#A62639] font-semibold' : 'text-[#241521] font-semibold';
   }
 
-  /** Devuelve las clases CSS de estado. */
   claseEstado(v: unknown): string {
     switch (v) {
       case 'Asistió': return 'bg-[#E6F4EA] text-[#1E7A3B]';
@@ -277,7 +221,6 @@ export class Reportes implements OnInit {
     }
   }
 
-  /** Devuelve el texto de «punto estado». */
   puntoEstado(v: unknown): string {
     switch (v) {
       case 'Asistió': return 'bg-[#1E7A3B]';
@@ -289,7 +232,6 @@ export class Reportes implements OnInit {
   }
 }
 
-/** Mensaje de error del backend cuando la respuesta era un Blob (descarga de Excel). */
 async function mensajeBlob(e: any): Promise<string | null> {
   try {
     if (e?.error instanceof Blob) return JSON.parse(await e.error.text())?.mensaje ?? null;

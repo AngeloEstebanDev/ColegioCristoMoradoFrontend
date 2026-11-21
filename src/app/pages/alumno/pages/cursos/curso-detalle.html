@@ -1,4 +1,3 @@
-<!-- Ícono de cada elemento del curso (documento, texto, enlace, tarea, cuestionario, actividad) -->
 <ng-template #iconoItem let-e>
   <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" [style.background]="e.fondo" [style.color]="e.color">
     @switch (e.icono) {
@@ -35,7 +34,6 @@
   }
 
   @if (curso(); as c) {
-    <!-- Portada del curso -->
     <div class="relative overflow-hidden rounded-2xl shadow-md text-white px-5 py-5"
          [style.background]="'linear-gradient(120deg,' + c.color + ' 0%,' + c.color + ' 55%, #2E1233 140%)'">
       <div class="absolute -right-2 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
@@ -75,7 +73,6 @@
       </div>
     }
 
-    <!-- Pestañas -->
     <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm px-2 flex gap-1 overflow-x-auto">
       @for (t of pestanas; track t.id) {
         <button type="button" (click)="cambiarPestana(t.id)"
@@ -87,12 +84,10 @@
       }
     </div>
 
-    <!-- ===================== CONTENIDO ===================== -->
     @if (pestana() === 'contenido') {
       <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
         <div class="space-y-4 min-w-0">
 
-          <!-- Estructura curricular -->
           <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
             <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Estructura Curricular</h3>
             <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
@@ -114,7 +109,6 @@
             </div>
           </section>
 
-          <!-- Contenido del curso -->
           <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
             <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Contenido del curso</h3>
             @if (cargandoContenido()) {
@@ -177,7 +171,6 @@
           </section>
         </div>
 
-        <!-- Columna derecha: profesor y participantes -->
         <aside class="space-y-4">
           <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
             <button type="button" (click)="verProfesor.set(!verProfesor())" class="w-full flex items-center gap-2 px-4 py-3 border-b border-[#F0E6D8] text-left">
@@ -237,7 +230,6 @@
       </div>
     }
 
-    <!-- ===================== ACTIVIDADES ===================== -->
     @if (pestana() === 'actividades') {
       <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
         <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Actividades del curso</h3>
@@ -295,7 +287,6 @@
       </section>
     }
 
-    <!-- ===================== ASISTENCIA ===================== -->
     @if (pestana() === 'asistencia') {
       <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
         <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
@@ -367,7 +358,6 @@
       </section>
     }
 
-    <!-- ===================== EXÁMENES ===================== -->
     @if (pestana() === 'examenes') {
       <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
         <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Exámenes y evaluaciones</h3>
@@ -433,7 +423,6 @@
   }
 </div>
 
-<!-- Fila de un elemento en "Contenido del curso" -->
 <ng-template #filaItem let-i>
   @let e = estilo(i);
   <button type="button" (click)="abrirItem(i)" class="w-full flex items-center gap-4 px-4 py-3 text-left bg-white hover:bg-[#FBF7F1] transition-colors">
@@ -457,7 +446,6 @@
   </button>
 </ng-template>
 
-<!-- Avatar (foto, avatar o iniciales) -->
 <ng-template #avatar let-p let-tam="tam">
   <span class="rounded-full shrink-0 overflow-hidden flex items-center justify-center text-white font-semibold border-2 border-white shadow-sm"
         [ngClass]="tam" style="background:radial-gradient(circle at 35% 30%, #6B3474, #2E1233 75%)">
@@ -465,7 +453,6 @@
   </span>
 </ng-template>
 
-<!-- ===================== Panel: actividad ===================== -->
 @if (actividad(); as a) {
   @let e = estilo({ clave: '', fecha: '', actividad: a });
   <div class="fixed inset-0 z-50 flex justify-end">
@@ -554,7 +541,6 @@
   </div>
 }
 
-<!-- ===================== Panel: material ===================== -->
 @if (material(); as m) {
   @let e = estilo({ clave: '', fecha: '', material: m });
   <div class="fixed inset-0 z-50 flex justify-end">

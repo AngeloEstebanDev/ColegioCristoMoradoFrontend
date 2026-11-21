@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «periodos», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en periodos.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-6">
 
-  <!-- Encabezado -->
   <div class="flex items-start justify-between flex-wrap gap-3">
     <div>
       <h2 class="font-serif font-bold text-2xl text-[#241521]">Periodos</h2>
@@ -33,7 +25,6 @@
     </div>
   }
 
-  <!-- Tarjetas -->
   @if (periodos().length) {
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       @for (p of periodos(); track p.id) {
@@ -101,7 +92,6 @@
     </div>
   }
 
-  <!-- Resumen -->
   <div class="space-y-3">
     <h3 class="flex items-center gap-2 font-semibold text-[15px] text-[#241521]">
       <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-[#4A1F52]"><path d="M3 4h18v16H3V4Zm2 2v3h6V6H5Zm8 0v3h6V6h-6Zm-8 5v3h6v-3H5Zm8 0v3h6v-3h-6Zm-8 5v2h6v-2H5Zm8 0v2h6v-2h-6Z"/></svg>
@@ -162,7 +152,6 @@
   </div>
 </div>
 
-<!-- ===================== Panel lateral: Nuevo / Editar periodo ===================== -->
 @if (panelAbierto()) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-black/30" (click)="panelAbierto.set(false)"></div>
@@ -205,7 +194,6 @@
               <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
               Bimestre *
             </label>
-            <!-- Combo con el color de cada bimestre -->
             <div class="relative">
               <button type="button" (click)="alternarBimestres($event)"
                       class="w-full flex items-center gap-2 pl-3 pr-9 py-2.5 text-[13.5px] rounded-lg border bg-white text-left"

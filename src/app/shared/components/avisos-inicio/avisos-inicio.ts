@@ -8,7 +8,6 @@ import { MensajeService } from '../../../core/services/mensaje.service';
 import { NotificacionService } from '../../../core/services/notificacion.service';
 import { fechaLarga, haceCuanto } from '../../../core/utils/texto';
 
-/** Novedad que se muestra en el modal: un anuncio importante o un aviso del colegio. */
 interface Novedad {
   clave: string;
   tipo: 'ANUNCIO' | 'AVISO';
@@ -20,43 +19,27 @@ interface Novedad {
   fecha: string;
 }
 
-/**
- * Modal grande que aparece al entrar a la cuenta (cualquier rol) con lo que el usuario aún no leyó:
- *  - Anuncios importantes de Comunicados.
- *  - Avisos del colegio: cambios de horario, nuevas actividades y materiales, notas, asistencia, citas...
- * Al cerrarlo (o al pasar por cada novedad) quedan marcados como leídos.
- */
 @Component({
   selector: 'app-avisos-inicio',
   standalone: true,
   templateUrl: './avisos-inicio.html',
 })
 export class AvisosInicio {
-  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
-  /** Servicio ComunicadoService (inyectado por Angular). */
   private comunicados = inject(ComunicadoService);
-  /** Servicio MensajeService (inyectado por Angular). */
   private mensajes = inject(MensajeService);
-  /** Servicio NotificacionService (inyectado por Angular). */
   private notificaciones = inject(NotificacionService);
-  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
 
   readonly haceCuanto = haceCuanto;
   readonly fechaLarga = fechaLarga;
 
-  /** Estado (signal): novedades. */
   novedades = signal<Novedad[]>([]);
-  /** Estado (signal): indice. */
   indice = signal(0);
-  /** Estado (signal): abierto. */
   abierto = signal(false);
-  /** Valor calculado (computed): actual. Se actualiza solo. */
   actual = computed(() => this.novedades()[this.indice()] ?? null);
   private vistas = new Set<string>();
 
-  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor() {
     const u = this.auth.obtenerUsuario();
     if (!u) return;
@@ -82,7 +65,6 @@ export class AvisosInicio {
     });
   }
 
-  /** Navega a los datos de esta pantalla. */
   ir(i: number): void {
     const n = this.novedades();
     if (i < 0 || i >= n.length) return;
@@ -90,7 +72,6 @@ export class AvisosInicio {
     this.vistas.add(n[i].clave);
   }
 
-  /** Cierra el modal y marca como leídas las novedades que el usuario vio. */
   cerrar(todas = false): void {
     const u = this.auth.obtenerUsuario();
     const leidas = this.novedades().filter(n => todas || this.vistas.has(n.clave));
@@ -105,7 +86,6 @@ export class AvisosInicio {
     if (peticiones.length) forkJoin(peticiones).subscribe(() => this.notificaciones.refrescar());
   }
 
-  /** Abre Comunicados (pestaña Mensajes para los avisos). */
   verEnComunicados(): void {
     const n = this.actual();
     const rol = (this.auth.obtenerUsuario()?.rol ?? '').toUpperCase();
@@ -114,7 +94,6 @@ export class AvisosInicio {
     this.router.navigate([base + '/comunicados'], n?.tipo === 'AVISO' ? { queryParams: { tab: 'mensajes' } } : {});
   }
 
-  /** Realiza la acción «teclado» de esta pantalla. */
   @HostListener('document:keydown', ['$event'])
   teclado(e: KeyboardEvent): void {
     if (!this.abierto()) return;

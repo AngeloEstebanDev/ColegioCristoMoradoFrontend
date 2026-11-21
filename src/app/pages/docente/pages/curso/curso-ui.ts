@@ -3,24 +3,16 @@ import { CommonModule } from '@angular/common';
 import { Actividad, Material } from '../../../../core/models/aula.model';
 import { iniciales } from '../../../../core/utils/texto';
 
-/**
- * Piezas visuales compartidas por las pestañas del curso del docente
- * (Contenido, Actividades, Asistencia y Exámenes).
- */
-
 export type IconoTipo = 'doc' | 'texto' | 'enlace' | 'tarea' | 'cuestionario' | 'actividad' | 'examen';
 
-/** Modelo EstiloItem: describe la forma de los datos de «estilo item». */
 export interface EstiloItem { etiqueta: string; color: string; fondo: string; icono: IconoTipo; }
 
-/** Devuelve el estilo de material. */
 export function estiloMaterial(m: Material): EstiloItem {
   if (m.tipo === 'ARCHIVO' || (!m.tipo && m.archivo)) return { etiqueta: 'Documento', color: '#9333EA', fondo: '#F3E8FD', icono: 'doc' };
   if (m.tipo === 'ENLACE' || (!m.tipo && m.enlace)) return { etiqueta: 'Enlace', color: '#0891B2', fondo: '#E0F3F8', icono: 'enlace' };
   return { etiqueta: 'Texto', color: '#2563EB', fondo: '#E6EEFB', icono: 'texto' };
 }
 
-/** Devuelve el estilo de actividad. */
 export function estiloActividad(a: Actividad): EstiloItem {
   switch (a.tipo) {
     case 'CUESTIONARIO': return { etiqueta: 'Cuestionario', color: '#FFFFFF', fondo: '#F97316', icono: 'cuestionario' };
@@ -29,7 +21,6 @@ export function estiloActividad(a: Actividad): EstiloItem {
   }
 }
 
-/** Ícono cuadrado de cada elemento del curso. */
 @Component({
   selector: 'app-icono-item',
   standalone: true,
@@ -62,7 +53,6 @@ export class IconoItem {
   @Input() tam = 'w-11 h-11';
 }
 
-/** Foto del alumno (o sus iniciales). */
 @Component({
   selector: 'app-avatar-persona',
   standalone: true,
@@ -81,7 +71,6 @@ export class AvatarPersona {
   readonly iniciales = iniciales;
 }
 
-/** Pastilla "Activo" / "Oculto". */
 @Component({
   selector: 'app-chip-visible',
   standalone: true,
@@ -106,18 +95,15 @@ export class ChipVisible {
   @Input() textoOculto = 'Oculto';
 }
 
-/** "2026-03-21" -> Date local */
 export function aFecha(iso: string): Date {
   const [y, m, d] = iso.substring(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
-/** Convierte el valor a iso. */
 export function aIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** "07:45" -> "7:45 a. m." */
 export function horaAmPm(h: string | null | undefined): string {
   if (!h) return '—';
   const [hh, mm] = h.split(':').map(Number);

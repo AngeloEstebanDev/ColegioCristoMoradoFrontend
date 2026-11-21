@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «dashboard», que se muestra en el panel del padre de familia.
-  La lógica (datos, eventos y llamadas al backend) está en dashboard.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
-  <!-- Bienvenida -->
   <div class="relative overflow-hidden bg-white rounded-2xl border border-[#E3D5C4] shadow-sm pl-6 pr-6 sm:pr-28 py-5">
     <span class="absolute left-0 top-4 bottom-4 w-1.5 rounded-r-full bg-[linear-gradient(180deg,#6B2C63,#2E1233)]"></span>
     <h2 class="font-serif font-bold text-[22px] text-[#241521] leading-tight">¡Bienvenido, padre de familia!</h2>
@@ -19,7 +11,6 @@
     <div class="bg-[#FBE7E9] border border-[#A62639]/30 text-[#A62639] text-[13px] rounded-xl px-4 py-3">{{ error() }}</div>
   }
 
-  <!-- Hijos registrados -->
   <div class="inline-flex items-center gap-4 bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 min-w-[260px]">
     <span class="w-12 h-12 rounded-xl bg-[#E6EEFB] text-[#2563EB] flex items-center justify-center shrink-0">
       <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="1.8"><path d="M8.5 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM2.5 19.5c.5-3 2.8-5 6-5s5.5 2 6 5M15.3 14.6c2.4.2 4.2 1.9 4.7 4.4"/></svg>
@@ -38,7 +29,6 @@
     </div>
   }
 
-  <!-- Un acordeón por hijo -->
   @for (h of hijos(); track h.id) {
     <section class="bg-white rounded-2xl border shadow-sm overflow-hidden transition-colors"
              [ngClass]="abierto(h.id) ? 'border-[#CDBBD6]' : 'border-[#E3D5C4]'">

@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «personal staff», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en personal-staff.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
-  <!-- Encabezado -->
   <div class="flex items-start justify-between flex-wrap gap-3">
     <div>
       <h2 class="font-serif font-bold text-2xl text-[#241521]">Gestión de Personal Staff</h2>
@@ -29,7 +21,6 @@
     }
   </div>
 
-  <!-- Pestañas: "Cuentas del sistema" solo para el administrador -->
   @if (esAdmin) {
     <div class="flex gap-1 border-b border-[#E3D5C4]">
       <button type="button" (click)="pestana.set('staff')" class="px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px"
@@ -62,9 +53,7 @@
 
     <p class="text-[13px] text-[#241521]">Se encontraron {{ filtrados().length }} miembros de staff</p>
 
-    <!-- Tabla -->
     <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm">
-      <!-- En pantallas grandes no se recorta, para que el menú ⋮ se vea completo -->
       <div class="overflow-x-auto lg:overflow-visible">
         <table class="w-full text-[13px]">
           <thead>
@@ -153,7 +142,6 @@
         </table>
       </div>
 
-      <!-- Paginación -->
       <div class="flex items-center justify-end gap-5 flex-wrap px-5 py-3 border-t border-[#E3D5C4] text-[12.5px] text-[#241521]">
         <label class="flex items-center gap-2">Por página
           <span class="relative">
@@ -180,8 +168,6 @@
   }
 </div>
 
-<!-- ===================== Panel lateral derecho: Nuevo / Editar personal ===================== -->
-<!-- Mismo diseño que los paneles de Alumnos, Padres y Docentes -->
 @if (modalAbierto()) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-black/30" (click)="cerrarFormulario()"></div>
@@ -194,14 +180,12 @@
           </button>
         </div>
         @if (!editando()) {
-          <!-- Avance de los campos obligatorios -->
           <div class="h-1 bg-[#F0E6D8]">
             <div class="h-full bg-[#4A1F52] transition-all duration-300" [style.width.%]="avance()"></div>
           </div>
         }
       </div>
 
-      <!-- Tarjeta de cabecera -->
       <div class="px-6 py-4 flex items-center gap-3 border-b border-[#E3D5C4]">
         <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-[15px] font-semibold shrink-0" style="background:#13807A">
           @if (f().nombres.trim() || f().apellidoPaterno.trim()) {
@@ -276,7 +260,6 @@
         <h4 class="pt-2 text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Estructura organizacional</h4>
         <div>
           <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Cargo o puesto institucional *</label>
-          <!-- Combobox: elige de la lista o escribe un cargo nuevo -->
           <div class="relative">
             <input type="text" role="combobox" autocomplete="off" placeholder="Selecciona o escribe un cargo"
                    [attr.aria-expanded]="cargoAbierto()"
@@ -311,7 +294,6 @@
           </div>
         </div>
 
-        <!-- Cuenta de acceso -->
         <div class="pt-2 border-t border-[#E3D5C4] space-y-4">
           <div class="pt-3">
             <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cuenta de acceso</h4>
@@ -369,7 +351,6 @@
   </div>
 }
 
-<!-- ===================== Modal: Gestionar permisos (admin o quien tenga "Gestionar permisos") ===================== -->
 @if (permisosDe(); as p) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/45" (click)="permisosDe.set(null)"></div>
@@ -383,7 +364,6 @@
         <button type="button" (click)="permisosDe.set(null)" class="text-[#6B5A67] hover:text-[#241521] text-lg">✕</button>
       </div>
       <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FBF9F6]">
-        <!-- Seleccionar todos: activa o desactiva todas las casillas -->
         <label class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl border border-dashed border-[#C9B8A6] bg-white cursor-pointer hover:border-[#4A1F52]/50">
           <input type="checkbox" class="w-4 h-4 accent-[#4A1F52]" [checked]="todosMarcados()" [indeterminate]="algunoMarcado()"
                  (change)="alternarTodos($any($event.target).checked)" />
@@ -421,7 +401,6 @@
   </div>
 }
 
-<!-- ===================== Panel: detalle ===================== -->
 @if (detalle(); as d) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-[#241521]/35" (click)="detalle.set(null)"></div>

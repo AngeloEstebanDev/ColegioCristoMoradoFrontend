@@ -1,6 +1,5 @@
 import { Component, input } from '@angular/core';
 
-/** Encabezado de página con ícono (mismo estilo que el resto del sistema). */
 @Component({
   selector: 'app-encabezado',
   standalone: true,
@@ -22,15 +21,11 @@ import { Component, input } from '@angular/core';
   `,
 })
 export class Encabezado {
-  /** Dato de entrada «título» que envía el componente padre. */
   titulo = input.required<string>();
-  /** Dato de entrada «subtitulo» que envía el componente padre. */
   subtitulo = input<string | null>(null);
-  /** Dato de entrada «icono» que envía el componente padre. */
   icono = input('M4 4h16v16H4z');
 }
 
-/** Íconos (path SVG 24x24) usados en los encabezados y menús. */
 export const ICONOS = {
   aula: 'M12 3 2 8l10 5 10-5-10-5ZM6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5',
   tareas: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2ZM9 13l2 2 4-4',

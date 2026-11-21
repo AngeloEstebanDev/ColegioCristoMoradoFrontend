@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «perfil», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en perfil.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="max-w-2xl space-y-5">
 
   <div>
@@ -55,7 +48,6 @@
       </div>
     </div>
 
-    <!-- ===================== Gmail vinculado ===================== -->
     <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
       <div class="flex items-center justify-between gap-3">
         <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide flex items-center gap-2">
@@ -136,10 +128,8 @@
       }
     </div>
 
-    <!-- ===================== Modo lectura: todos los datos ===================== -->
     <ng-container *ngIf="!editando()">
 
-      <!-- Cuenta -->
       <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Información de la cuenta</h3>
@@ -171,7 +161,6 @@
         }
       </div>
 
-      <!-- Administrador: datos de contacto -->
       @if (esCuentaSola(p)) {
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
           <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Datos de contacto</h3>
@@ -182,7 +171,6 @@
         </div>
       }
 
-      <!-- Alumno -->
       <ng-container *ngIf="p.estudiante as e">
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
           <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Datos personales</h3>
@@ -221,7 +209,6 @@
         </div>
       </ng-container>
 
-      <!-- Docente -->
       <ng-container *ngIf="p.docente as d">
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
           <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Datos personales</h3>
@@ -246,7 +233,6 @@
         </div>
       </ng-container>
 
-      <!-- Directiva / Personal Staff -->
       <ng-container *ngIf="p.personal as ps">
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
           <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Datos personales</h3>
@@ -277,7 +263,6 @@
         </div>
       </ng-container>
 
-      <!-- Apoderado / padre -->
       <ng-container *ngIf="p.padre as pf">
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
           <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Datos personales</h3>
@@ -308,7 +293,6 @@
       </ng-container>
     </ng-container>
 
-    <!-- Modo edición: todos los datos personales (menos documento, rol y Gmail) -->
     <form *ngIf="editando() && p.puedeEditar" [formGroup]="form" (ngSubmit)="guardar()" class="bg-white rounded-xl border border-[#E3D5C4] p-6 space-y-4">
       <h3 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Editar mis datos</h3>
 
@@ -410,7 +394,6 @@
         </button>
       </div>
     </form>
-    <!-- ===================== Selector de foto / avatar ===================== -->
     @if (selectorFoto()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-[#241521]/50" (click)="cerrarSelectorFoto()"></div>

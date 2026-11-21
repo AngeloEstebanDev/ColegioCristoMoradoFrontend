@@ -4,20 +4,13 @@ import { ArchivoInfo, ArchivoNuevo } from '../models/aula.model';
 import { ToastService } from './toast.service';
 import { environment } from '../../../environments/environment';
 
-/**
- * Constante ARCHIVO_MAX_BYTES: valor fijo (archivo max bytes) que se reutiliza en varias partes.
- */
 export const ARCHIVO_MAX_BYTES = 10 * 1024 * 1024;
 
-/** Lee archivos del equipo (base64) y descarga los del servidor. */
 @Injectable({ providedIn: 'root' })
 export class ArchivoService {
-  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
-  /** Descarga con la cabecera X-Usuario-Id (la agrega el interceptor). */
   descargar(a: ArchivoInfo): void {
     this.http.get(`${environment.apiUrl}/archivos/${a.id}`, { responseType: 'blob' }).subscribe({
       next: (blob) => guardarBlob(blob, a.nombre),
@@ -25,7 +18,6 @@ export class ArchivoService {
     });
   }
 
-  /** Lee un archivo elegido por el usuario. Rechaza si pesa más de 10 MB. */
   leer(archivo: File): Promise<ArchivoNuevo> {
     return new Promise((resolve, reject) => {
       if (archivo.size > ARCHIVO_MAX_BYTES) { reject(new Error('El archivo pesa más de 10 MB.')); return; }
@@ -42,7 +34,6 @@ export class ArchivoService {
   }
 }
 
-/** Guarda blob. */
 export function guardarBlob(blob: Blob, nombre: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -54,7 +45,6 @@ export function guardarBlob(blob: Blob, nombre: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** 1536 -> "1.5 KB" */
 export function tamanioLegible(bytes: number | null | undefined): string {
   if (!bytes) return '';
   if (bytes < 1024) return `${bytes} B`;
@@ -62,7 +52,6 @@ export function tamanioLegible(bytes: number | null | undefined): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** Extensión en mayúsculas para el ícono del archivo ("PDF", "DOCX"...). */
 export function extension(nombre: string | null | undefined): string {
   const n = nombre ?? '';
   const i = n.lastIndexOf('.');

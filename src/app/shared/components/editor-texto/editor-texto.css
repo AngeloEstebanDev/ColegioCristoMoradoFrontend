@@ -1,4 +1,3 @@
-/* Estilos de editor-texto: reglas CSS propias además de las clases de Tailwind. */
 .editor-area:empty::before {
   content: attr(data-placeholder);
   color: #B08900;

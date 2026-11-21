@@ -21,29 +21,21 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { AuthService } from '../../../../services/auth';
 import { Hijo, HijosService } from '../../../../core/services/hijos.service';
 
-/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'contenido' | 'actividades' | 'asistencia' | 'examenes';
 
-/** Elemento del "Contenido del curso": un material o una actividad. */
 interface Item {
   clave: string;
-  fecha: string;              // ISO: publicación (material) o fecha límite (actividad)
+  fecha: string;
   material?: Material;
   actividad?: Actividad;
 }
 
-/** Subcarpeta de un bimestre: una carpeta creada por el docente o (contenido antiguo) una semana calculada. */
 interface Semana { numero: number; clave: string; nombre: string; detalle: string; items: Item[]; }
 
-/** Carpeta de un bimestre (o "Otras fechas" si no cae en ningún periodo). */
 interface Carpeta { clave: string; nombre: string; desde: string | null; hasta: string | null; semanas: Semana[]; items: Item[]; }
 
-/** Estilo del ícono de cada tipo de elemento. */
 interface Estilo { etiqueta: string; color: string; fondo: string; icono: 'doc' | 'texto' | 'enlace' | 'tarea' | 'cuestionario' | 'actividad'; }
 
-/**
- * Constante ESTADO_ASISTENCIA: valor fijo (estado asistencia) que se reutiliza en varias partes.
- */
 const ESTADO_ASISTENCIA: Record<EstadoAsistencia, { etiqueta: string; color: string; fondo: string }> = {
   PRESENTE: { etiqueta: 'Asistió', color: '#1E7A3B', fondo: '#E7F3EA' },
   TARDANZA: { etiqueta: 'Tardanza', color: '#9A6B00', fondo: '#FDF1DC' },
@@ -51,7 +43,6 @@ const ESTADO_ASISTENCIA: Record<EstadoAsistencia, { etiqueta: string; color: str
   JUSTIFICADA: { etiqueta: 'Justificado', color: '#6D28D9', fondo: '#F0EAFD' },
 };
 
-/** Color del ícono de cada tipo de evaluación (pestaña Exámenes). */
 const COLOR_EVALUACION: Record<string, { color: string; fondo: string }> = {
   EXAMEN: { color: '#DC2626', fondo: '#FDE8E8' },
   PRACTICA: { color: '#2563EB', fondo: '#E6EEFB' },
@@ -63,12 +54,6 @@ const COLOR_EVALUACION: Record<string, { color: string; fondo: string }> = {
   OTRO: { color: '#6B5A67', fondo: '#F0E6D8' },
 };
 
-/**
- * Alumno > Mis Cursos > un curso.
- * Pestañas: Contenido (materiales y actividades por bimestre y semana), Actividades (con su nota),
- * Asistencia (solo de este curso) y Exámenes (notas registradas por el docente).
- * Las tareas y cuestionarios solo se pueden enviar antes de su fecha de vencimiento.
- */
 @Component({
   selector: 'app-alumno-curso-detalle',
   standalone: true,
@@ -76,40 +61,22 @@ const COLOR_EVALUACION: Record<string, { color: string; fondo: string }> = {
   templateUrl: './curso-detalle.html',
 })
 export class AlumnoCursoDetalle implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
-  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
-  /** Servicio AsistenciaService (inyectado por Angular). */
   private asistenciaService = inject(AsistenciaService);
-  /** Servicio NotaService (inyectado por Angular). */
   private notaService = inject(NotaService);
-  /** Servicio PeriodoService (inyectado por Angular). */
   private periodoService = inject(PeriodoService);
-  /** Servicio MiHorarioService (inyectado por Angular). */
   private miHorarioService = inject(MiHorarioService);
-  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
-  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
-  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
-  /** Servicio DestroyRef (inyectado por Angular). */
   private destroyRef = inject(DestroyRef);
-  /** Servicio HijosService (inyectado por Angular). */
   private hijosService = inject(HijosService);
 
-  /**
-   * Modo padre (ruta /home/padre/hijos/:estudianteId/cursos/:id): solo lectura.
-   * Ve el contenido, las actividades (con lo que entregó su hijo), la asistencia y las notas de su hijo,
-   * pero no puede entregar, enviar ni editar nada.
-   */
   readonly esPadre = ['padre', 'familiar', 'apoderado'].includes((inject(AuthService).obtenerRol() ?? '').toLowerCase());
   estudianteId: number | null = null;
-  /** Estado (signal): hijo. */
   hijo = signal<Hijo | null>(null);
-  /** Ruta de "Volver". */
   volver: (string | number)[] = ['/home', 'alumno', 'cursos'];
 
   readonly fechaCorta = fechaCorta;
@@ -133,71 +100,43 @@ export class AlumnoCursoDetalle implements OnInit {
   ];
 
   id = 0;
-  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('contenido');
-  /** Estado (signal): curso. */
   curso = signal<CursoAula | null>(null);
-  /** Estado (signal): materiales. */
   materiales = signal<Material[]>([]);
-  /** Estado (signal): actividades. */
   actividades = signal<Actividad[]>([]);
-  /** Estado (signal): carpetas curso. */
   carpetasCurso = signal<CarpetaCurso[]>([]);
-  /** Estado (signal): participantes. */
   participantes = signal<Participantes | null>(null);
-  /** Estado (signal): periodos. */
   periodos = signal<Periodo[]>([]);
-  /** Estado (signal): bloques. */
   bloques = signal<BloqueHorario[]>([]);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): cargando contenido. */
   cargandoContenido = signal(true);
 
-  /** Estado (signal): asistencia. */
   asistencia = signal<AsistenciaAlumno | null>(null);
-  /** Estado (signal): cargando asistencia. */
   cargandoAsistencia = signal(false);
-  /** Estado (signal): orden asc. */
   ordenAsc = signal(false);
-  /** Estado (signal): boleta. */
   boleta = signal<CursoBoleta | null>(null);
-  /** Estado (signal): periodos boleta. */
   periodosBoleta = signal<PeriodoCorto[]>([]);
-  /** Estado (signal): cargando notas. */
   cargandoNotas = signal(false);
 
-  /** Carpetas / semanas desplegadas. */
   abiertas = signal<Set<string>>(new Set());
-  /** Estado (signal): ver estructura. */
   verEstructura = signal(true);
-  /** Estado (signal): ver profesor. */
   verProfesor = signal(true);
-  /** Estado (signal): ver participantes. */
   verParticipantes = signal(true);
 
-  // Paneles laterales
   material = signal<Material | null>(null);
-  /** Estado (signal): actividad. */
   actividad = signal<Actividad | null>(null);
 
   readonly anio = new Date().getFullYear();
 
-  /** Valor calculado (computed): categoría. Se actualiza solo. */
   categoria = computed(() => categoriaDe(this.curso()?.categoria));
-  /** Valor calculado (computed): salon. Se actualiza solo. */
   salon = computed(() => {
     const c = this.curso();
     return c ? `${infoGrado(c.grado)?.titulo ?? c.grado} “${c.letra}”` : '';
   });
-  /** Valor calculado (computed): nivel. Se actualiza solo. */
   nivel = computed(() => (this.curso()?.grado ?? '').includes('Secundaria') ? 'Secundaria' : 'Primaria');
-  /** Periodos del año en curso, en orden. */
   periodosAnio = computed(() => this.periodos().filter(p => p.anio === this.anio).sort((a, b) => a.bimestre - b.bimestre));
-  /** Valor calculado (computed): periodo activo. Se actualiza solo. */
   periodoActivo = computed(() => this.periodos().find(p => p.activo) ?? null);
 
-  /** Contenido del curso agrupado en bimestres y semanas. */
   carpetas = computed<Carpeta[]>(() => {
     const items: Item[] = [
       ...this.materiales().map(m => ({ clave: 'm' + m.id, fecha: m.fechaPublicacion, material: m })),
@@ -206,7 +145,6 @@ export class AlumnoCursoDetalle implements OnInit {
     return this.agrupar(items, true);
   });
 
-  /** Pestaña Actividades: por bimestre según la fecha de entrega. */
   carpetasActividades = computed<Carpeta[]>(() => {
     const items: Item[] = this.actividades()
       .map(a => ({ clave: 'a' + a.id, fecha: a.fechaLimite, actividad: a }))
@@ -214,7 +152,6 @@ export class AlumnoCursoDetalle implements OnInit {
     return this.agrupar(items, false);
   });
 
-  /** Asistencia de este curso, por bimestre. */
   asistenciaPorBimestre = computed(() => {
     const a = this.asistencia();
     const c = this.curso();
@@ -230,28 +167,19 @@ export class AlumnoCursoDetalle implements OnInit {
     return grupos.filter(g => g.filas.length || this.periodosAnio().length);
   });
 
-  /** Valor calculado (computed): resumen asistencia. Se actualiza solo. */
   resumenAsistencia = computed(() => {
     const c = this.curso();
     return this.asistencia()?.cursos.find(x => x.seccionCursoId === c?.seccionCursoId)?.conteo ?? null;
   });
 
-  /** La fecha límite ya pasó. */
   vencio(fecha: string | null | undefined): boolean {
     return !!fecha && new Date(fecha).getTime() <= Date.now();
   }
 
-  /** "Vencida" (en rojo) solo si pasó la fecha límite y el alumno NO entregó la tarea. */
   vencidaSinEntrega(a: Actividad | null | undefined): boolean {
     return !!a && !a.miEntrega && this.vencio(a.fechaLimite);
   }
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales. Pide los datos al backend con hijosService.listar(), aula.curso(),
-   * aula.materiales() y actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast) con
-   * el resultado.
-   */
   ngOnInit(): void {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
     const est = this.route.snapshot.paramMap.get('estudianteId');
@@ -265,7 +193,6 @@ export class AlumnoCursoDetalle implements OnInit {
     }
     const estado = (typeof history !== 'undefined' ? history.state : null) as { avisoEntrega?: { texto: string; tardia: boolean } } | null;
     if (estado?.avisoEntrega) {
-      // Aviso al volver de entregar (notificación arriba)
       if (estado.avisoEntrega.tardia) this.toast.aviso(estado.avisoEntrega.texto, 8000);
       else this.toast.exito(estado.avisoEntrega.texto, 6000);
     }
@@ -280,7 +207,6 @@ export class AlumnoCursoDetalle implements OnInit {
     const fin = () => { if (--pendientes === 0) { this.cargandoContenido.set(false); this.abrirPorDefecto(); } };
     this.aula.materiales(this.id).subscribe({ next: (m) => { this.materiales.set(m); fin(); }, error: () => fin() });
     this.aula.carpetas(this.id).subscribe({ next: (c) => { this.carpetasCurso.set(c); fin(); }, error: () => fin() });
-    // El padre ve las actividades como su hijo (si entregó y su nota).
     const actividades$ = this.esPadre && this.estudianteId
       ? this.aula.actividadesHijo(this.estudianteId)
       : this.aula.actividades(this.id);
@@ -297,7 +223,6 @@ export class AlumnoCursoDetalle implements OnInit {
     });
   }
 
-  /** Cambia pestaña. Al terminar, lleva al usuario a otra página (router.navigate). */
   cambiarPestana(p: Pestana): void {
     this.pestana.set(p);
     this.router.navigate([], { queryParams: { tab: p === 'contenido' ? null : p }, queryParamsHandling: 'merge', replaceUrl: true });
@@ -305,7 +230,6 @@ export class AlumnoCursoDetalle implements OnInit {
     if (p === 'examenes' && !this.boleta() && !this.cargandoNotas()) this.cargarNotas();
   }
 
-  /** Carga asistencia. */
   private cargarAsistencia(): void {
     this.cargandoAsistencia.set(true);
     const desde = `${this.anio}-01-01`, hasta = `${this.anio}-12-31`;
@@ -318,7 +242,6 @@ export class AlumnoCursoDetalle implements OnInit {
     });
   }
 
-  /** Carga notas. */
   private cargarNotas(): void {
     this.cargandoNotas.set(true);
     const notas$ = this.esPadre && this.estudianteId ? this.notaService.boleta(this.estudianteId, this.anio) : this.notaService.mias(this.anio);
@@ -333,8 +256,6 @@ export class AlumnoCursoDetalle implements OnInit {
     });
   }
 
-  // ---------------- Agrupar por bimestre / semana ----------------
-
   private agrupar(items: Item[], conSemanas: boolean): Carpeta[] {
     const periodos = this.periodosAnio();
     const usados = new Set<string>();
@@ -343,10 +264,8 @@ export class AlumnoCursoDetalle implements OnInit {
     const carpetaDe = (i: Item) => (i.material ? i.material.carpetaId : i.actividad?.carpetaId) ?? null;
     const enCarpeta = (i: Item) => { const c = carpetaDe(i); return c !== null && carpetasCurso.some(x => x.id === c); };
     for (const p of periodos) {
-      // Contenido dentro de las carpetas del docente (cada carpeta pertenece a un bimestre).
       const delPeriodo = carpetasCurso.filter(c => c.periodoId === p.id);
       const enCarpetas = items.filter(i => delPeriodo.some(c => c.id === carpetaDe(i)));
-      // Contenido antiguo (sin carpeta): se ubica por su fecha.
       const sueltos = items.filter(i => !enCarpeta(i) && !usados.has(i.clave)
         && i.fecha.substring(0, 10) >= p.fechaInicio && i.fecha.substring(0, 10) <= p.fechaFin);
       const suyos = [...enCarpetas, ...sueltos];
@@ -360,7 +279,6 @@ export class AlumnoCursoDetalle implements OnInit {
             ...this.semanas(p, sueltos),
           ]
         : [];
-      // En "Contenido" se ocultan los bimestres y carpetas sin contenido.
       if (conSemanas && !suyos.length) continue;
       carpetas.push({
         clave: (conSemanas ? 'c' : 'ac') + p.id,
@@ -377,7 +295,6 @@ export class AlumnoCursoDetalle implements OnInit {
     return carpetas;
   }
 
-  /** Semanas del bimestre (de 7 días desde su inicio) que tienen contenido. */
   private semanas(p: Periodo, items: Item[]): Semana[] {
     const inicio = aFecha(p.fechaInicio);
     const fin = aFecha(p.fechaFin);
@@ -394,7 +311,6 @@ export class AlumnoCursoDetalle implements OnInit {
     return [...mapa.values()].sort((a, b) => a.numero - b.numero);
   }
 
-  /** Al entrar: se abre el bimestre actual y su semana más reciente. */
   private abrirPorDefecto(): void {
     if (this.cargandoContenido()) return;
     const carpetas = this.carpetas();
@@ -416,10 +332,6 @@ export class AlumnoCursoDetalle implements OnInit {
   private periodosListos = false;
   private extrasAbiertos = { asistencia: false, notas: false };
 
-  /**
-   * Asistencia y Exámenes: se abre el bimestre activo si tiene datos; si no, el más reciente con datos.
-   * Espera a tener los periodos (si se entra directo con ?tab=asistencia llegan después).
-   */
   private abrirExtras(): void {
     if (!this.periodosListos) return;
     if (this.asistencia() && !this.extrasAbiertos.asistencia) {
@@ -438,12 +350,10 @@ export class AlumnoCursoDetalle implements OnInit {
     }
   }
 
-  /** Indica si está abierta (devuelve verdadero o falso). */
   estaAbierta(clave: string): boolean {
     return this.abiertas().has(clave);
   }
 
-  /** Abre los datos de esta pantalla. */
   abrir(clave: string, forzar = false): void {
     this.abiertas.update(s => {
       const n = new Set(s);
@@ -451,8 +361,6 @@ export class AlumnoCursoDetalle implements OnInit {
       return n;
     });
   }
-
-  // ---------------- Estilos de cada elemento ----------------
 
   estilo(i: Item): Estilo {
     if (i.actividad) {
@@ -469,30 +377,25 @@ export class AlumnoCursoDetalle implements OnInit {
     return { etiqueta: 'Texto', color: '#2563EB', fondo: '#E6EEFB', icono: 'texto' };
   }
 
-  /** Devuelve el texto de «título». */
   titulo(i: Item): string {
     return i.actividad ? i.actividad.titulo : i.material!.titulo;
   }
 
-  /** ¿Todavía puede enviar? (antes de la fecha de vencimiento y sin calificar). */
   abierta(a: Actividad): boolean {
     if (a.tipo !== 'CUESTIONARIO' && a.miEntrega?.estado === 'CALIFICADA') return false;
     if (a.miEntrega && (a.miEntrega.intentos ?? 1) >= (a.intentosPermitidos ?? 1)) return false;
     return new Date(a.fechaLimite).getTime() > Date.now() || !!a.permiteTardia;
   }
 
-  /** Venció pero el docente acepta entregas tardías. */
   tardiaAbierta(a: Actividad): boolean {
     return this.abierta(a) && new Date(a.fechaLimite).getTime() <= Date.now();
   }
 
-  /** "1 de 3" */
   intentos(a: Actividad): string {
     const usados = a.miEntrega ? (a.miEntrega.intentos ?? 1) : 0;
     return `${usados} de ${a.intentosPermitidos ?? 1}`;
   }
 
-  /** Color de la pastilla de la derecha (nota o situación). */
   colorPastilla(a: Actividad): { color: string; fondo: string } {
     const e = a.miEntrega;
     if (e?.estado === 'CALIFICADA') return colorNota(e.nota20);
@@ -501,7 +404,6 @@ export class AlumnoCursoDetalle implements OnInit {
     return { color: '#A62639', fondo: '#FBE7E9' };
   }
 
-  /** Devuelve el texto de pastilla. */
   textoPastilla(a: Actividad): string {
     const e = a.miEntrega;
     if (e?.estado === 'CALIFICADA') return `${num(e.nota20, 1)}/20`;
@@ -509,85 +411,70 @@ export class AlumnoCursoDetalle implements OnInit {
     return this.abierta(a) ? 'Pendiente' : 'No entregada';
   }
 
-  /** Devuelve el color de evaluación. */
   colorEvaluacion(tipo: string): { color: string; fondo: string } {
     return COLOR_EVALUACION[tipo] ?? COLOR_EVALUACION['OTRO'];
   }
 
-  /** Hora de la clase de ese día (según el horario del curso). */
   horaClase(fecha: string): string {
     const dia = aFecha(fecha).getDay();
     const b = this.bloques().filter(x => x.dia === dia).sort((x, y) => x.horaInicio.localeCompare(y.horaInicio))[0];
     return b ? horaAmPm(b.horaInicio) : '—';
   }
 
-  /** Devuelve el nombre de periodo. */
   nombrePeriodo(id: number): string {
     const p = this.periodosBoleta().find(x => x.id === id);
     return p ? `${ROMANOS[p.bimestre]} Bimestre - ${p.anio}` : 'Periodo';
   }
 
-  /** Devuelve el texto de «rango periodo». */
   rangoPeriodo(id: number): string {
     const p = this.periodos().find(x => x.id === id);
     return p ? `${dmy(p.fechaInicio)} - ${dmy(p.fechaFin)}` : '';
   }
-
-  // ---------------- Paneles ----------------
 
   abrirItem(i: Item): void {
     if (i.actividad) this.abrirActividad(i.actividad);
     else this.abrirMaterial(i.material!);
   }
 
-  /** Abre actividad. */
   abrirActividad(a: Actividad): void {
     this.material.set(null);
     this.actividad.set(a);
   }
 
-  /** Abre material. */
   abrirMaterial(m: Material): void {
     this.actividad.set(null);
     this.material.set(m);
   }
 
-  /** Descarga los datos de esta pantalla. */
   descargar(m: Material): void {
     if (m.archivo) this.archivos.descargar(m.archivo);
   }
 
-  /** Cierra panel. */
   cerrarPanel(): void {
     this.material.set(null);
     this.actividad.set(null);
   }
 
-  /** Navega a entrega. Al terminar, lleva al usuario a otra página (router.navigate). */
   irAEntrega(a: Actividad): void {
-    if (this.esPadre) return;   // el padre solo mira
+    if (this.esPadre) return;
     this.router.navigate(['/home', 'alumno', 'cursos', this.id, 'actividad', a.id]);
   }
 
-  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     this.cerrarPanel();
   }
 }
 
-/** Convierte el valor a fecha. */
 function aFecha(iso: string): Date {
   const [y, m, d] = iso.substring(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
-/** Convierte el valor a iso. */
 function aIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** "07:45" -> "7:45 a. m." */
 function horaAmPm(h: string): string {
   const [hh, mm] = h.split(':').map(Number);
   const sufijo = hh < 12 ? 'a. m.' : 'p. m.';
@@ -595,14 +482,12 @@ function horaAmPm(h: string): string {
   return `${h12}:${String(mm).padStart(2, '0')} ${sufijo}`;
 }
 
-/** "2026-03-21..." -> "21/03/2026" */
 export function dmy(iso: string | null | undefined): string {
   if (!iso) return '';
   const [y, m, d] = iso.substring(0, 10).split('-');
   return `${d}/${m}/${y}`;
 }
 
-/** "2026-03-21T23:59:00" -> "21/03/2026, 23:59" */
 export function dmyHora(iso: string | null | undefined): string {
   if (!iso) return '';
   const hora = iso.length >= 16 ? iso.substring(11, 16) : '';

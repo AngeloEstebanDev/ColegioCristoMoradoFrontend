@@ -7,7 +7,6 @@ import { docenteGuard } from './core/guards/docente.guard';
 import { alumnoGuard } from './core/guards/alumno.guard';
 import { padreGuard } from './core/guards/padre.guard';
 
-// --- Admin ---
 import { Dashboard } from './admin/pages/dashboard/dashboard';
 import { Comunicados } from './admin/pages/comunicados/comunicados';
 import { GradosSecciones } from './admin/pages/academico/grados-secciones/grados-secciones';
@@ -24,19 +23,11 @@ import { Directiva } from './admin/pages/directiva/directiva';
 import { Perfil } from './admin/pages/perfil/perfil';
 import { Configuracion } from './admin/pages/configuracion/configuracion';
 
-// --- Docente / Alumno / Padre ---
-// Las páginas de los Sprints 4, 5 y 6 se cargan bajo demanda (loadComponent)
-// para que el paquete inicial no crezca.
 const misCitas = () => import('./admin/pages/agenda/mis-citas/mis-citas').then(m => m.MisCitas);
-/** Función disponibilidad: disponibilidad. */
 const disponibilidad = () => import('./admin/pages/agenda/disponibilidad/disponibilidad').then(m => m.Disponibilidad);
 import { AlumnoDashboard } from './pages/alumno/pages/dashboard/dashboard';
 import { AlumnoCursos } from './pages/alumno/pages/cursos/cursos';
 
-/**
- * Rutas de la aplicación: dicen qué componente se muestra para cada dirección (URL) y qué guards
- * protegen cada sección.
- */
 export const routes: Routes = [
   {
     path: '',
@@ -48,9 +39,6 @@ export const routes: Routes = [
     component: Login
   },
   {
-    // Layout contiene el siderbar + navbar; cada hijo es el contenido
-    // que se muestra al hacer click en un botón del menú lateral.
-    // authGuard exige sesión iniciada para entrar a cualquier /home/**.
     path: 'home',
     component: Layout,
     canActivate: [authGuard],
@@ -58,13 +46,8 @@ export const routes: Routes = [
       { path: '', redirectTo: 'admin/inicio', pathMatch: 'full' },
 
       {
-        // Todo lo del rol Administrador vive bajo /home/admin/**.
-        // adminGuard verifica que el usuario logeado tenga ese rol.
-        // Esta ruta no tiene 'component': solo agrupa el guard y sus
-        // hijos se siguen mostrando en el <router-outlet> de Layout.
         path: 'admin',
         canActivate: [adminGuard],
-        // Directiva: cada página pide su permiso (data.permiso).
         canActivateChild: [permisoGuard],
         children: [
           { path: '', redirectTo: 'inicio', pathMatch: 'full' },
@@ -89,14 +72,12 @@ export const routes: Routes = [
 
           { path: 'reportes', loadComponent: () => import('./admin/pages/reportes/reportes').then(m => m.Reportes), data: { titulo: 'Reportes', permiso: 'REPORTES' } },
 
-          // Directiva, Mi Perfil y Configuración se abren desde el menú del usuario (navbar).
           { path: 'directiva', component: Directiva, data: { titulo: 'Directiva' } },
           { path: 'perfil', component: Perfil, data: { titulo: 'Mi Perfil' } },
           { path: 'configuracion', component: Configuracion, data: { titulo: 'Configuración' } },
         ]
       },
 
-      // Docente, Alumno y Padre: cada rol tiene su propio guard y sus páginas.
       {
         path: 'docente',
         canActivate: [docenteGuard],
@@ -108,9 +89,6 @@ export const routes: Routes = [
           { path: 'comunicados', component: Comunicados, data: { titulo: 'Comunicados' } },
           { path: 'agenda/mis-citas', loadComponent: misCitas, data: { titulo: 'Mis Citas' } },
           { path: 'agenda/disponibilidad', loadComponent: disponibilidad, data: { titulo: 'Disponibilidad' } },
-          // Perfil y Configuración reusan los mismos componentes de admin:
-          // ambos trabajan siempre sobre el usuario logeado (AuthService),
-          // así que no hace falta duplicar el código por rol.
           { path: 'perfil', component: Perfil, data: { titulo: 'Mi Perfil' } },
           { path: 'configuracion', component: Configuracion, data: { titulo: 'Configuración' } },
         ]
@@ -124,7 +102,6 @@ export const routes: Routes = [
           { path: 'cursos', component: AlumnoCursos, data: { titulo: 'Mis Cursos' } },
           { path: 'cursos/:id', loadComponent: () => import('./pages/alumno/pages/cursos/curso-detalle').then(m => m.AlumnoCursoDetalle), data: { titulo: 'Mis Cursos' } },
           { path: 'cursos/:id/actividad/:actividadId', loadComponent: () => import('./pages/alumno/pages/cursos/entrega-actividad').then(m => m.AlumnoEntregaActividad), data: { titulo: 'Mis Cursos' } },
-          // Rutas anteriores del alumno: ahora todo está en Mis Cursos.
           { path: 'aula', redirectTo: 'cursos', pathMatch: 'full' },
           { path: 'aula/:id', redirectTo: 'cursos/:id' },
           { path: 'tareas', redirectTo: 'cursos', pathMatch: 'full' },
@@ -145,9 +122,7 @@ export const routes: Routes = [
           { path: 'comunicados', loadComponent: () => import('./pages/padre/pages/comunicados/padre-comunicados').then(m => m.PadreComunicados), data: { titulo: 'Comunicados' } },
           { path: 'citas', loadComponent: misCitas, data: { titulo: 'Mis Citas' } },
           { path: 'hijos', loadComponent: () => import('./pages/padre/pages/hijos/mis-hijos').then(m => m.PadreMisHijos), data: { titulo: 'Mis Hijos' } },
-          // Curso de un hijo en modo solo lectura (mismo componente que el alumno).
           { path: 'hijos/:estudianteId/cursos/:id', loadComponent: () => import('./pages/alumno/pages/cursos/curso-detalle').then(m => m.AlumnoCursoDetalle), data: { titulo: 'Mis Hijos' } },
-          // Rutas anteriores del padre: ahora todo está en Mis Hijos (cada curso tiene notas, asistencia y tareas).
           { path: 'calificaciones', redirectTo: 'hijos', pathMatch: 'full' },
           { path: 'asistencia', redirectTo: 'hijos', pathMatch: 'full' },
           { path: 'tareas', redirectTo: 'hijos', pathMatch: 'full' },
@@ -159,7 +134,6 @@ export const routes: Routes = [
     ]
   },
   {
-    // Cualquier ruta no encontrada vuelve al login.
     path: '**',
     redirectTo: 'login'
   }

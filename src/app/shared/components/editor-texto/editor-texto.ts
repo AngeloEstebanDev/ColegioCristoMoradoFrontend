@@ -2,11 +2,6 @@ import {
   AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild,
 } from '@angular/core';
 
-/**
- * Editor de texto sencillo (negrita, cursiva, subrayado, listas, alineación).
- * Uso: <app-editor-texto [contenido]="html" (contenidoChange)="html = $event" />
- * Devuelve HTML simple; al mostrarlo, Angular lo sanitiza con [innerHTML].
- */
 @Component({
   selector: 'app-editor-texto',
   standalone: true,
@@ -43,28 +38,22 @@ export class EditorTexto implements AfterViewInit {
     { cmd: 'removeFormat', titulo: 'Quitar formato', html: 'T̶' },
   ];
 
-  /** Se ejecuta cuando la vista (HTML) ya está dibujada en pantalla. */
   ngAfterViewInit(): void {
     if (this.pendiente) this.area.nativeElement.innerHTML = this.pendiente;
   }
 
-  /** Realiza la acción «ejecutar» de esta pantalla. */
   ejecutar(cmd: string): void {
     this.area.nativeElement.focus();
-    // execCommand sigue funcionando en todos los navegadores para esto.
     document.execCommand(cmd, false);
     this.emitir();
   }
 
-  /** Realiza la acción «emitir» de esta pantalla. */
   emitir(): void {
     const el = this.area.nativeElement;
-    // Si solo quedó un <br> vacío, lo tratamos como vacío.
     const html = (el.textContent ?? '').trim() === '' && !el.querySelector('img') ? '' : el.innerHTML;
     this.contenidoChange.emit(html);
   }
 
-  /** Al pegar, solo se pega texto (evita estilos raros de Word/web). */
   pegar(ev: ClipboardEvent): void {
     ev.preventDefault();
     const texto = ev.clipboardData?.getData('text/plain') ?? '';

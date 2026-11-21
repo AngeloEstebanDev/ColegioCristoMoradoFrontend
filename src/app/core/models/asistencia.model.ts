@@ -1,10 +1,5 @@
-/** HU-18 Asistencia. Fechas "yyyy-MM-dd". */
 export type EstadoAsistencia = 'PRESENTE' | 'TARDANZA' | 'FALTA' | 'JUSTIFICADA';
 
-/**
- * Modelo FilaAsistencia: describe la forma de los datos de «fila asistencia». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface FilaAsistencia {
   estudianteId: number;
   nombre: string;
@@ -13,10 +8,6 @@ export interface FilaAsistencia {
   foto?: string | null;
 }
 
-/**
- * Modelo DiaAsistencia: describe la forma de los datos de «día asistencia». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface DiaAsistencia {
   seccionCursoId: number;
   curso: string;
@@ -28,11 +19,6 @@ export interface DiaAsistencia {
   fechasRegistradas: string[];
 }
 
-/**
- * Modelo ConteoAsistencia: describe la forma de los datos de «conteo asistencia». Es lo que viaja en
- * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
- * campo.
- */
 export interface ConteoAsistencia {
   presentes: number;
   tardanzas: number;
@@ -42,11 +28,6 @@ export interface ConteoAsistencia {
   porcentaje: number | null;
 }
 
-/**
- * Modelo ResumenCursoAsistencia: describe la forma de los datos de «resumen curso asistencia». Es lo
- * que viaja en JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se
- * usa mal un campo.
- */
 export interface ResumenCursoAsistencia {
   seccionCursoId: number;
   curso: string;
@@ -56,11 +37,6 @@ export interface ResumenCursoAsistencia {
   alumnos: { estudianteId: number; nombre: string; conteo: ConteoAsistencia }[];
 }
 
-/**
- * Modelo AsistenciaAlumno: describe la forma de los datos de «asistencia alumno». Es lo que viaja en
- * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
- * campo.
- */
 export interface AsistenciaAlumno {
   estudianteId: number;
   nombre: string;
@@ -72,9 +48,6 @@ export interface AsistenciaAlumno {
   detalle: { fecha: string; curso: string; color: string; estado: EstadoAsistencia; observacion: string | null }[];
 }
 
-/**
- * Constante ESTADOS_ASISTENCIA: valor fijo (estados asistencia) que se reutiliza en varias partes.
- */
 export const ESTADOS_ASISTENCIA: { valor: EstadoAsistencia; etiqueta: string; corto: string; color: string; fondo: string }[] = [
   { valor: 'PRESENTE', etiqueta: 'Presente', corto: 'P', color: '#1E7A3B', fondo: '#E7F3EA' },
   { valor: 'TARDANZA', etiqueta: 'Tardanza', corto: 'T', color: '#9A6B00', fondo: '#FDF1DC' },
@@ -82,27 +55,19 @@ export const ESTADOS_ASISTENCIA: { valor: EstadoAsistencia; etiqueta: string; co
   { valor: 'JUSTIFICADA', etiqueta: 'Justificada', corto: 'J', color: '#2563EB', fondo: '#E6EEFB' },
 ];
 
-/** Función infoAsistencia: info asistencia. */
 export function infoAsistencia(estado: string | null | undefined) {
   return ESTADOS_ASISTENCIA.find(e => e.valor === estado);
 }
 
-/** Sesión de asistencia de una clase: MARCADA, SIN_MARCAR (generada sin registrar), NO_GENERADA (en rojo) u HOY (aún puede generarse). */
 export interface SesionAsistencia {
   fecha: string;
   horaInicio: string;
   horaFin: string;
   estado: 'MARCADA' | 'SIN_MARCAR' | 'NO_GENERADA' | 'HOY';
   registrados: number;
-  /** Solo durante la hora de clase de ese día; al terminar la clase se cierra. */
   editable: boolean;
 }
 
-/**
- * Modelo SesionesAsistencia: describe la forma de los datos de «sesiones asistencia». Es lo que viaja
- * en JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
- * campo.
- */
 export interface SesionesAsistencia {
   seccionCursoId: number;
   curso: string;

@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «entregas actividad», que se muestra en el panel del docente.
-  La lógica (datos, eventos y llamadas al backend) está en entregas-actividad.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 @let a = datos()?.actividad ?? actividad;
 <div class="space-y-4">
-  <!-- Cabecera de la actividad -->
   <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-5 py-4 flex items-start gap-4 flex-wrap">
     <button type="button" (click)="volver.emit()" title="Volver a las actividades"
             class="w-11 h-11 shrink-0 rounded-full bg-[#EFEAF3] hover:bg-[#E5DCEC] text-[#4A1F52] flex items-center justify-center">
@@ -25,7 +17,6 @@
         <span>{{ a.tipo === 'CUESTIONARIO' ? a.preguntas.length + ' pregunta' + (a.preguntas.length === 1 ? '' : 's') + ' · se califica solo' : 'Archivo/Tarea' }}</span>
         @if (a.vencida) { <span class="text-[#D9CDBD]">|</span><span [ngClass]="a.permiteTardia ? 'text-[#B45309]' : 'text-[#A62639]'">{{ a.permiteTardia ? 'Plazo vencido · acepta tardías' : 'Plazo cerrado' }}</span> }
       </p>
-      <!-- Opción: aceptar entregas tardías -->
       <button type="button" (click)="alternarTardia()" [disabled]="cambiandoTardia()"
               class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12.5px] font-medium transition disabled:opacity-60"
               [ngClass]="a.permiteTardia ? 'bg-[#FEF3E2] border-[#F5C77E] text-[#B45309]' : 'bg-white border-[#E3D5C4] text-[#6B5A67] hover:border-[#4A1F52]'"
@@ -61,7 +52,6 @@
     <div class="bg-white rounded-xl border border-[#E3D5C4] p-10 text-center text-[13.5px] text-[#6B5A67]">Cargando entregas...</div>
   } @else {
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 items-start">
-      <!-- Entregas -->
       <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-4">
         <div class="flex items-center justify-between gap-2 mb-3 px-1">
           <h4 class="font-serif font-bold text-[18px] text-[#241521]">Entregas de estudiantes</h4>
@@ -99,7 +89,6 @@
         </ul>
       </section>
 
-      <!-- Detalle -->
       <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5 space-y-5">
         @if (fila(); as f) {
           @let e = f.entrega;
@@ -146,7 +135,6 @@
           </div>
 
           @if (e && vista(); as v) {
-            <!-- Historial: Entrega 1, Entrega 2... -->
             @if ((e.envios?.length ?? 0) > 0) {
               <div>
                 <h4 class="font-serif font-bold text-[17px] text-[#241521] mb-2">Entregas enviadas</h4>

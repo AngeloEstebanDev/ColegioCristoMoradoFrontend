@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «curso docente», que se muestra en el panel del docente.
-  La lógica (datos, eventos y llamadas al backend) está en curso-docente.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <ng-template #carpetaIcono let-oculta>
   <svg viewBox="0 0 24 24" class="w-8 h-8 shrink-0" [attr.fill]="oculta ? '#D9CDBD' : '#F5B83D'"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2l2 2.2h6.8A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
 </ng-template>
@@ -18,7 +11,6 @@
   <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
 </ng-template>
 
-<!-- Menú de un elemento: Ocultar / Editar / Eliminar -->
 <ng-template #menuItem let-i>
   <div class="absolute right-0 top-full mt-1 z-30 w-40 bg-white rounded-xl border border-[#E3D5C4] shadow-lg py-1 text-[13px]" (click)="$event.stopPropagation()">
     <button type="button" (click)="alternarVisible(i)" class="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-[#FAF6EF] text-[#241521]">
@@ -41,7 +33,6 @@
   </div>
 </ng-template>
 
-<!-- Fila de un elemento (contenido y actividades) -->
 <ng-template #filaItem let-i let-modo="modo">
   @let e = estilo(i);
   <div class="relative flex items-center gap-4 px-4 py-3 bg-white hover:bg-[#FBF7F1] transition-colors" [ngClass]="visible(i) ? '' : 'opacity-75'">
@@ -88,7 +79,6 @@
   }
 
   @if (curso(); as c) {
-    <!-- Portada del curso -->
     <div class="relative overflow-hidden rounded-2xl shadow-md text-white px-5 py-5"
          [style.background]="'linear-gradient(120deg,' + c.color + ' 0%,' + c.color + ' 55%, #2E1233 140%)'">
       <div class="absolute -right-2 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
@@ -125,7 +115,6 @@
       </div>
     </div>
 
-    <!-- Pestañas -->
     <div class="bg-white rounded-xl border border-[#E3D5C4] shadow-sm px-2 flex gap-1 overflow-x-auto">
       @for (t of pestanas; track t.id) {
         <button type="button" (click)="cambiarPestana(t.id)"
@@ -144,12 +133,10 @@
       </div>
     }
 
-    <!-- ===================== CONTENIDO ===================== -->
     @if (pestana() === 'contenido') {
       <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px] gap-4 items-start">
         <div class="space-y-4 min-w-0">
 
-          <!-- Estructura curricular -->
           <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
             <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Estructura Curricular</h3>
             <div class="rounded-xl border border-[#F0E6D8] overflow-hidden">
@@ -172,7 +159,6 @@
             </div>
           </section>
 
-          <!-- Contenido del curso -->
           <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5">
             <h3 class="font-serif font-bold text-[18px] text-[#241521] mb-3">Contenido del curso</h3>
             @if (cargando()) {
@@ -275,7 +261,6 @@
           </section>
         </div>
 
-        <!-- Columna derecha: profesor y participantes -->
         <aside class="space-y-4">
           <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden">
             <button type="button" (click)="verProfesor.set(!verProfesor())" class="w-full flex items-center gap-2 px-4 py-3 border-b border-[#F0E6D8] text-left">
@@ -334,7 +319,6 @@
       </div>
     }
 
-    <!-- ===================== ACTIVIDADES ===================== -->
     @if (pestana() === 'actividades') {
       @if (actividadDetalle(); as a) {
         <app-entregas-actividad [actividad]="a" (volver)="actividadDetalle.set(null)" (cambio)="recargar()"
@@ -387,12 +371,10 @@
       }
     }
 
-    <!-- ===================== ASISTENCIA ===================== -->
     @if (pestana() === 'asistencia') {
       @if (periodosListos()) { <app-asistencia-curso [curso]="c" [periodos]="periodos()" /> }
     }
 
-    <!-- ===================== EXÁMENES ===================== -->
     @if (pestana() === 'examenes') {
       @if (periodosListos()) { <app-examenes-curso [curso]="c" [periodos]="periodos()" /> }
     }
@@ -401,7 +383,6 @@
   }
 </div>
 
-<!-- ===================== Modal: carpeta ===================== -->
 @if (carpetaModal(); as m) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/50" (click)="carpetaModal.set(null)"></div>
@@ -438,14 +419,12 @@
   </div>
 }
 
-<!-- ===================== Modal: agregar / editar contenido ===================== -->
 @if (formulario(); as f) {
   <app-contenido-form [cursoId]="id" [carpetaId]="f.carpetaId" [carpetaNombre]="f.carpetaNombre"
                       [material]="f.material" [actividad]="f.actividad" [tipoInicial]="f.tipo"
                       (guardado)="alGuardar()" (cerrar)="formulario.set(null)" />
 }
 
-<!-- ===================== Panel: material ===================== -->
 @if (material(); as m) {
   @let e = estiloMaterial(m);
   <div class="fixed inset-0 z-50 flex justify-end">

@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «catalogo cursos», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en catalogo-cursos.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
-  <!-- Encabezado -->
   <div class="flex items-start justify-between flex-wrap gap-3">
     <div class="flex items-center gap-3">
       <div class="w-12 h-12 rounded-xl bg-[#EFEAF3] flex items-center justify-center shrink-0">
@@ -38,7 +30,6 @@
     </div>
   }
 
-  <!-- Filtros por categoría -->
   <div class="flex flex-wrap gap-2">
     <button type="button" (click)="filtro.set(null)"
             class="flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-full border text-[12.5px] font-medium transition-colors"
@@ -58,14 +49,12 @@
     }
   </div>
 
-  <!-- Buscador -->
   <div class="relative">
     <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
     <input type="text" placeholder="Buscar por nombre..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
            class="w-full pl-10 pr-3 py-2.5 text-[13.5px] rounded-xl border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
   </div>
 
-  <!-- Lista de cursos -->
   <div class="space-y-2">
     @for (c of filtrados(); track c.id) {
       @let cat = categoriaDe(c.categoria);
@@ -104,7 +93,6 @@
   </div>
 </div>
 
-<!-- ===================== Panel lateral: Nuevo / Editar curso ===================== -->
 @if (panelAbierto()) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-black/30" (click)="panelAbierto.set(false)"></div>
@@ -126,7 +114,6 @@
 
         <div>
           <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Categoría *</label>
-          <!-- Combobox con íconos -->
           <div class="relative">
             <button type="button" (click)="alternarCategorias($event)"
                     class="w-full flex items-center gap-2.5 pl-2.5 pr-9 py-2 text-[13.5px] rounded-lg border bg-white text-left"

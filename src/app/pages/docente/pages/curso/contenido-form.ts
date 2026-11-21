@@ -9,10 +9,8 @@ import { VistaPrevia } from '../../../../shared/components/vista-previa/vista-pr
 import { hoyIso } from '../../../../core/utils/texto';
 import { ToastService } from '../../../../core/services/toast.service';
 
-/** Tipo TipoContenido: describe la forma de los datos de «tipo contenido». */
 export type TipoContenido = 'TEXTO' | 'ARCHIVO' | 'ACTIVIDAD' | 'CUESTIONARIO';
 
-/** Modelo PreguntaForm: describe la forma de los datos de «pregunta form». */
 interface PreguntaForm {
   enunciado: string;
   tipo: 'UNICA' | 'MULTIPLE';
@@ -21,7 +19,6 @@ interface PreguntaForm {
   puntos: number;
 }
 
-/** Constante TIPOS: valor fijo (tipos) que se reutiliza en varias partes. */
 const TIPOS: { id: TipoContenido; titulo: string; texto: string; color: string; fondo: string }[] = [
   { id: 'TEXTO', titulo: 'Crear texto', texto: 'Agrega un mensaje o información en formato de texto para tus estudiantes.', color: '#FFFFFF', fondo: '#2563EB' },
   { id: 'ARCHIVO', titulo: 'Subir archivo', texto: 'Adjunta documentos, presentaciones, imágenes o cualquier otro archivo.', color: '#9333EA', fondo: '#F3E8FD' },
@@ -29,11 +26,6 @@ const TIPOS: { id: TipoContenido; titulo: string; texto: string; color: string; 
   { id: 'CUESTIONARIO', titulo: 'Crear cuestionario', texto: 'Diseña un cuestionario interactivo con diferentes tipos de preguntas.', color: '#FFFFFF', fondo: '#F97316' },
 ];
 
-/**
- * Modal "Agregar contenido" (y editar) de una carpeta del curso:
- * texto con formato (+ imagen opcional), archivo, actividad (tarea con fecha, hora e intentos)
- * o cuestionario (opción única / selección múltiple).
- */
 @Component({
   selector: 'app-contenido-form',
   standalone: true,
@@ -41,11 +33,8 @@ const TIPOS: { id: TipoContenido; titulo: string; texto: string; color: string; 
   templateUrl: './contenido-form.html',
 })
 export class ContenidoForm implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
-  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
 
   @Input({ required: true }) cursoId!: number;
@@ -61,13 +50,9 @@ export class ContenidoForm implements OnInit {
   readonly tam = tamanioLegible;
   readonly letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-  /** Estado (signal): tipo. */
   tipo = signal<TipoContenido>('TEXTO');
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): arrastrando. */
   arrastrando = signal(false);
 
   titulo = '';
@@ -76,42 +61,26 @@ export class ContenidoForm implements OnInit {
   fecha = '';
   hora = '';
   intentos = 1;
-  /** Opción del docente: aceptar envíos después de la fecha límite (marcados como tardíos). */
   permiteTardia = false;
   readonly formatosDisponibles = FORMATOS_ARCHIVO;
-  /** Estado (signal): formatos. */
   formatos = signal<FormatoArchivo[]>(FORMATOS_ARCHIVO.map(f => f.id));
-  /** Estado (signal): archivo. */
   archivo = signal<ArchivoNuevo | null>(null);
-  /** Estado (signal): archivo actual. */
   archivoActual = signal<ArchivoInfo | null>(null);
   quitarArchivo = false;
-  /** Estado (signal): preguntas. */
   preguntas = signal<PreguntaForm[]>([]);
 
-  /** Valor calculado (computed): editando. Se actualiza solo. */
   editando = computed(() => !!this.material || !!this.actividad);
-  /** Valor calculado (computed): info. Se actualiza solo. */
   info = computed(() => TIPOS.find(t => t.id === this.tipo())!);
-  /** El cuestionario ya tiene respuestas: no se puede editar (se avisa antes de abrir). */
-  /** Ya no se bloquea: el docente puede editar todo aunque haya entregas (menos el tipo). */
   bloqueada = computed(() => false);
-  /** Entregas que ya tiene la actividad (para avisar que las notas se recalculan). */
   conEntregas = computed(() => this.actividad?.entregadas ?? 0);
 
-  /** Fecha mínima del calendario: hoy. */
   get hoy(): string { return hoyIso(); }
 
-  /** Muestra u oculta formato. */
   alternarFormato(f: FormatoArchivo): void {
     this.formatos.update(l => l.includes(f) ? l.filter(x => x !== f) : [...l, f]);
     this.error.set(null);
   }
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void {
     const m = this.material, a = this.actividad;
     if (m) {
@@ -138,13 +107,12 @@ export class ContenidoForm implements OnInit {
       })));
     } else {
       this.tipo.set(this.tipoInicial);
-      this.fecha = hoyIso();   // por defecto, hoy (se calcula cada vez que se abre)
+      this.fecha = hoyIso();
       this.hora = '23:59';
     }
     if (this.tipo() === 'CUESTIONARIO' && !this.preguntas().length) this.agregarPregunta();
   }
 
-  /** Elige tipo. */
   elegirTipo(t: TipoContenido): void {
     if (this.editando()) return;
     this.tipo.set(t);
@@ -153,8 +121,6 @@ export class ContenidoForm implements OnInit {
     if (t === 'CUESTIONARIO' && !this.preguntas().length) this.agregarPregunta();
   }
 
-  // ---------------- Archivo ----------------
-
   async elegirArchivo(ev: Event): Promise<void> {
     const input = ev.target as HTMLInputElement;
     const f = input.files?.[0];
@@ -162,7 +128,6 @@ export class ContenidoForm implements OnInit {
     if (f) await this.leer(f);
   }
 
-  /** Suelta los datos de esta pantalla. */
   async soltar(ev: DragEvent): Promise<void> {
     ev.preventDefault();
     this.arrastrando.set(false);
@@ -170,13 +135,11 @@ export class ContenidoForm implements OnInit {
     if (f) await this.leer(f);
   }
 
-  /** Realiza la acción «sobre» de esta pantalla. */
   sobre(ev: DragEvent): void {
     ev.preventDefault();
     this.arrastrando.set(true);
   }
 
-  /** Lee los datos de esta pantalla. */
   private async leer(f: File): Promise<void> {
     if (this.tipo() === 'TEXTO' && !/^image\/(jpeg|png)$/.test(f.type)) {
       this.error.set('La imagen debe ser JPG o PNG.');
@@ -190,34 +153,27 @@ export class ContenidoForm implements OnInit {
     }
   }
 
-  /** Quita los datos de esta pantalla. */
   quitar(): void {
     if (this.archivo()) { this.archivo.set(null); return; }
     if (this.archivoActual()) { this.archivoActual.set(null); this.quitarArchivo = true; }
   }
 
-  // ---------------- Preguntas ----------------
-
   agregarPregunta(): void {
     this.preguntas.update(l => [...l, { enunciado: '', tipo: 'UNICA', opciones: ['', ''], correctas: [], puntos: 1 }]);
   }
 
-  /** Quita pregunta. */
   quitarPregunta(i: number): void {
     this.preguntas.update(l => l.filter((_, k) => k !== i));
   }
 
-  /** Cambia tipo pregunta. */
   cambiarTipoPregunta(i: number, tipo: 'UNICA' | 'MULTIPLE'): void {
     this.preguntas.update(l => l.map((p, k) => k !== i ? p : { ...p, tipo, correctas: tipo === 'UNICA' ? p.correctas.slice(0, 1) : p.correctas }));
   }
 
-  /** Agrega opción. */
   agregarOpcion(i: number): void {
     this.preguntas.update(l => l.map((p, k) => k !== i || p.opciones.length >= 8 ? p : { ...p, opciones: [...p.opciones, ''] }));
   }
 
-  /** Quita opción. */
   quitarOpcion(i: number, o: number): void {
     this.preguntas.update(l => l.map((p, k) => {
       if (k !== i || p.opciones.length <= 2) return p;
@@ -229,7 +185,6 @@ export class ContenidoForm implements OnInit {
     }));
   }
 
-  /** Marca los datos de esta pantalla. */
   marcar(i: number, o: number): void {
     this.preguntas.update(l => l.map((p, k) => {
       if (k !== i) return p;
@@ -238,13 +193,9 @@ export class ContenidoForm implements OnInit {
     }));
   }
 
-  /** Indica si es correcta (devuelve verdadero o falso). */
   esCorrecta(p: PreguntaForm, o: number): boolean { return p.correctas.includes(o); }
 
-  // El [(ngModel)] dentro de @for necesita trackBy por índice; se edita en el mismo objeto.
   trackIndice(i: number): number { return i; }
-
-  // ---------------- Guardar ----------------
 
   guardar(): void {
     this.error.set(null);
@@ -254,7 +205,6 @@ export class ContenidoForm implements OnInit {
     else this.guardarActividad(t);
   }
 
-  /** Guarda material. Muestra un aviso (toast) con el resultado. */
   private guardarMaterial(t: 'TEXTO' | 'ARCHIVO'): void {
     if (t === 'TEXTO' && !this.contenido.trim()) { this.error.set('Escribe el contenido del texto.'); return; }
     if (t === 'ARCHIVO' && !this.archivo() && !this.archivoActual()) { this.error.set('Selecciona el archivo que vas a subir.'); return; }
@@ -275,7 +225,6 @@ export class ContenidoForm implements OnInit {
     });
   }
 
-  /** Guarda actividad. Muestra un aviso (toast) con el resultado. */
   private guardarActividad(t: 'ACTIVIDAD' | 'CUESTIONARIO'): void {
     if (!this.fecha) { this.error.set('Indica la fecha de entrega.'); return; }
     if (!this.hora) { this.error.set('Indica la hora máxima.'); return; }
@@ -327,7 +276,6 @@ export class ContenidoForm implements OnInit {
     });
   }
 
-  /** Devuelve el texto de botón. */
   textoBoton(): string {
     switch (this.tipo()) {
       case 'TEXTO': return 'Guardar texto';

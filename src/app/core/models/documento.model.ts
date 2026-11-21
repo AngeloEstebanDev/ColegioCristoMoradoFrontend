@@ -1,23 +1,17 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-/** Tipos de documento de identidad (mismas reglas que TipoDocumento.java en el backend). */
 export type TipoDocumento = 'DNI' | 'CE' | 'PASAPORTE' | 'OTRO';
 
-/**
- * Modelo InfoDocumento: describe la forma de los datos de «info documento». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface InfoDocumento {
   valor: TipoDocumento;
-  nombre: string;        // para el combobox
-  corto: string;         // para la tabla (etiqueta)
-  max: number;           // maxlength del campo
-  ayuda: string;         // placeholder
+  nombre: string;
+  corto: string;
+  max: number;
+  ayuda: string;
   patron: RegExp;
   error: string;
 }
 
-/** Constante TIPOS_DOCUMENTO: valor fijo (tipos documento) que se reutiliza en varias partes. */
 export const TIPOS_DOCUMENTO: InfoDocumento[] = [
   { valor: 'DNI', nombre: 'DNI', corto: 'DNI', max: 8, ayuda: '8 dígitos',
     patron: /^\d{8}$/, error: 'El DNI debe tener 8 dígitos.' },
@@ -29,17 +23,14 @@ export const TIPOS_DOCUMENTO: InfoDocumento[] = [
     patron: /^[0-9A-Z]{6,15}$/, error: 'El número de documento debe tener entre 6 y 15 caracteres (números o letras).' },
 ];
 
-/** Función infoDocumento: info documento. */
 export function infoDocumento(tipo: string | null | undefined): InfoDocumento {
   return TIPOS_DOCUMENTO.find(t => t.valor === (tipo || 'DNI')) ?? TIPOS_DOCUMENTO[0];
 }
 
-/** Limpia documento. */
 export function limpiarDocumento(numero: string | null | undefined): string {
   return (numero ?? '').replace(/\s/g, '').toUpperCase();
 }
 
-/** Mensaje de error o null si el número es válido para el tipo. */
 export function errorDocumento(tipo: string | null | undefined, numero: string | null | undefined): string | null {
   const n = limpiarDocumento(numero);
   if (!n) return 'Escribe el número de documento.';
@@ -47,10 +38,6 @@ export function errorDocumento(tipo: string | null | undefined, numero: string |
   return info.patron.test(n) ? null : info.error;
 }
 
-/**
- * Validador de grupo para formularios reactivos con los controles
- * `tipoDocumento` y `dni` (número). Error: { documento: 'mensaje' }.
- */
 export function validadorDocumento(campoTipo = 'tipoDocumento', campoNumero = 'dni'): ValidatorFn {
   return (grupo: AbstractControl): ValidationErrors | null => {
     const tipo = grupo.get(campoTipo)?.value;

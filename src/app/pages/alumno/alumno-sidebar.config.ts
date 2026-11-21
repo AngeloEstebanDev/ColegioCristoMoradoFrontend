@@ -1,10 +1,5 @@
 import { SidebarEntry } from '../../shared/layout/siderbar/siderbar';
 
-/**
- * Menú lateral del rol Alumno: Dashboard, Comunicados y Mis Cursos.
- * + Mi Cuenta (Mi Perfil y Configuración), igual que en los otros roles.
- * Mismo formato que admin-sidebar.config.ts.
- */
 export const ALUMNO_SIDEBAR_ITEMS: SidebarEntry[] = [
   {
     type: 'link',

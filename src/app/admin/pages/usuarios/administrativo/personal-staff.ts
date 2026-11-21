@@ -16,10 +16,8 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { FiltroEntrada } from '../../../../shared/components/error-campo/filtro-entrada';
 import { Val, revisar, primerError, soloDigitos, limpiarTexto } from '../../../../core/utils/validadores';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
-/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'staff' | 'cuentas';
 
-/** Modelo Formulario: describe la forma de los datos de «formulario». */
 interface Formulario {
   tipoDocumento: TipoDocumento;
   numeroDocumento: string;
@@ -34,18 +32,11 @@ interface Formulario {
   confirmarPassword: string;
 }
 
-/** Constante VACIO: valor fijo (vacío) que se reutiliza en varias partes. */
 const VACIO: Formulario = {
   tipoDocumento: 'DNI', numeroDocumento: '', nombres: '', apellidoPaterno: '', apellidoMaterno: '',
   correo: '', telefono: '', fechaNacimiento: '', cargo: '', password: '', confirmarPassword: '',
 };
 
-/**
- * "Gestión de Personal Staff" (Directiva). Cuentas DIR + N.º de documento.
- * - Administrador: registra, edita, activa/desactiva y GESTIONA PERMISOS.
- * - Directiva con "Gestión de Usuarios": registra, edita y activa/desactiva (no permisos).
- * - Nadie puede modificar su propio registro desde aquí.
- */
 @Component({
   selector: 'app-personal-staff',
   standalone: true,
@@ -53,14 +44,10 @@ const VACIO: Formulario = {
   templateUrl: './personal-staff.html',
 })
 export class PersonalStaff implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
-  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
-  /** Servicio PersonalService (inyectado por Angular). */
   private personalService = inject(PersonalService);
 
   readonly permisosDisponibles = PERMISOS;
@@ -70,64 +57,41 @@ export class PersonalStaff implements OnInit {
   readonly iniciales = iniciales;
   readonly fechaLarga = fechaLarga;
   readonly esAdmin = this.auth.esAdministrador();
-  /** Administrador, o Directiva con "Gestionar permisos" (p.ej. el Director). */
   readonly puedeGestionarPermisos = this.auth.tienePermiso('PERMISOS');
   private misPermisos = this.auth.obtenerUsuario()?.permisos ?? [];
   private miId = this.auth.obtenerUsuario()?.id ?? null;
 
-  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('staff');
-  /** Estado (signal): personal. */
   personal = signal<Personal[]>([]);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
-  /** Estado (signal): búsqueda. */
   busqueda = signal('');
-  /** Estado (signal): por página. */
   porPagina = signal(20);
-  /** Estado (signal): página. */
   pagina = signal(1);
-  /** Estado (signal): menú abierto. */
   menuAbierto = signal<number | null>(null);
 
-  // Detalle
   detalle = signal<Personal | null>(null);
 
-  // Crear / editar
   modalAbierto = signal(false);
-  /** Estado (signal): editando. */
   editando = signal<Personal | null>(null);
-  /** Estado (signal): f. */
   f = signal<Formulario>({ ...VACIO });
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): error modal. */
   errorModal = signal<string | null>(null);
 
-  // Combobox de cargo
   cargoAbierto = signal(false);
-  /** Estado (signal): cargo resaltado. */
   cargoResaltado = signal(-1);
-  /** Filtra por lo escrito; si ya coincide con un cargo de la lista, la muestra completa. */
   cargosFiltrados = computed(() => {
     const t = this.f().cargo.trim().toLowerCase();
     if (!t || this.cargosSugeridos.some(c => c.toLowerCase() === t)) return [...this.cargosSugeridos];
     return this.cargosSugeridos.filter(c => c.toLowerCase().includes(t));
   });
 
-  // Permisos
   permisosDe = signal<Personal | null>(null);
-  /** Estado (signal): permisos marcados. */
   permisosMarcados = signal<string[]>([]);
-  /** Estado (signal): guardando permisos. */
   guardandoPermisos = signal(false);
 
-  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const t = this.busqueda().toLowerCase().trim();
     return this.personal().filter(p => !t
@@ -138,43 +102,30 @@ export class PersonalStaff implements OnInit {
       || (p.usuario ?? '').toLowerCase().includes(t));
   });
 
-  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtrados().length / this.porPagina())));
-  /** Valor calculado (computed): página datos. Se actualiza solo. */
   paginaDatos = computed(() => {
     const ini = (this.pagina() - 1) * this.porPagina();
     return this.filtrados().slice(ini, ini + this.porPagina());
   });
-  /** Valor calculado (computed): rango. Se actualiza solo. */
   rango = computed(() => {
     const total = this.filtrados().length;
     if (!total) return '0 de 0';
     const ini = (this.pagina() - 1) * this.porPagina() + 1;
     return `${ini} - ${Math.min(total, ini + this.porPagina() - 1)} de ${total}`;
   });
-  /** Valor calculado (computed): páginas. Se actualiza solo. */
   paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, i) => i + 1)
     .filter(n => n === 1 || n === this.totalPaginas() || Math.abs(n - this.pagina()) <= 1));
 
-  /** Avance del formulario (barra superior del modal): campos obligatorios completos. */
   avance = computed(() => {
     const f = this.f();
     const oblig = [f.numeroDocumento, f.nombres, f.apellidoPaterno, f.cargo];
     return Math.round(oblig.filter(v => v.trim()).length / oblig.length * 100);
   });
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void {
     this.cargar();
   }
 
-  /**
-   * Carga los datos de esta pantalla. Pide los datos al backend con personalService.listar() y
-   * actualiza la pantalla cuando llega la respuesta.
-   */
   cargar(): void {
     this.cargando.set(true);
     this.personalService.listar().subscribe({
@@ -183,52 +134,42 @@ export class PersonalStaff implements OnInit {
     });
   }
 
-  /** Indica si es yo (devuelve verdadero o falso). */
   esYo(p: Personal): boolean {
     return this.miId !== null && p.usuarioId === this.miId;
   }
 
-  /** Devuelve el nombre de tabla. */
   nombreTabla(p: Personal): string {
     const apellidos = [p.apellidoPaterno, p.apellidoMaterno].filter(Boolean).join(' ');
     return `${apellidos}, ${p.nombres}`;
   }
 
-  /** Devuelve el nombre de permiso. */
   nombrePermiso(valor: string): string {
     return PERMISOS.find(x => x.valor === valor)?.titulo ?? valor;
   }
 
-  /** Devuelve el nombre de formulario. */
   nombreFormulario(): string {
     const f = this.f();
     return [f.nombres, f.apellidoPaterno, f.apellidoMaterno].map(x => x.trim()).filter(Boolean).join(' ');
   }
 
-  /** Devuelve el texto de «usuario preview». */
   usuarioPreview(): string {
     return usuarioConDni(PREFIJO_USUARIO.DIRECTIVA, this.f().numeroDocumento);
   }
 
-  /** Cambia campo. */
   setCampo<K extends keyof Formulario>(campo: K, valor: Formulario[K]): void {
     this.f.update(f => ({ ...f, [campo]: valor }));
   }
-
-  // ---------------- Menú ⋮ ----------------
 
   alternarMenu(p: Personal, ev: Event): void {
     ev.stopPropagation();
     this.menuAbierto.set(this.menuAbierto() === p.id ? null : p.id);
   }
 
-  /** Cierra menú. */
   @HostListener('document:click')
   cerrarMenu(): void {
     this.menuAbierto.set(null);
   }
 
-  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     this.menuAbierto.set(null);
@@ -237,8 +178,6 @@ export class PersonalStaff implements OnInit {
     if (this.modalAbierto()) { this.cerrarFormulario(); return; }
     this.detalle.set(null);
   }
-
-  // ---------------- Crear / editar ----------------
 
   abrirNuevo(): void {
     this.editando.set(null);
@@ -249,7 +188,6 @@ export class PersonalStaff implements OnInit {
     this.modalAbierto.set(true);
   }
 
-  /** Abre editar. */
   abrirEditar(p: Personal): void {
     this.menuAbierto.set(null);
     this.detalle.set(null);
@@ -267,13 +205,10 @@ export class PersonalStaff implements OnInit {
     this.modalAbierto.set(true);
   }
 
-  /** Cierra formulario. */
   cerrarFormulario(): void {
     this.cargoAbierto.set(false);
     this.modalAbierto.set(false);
   }
-
-  // ---------------- Combobox de cargo ----------------
 
   escribirCargo(valor: string): void {
     this.setCampo('cargo', valor);
@@ -281,20 +216,17 @@ export class PersonalStaff implements OnInit {
     this.cargoResaltado.set(-1);
   }
 
-  /** Elige cargo. */
   elegirCargo(c: string): void {
     this.setCampo('cargo', c);
     this.cargoAbierto.set(false);
   }
 
-  /** Muestra u oculta lista cargos. */
   alternarListaCargos(input: HTMLInputElement | null): void {
     if (this.cargoAbierto()) { this.cargoAbierto.set(false); return; }
     input?.focus();
     this.cargoAbierto.set(true);
   }
 
-  /** Flechas para moverse, Enter para elegir, Escape para cerrar la lista. */
   teclaCargo(ev: KeyboardEvent): void {
     const lista = this.cargosFiltrados();
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
@@ -314,7 +246,6 @@ export class PersonalStaff implements OnInit {
     }
   }
 
-  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     const f = this.f();
     const doc = limpiarDocumento(f.numeroDocumento);
@@ -358,8 +289,6 @@ export class PersonalStaff implements OnInit {
     });
   }
 
-  // ---------------- Activar / desactivar ----------------
-
   async alternarEstado(p: Personal): Promise<void> {
     this.menuAbierto.set(null);
     if (this.esYo(p)) return;
@@ -375,8 +304,6 @@ export class PersonalStaff implements OnInit {
     });
   }
 
-  // ---------------- Permisos (solo administrador) ----------------
-
   abrirPermisos(p: Personal): void {
     this.menuAbierto.set(null);
     if (!this.puedeGestionarPermisos || this.esYo(p)) return;
@@ -384,40 +311,33 @@ export class PersonalStaff implements OnInit {
     this.permisosMarcados.set([...p.permisos]);
   }
 
-  /** El admin cambia cualquiera; la Directiva solo los que ella misma tiene. */
   puedoCambiarPermiso(valor: string): boolean {
     return this.esAdmin || this.misPermisos.includes(valor);
   }
 
-  /** Permisos que el usuario actual puede cambiar. */
   private permisosCambiables(): string[] {
     return this.permisosDisponibles.map(x => x.valor).filter(v => this.puedoCambiarPermiso(v));
   }
 
-  /** "Seleccionar todos" está marcado cuando todos los permisos que puede cambiar están marcados. */
   todosMarcados(): boolean {
     const c = this.permisosCambiables();
     return c.length > 0 && c.every(v => this.permisosMarcados().includes(v));
   }
 
-  /** Indica «alguno marcado» (devuelve verdadero o falso). */
   algunoMarcado(): boolean {
     return !this.todosMarcados() && this.permisosCambiables().some(v => this.permisosMarcados().includes(v));
   }
 
-  /** Marca o desmarca todas las casillas (solo las que puede cambiar). */
   alternarTodos(marcar: boolean): void {
     const c = this.permisosCambiables();
     this.permisosMarcados.update(l => marcar ? [...new Set([...l, ...c])] : l.filter(x => !c.includes(x)));
   }
 
-  /** Muestra u oculta permiso. */
   alternarPermiso(valor: string, marcado: boolean): void {
     if (!this.puedoCambiarPermiso(valor)) return;
     this.permisosMarcados.update(l => marcado ? [...new Set([...l, valor])] : l.filter(x => x !== valor));
   }
 
-  /** Guarda permisos. Muestra un aviso (toast) con el resultado. */
   guardarPermisos(): void {
     const p = this.permisosDe();
     if (!p) return;
@@ -437,13 +357,11 @@ export class PersonalStaff implements OnInit {
     });
   }
 
-  /** Abre detalle. */
   abrirDetalle(p: Personal): void {
     this.menuAbierto.set(null);
     this.detalle.set(p);
   }
 
-  /** Navega a página. */
   irAPagina(n: number): void {
     if (n >= 1 && n <= this.totalPaginas()) this.pagina.set(n);
   }

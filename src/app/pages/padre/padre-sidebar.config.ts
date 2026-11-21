@@ -1,10 +1,5 @@
 import { SidebarEntry } from '../../shared/layout/siderbar/siderbar';
 
-/**
- * Menú lateral del rol Padre/Familiar: Dashboard, Comunicados (avisos y mensajes),
- * Mis Citas, Mis Hijos y Mi Cuenta (Mi Perfil y Configuración), igual que en los otros roles.
- * Mismo formato que admin-sidebar.config.ts.
- */
 export const PADRE_SIDEBAR_ITEMS: SidebarEntry[] = [
   {
     type: 'link',

@@ -1,4 +1,3 @@
-/** "Hace 5 minutos", "Hace 2 horas", "Ayer", "22 sep 2026"... */
 export function haceCuanto(fecha: string | null | undefined): string {
   if (!fecha) return '';
   const d = new Date(fecha);
@@ -14,32 +13,25 @@ export function haceCuanto(fecha: string | null | undefined): string {
   return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-/** Texto plano (sin etiquetas HTML) para las vistas previas de las tarjetas. */
 export function textoPlano(html: string | null | undefined): string {
   if (!html) return '';
   const div = document.createElement('div');
-  // Cada salto de línea / párrafo / ítem de lista se vuelve un espacio,
-  // para que no se peguen las palabras de líneas distintas.
   div.innerHTML = html.replace(/<\/?(br|p|div|li|ul|ol|h[1-6])\b[^>]*>/gi, ' $&');
   return (div.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
-/** Devuelve las iniciales de los datos de esta pantalla. */
 export function iniciales(nombre: string | null | undefined): string {
   return (nombre ?? '?').split(' ').filter(Boolean).slice(0, 2).map(p => p.charAt(0)).join('').toUpperCase() || '?';
 }
 
-/** Año (número) de una fecha ISO. */
 export function anioDe(fecha: string): number {
   return new Date(fecha).getFullYear();
 }
 
-/** Categoría del rol del usuario logeado. */
 export function esAdministrativo(rol: string | null | undefined): boolean {
   return ['admin', 'administrador', 'directivo', 'director', 'secretaria'].includes((rol ?? '').toLowerCase());
 }
 
-/** "22 de septiembre de 2026, 19:30" (en español, sin depender del LOCALE_ID). */
 export function fechaLarga(fecha: string | null | undefined): string {
   if (!fecha) return '';
   const d = new Date(fecha);
@@ -48,18 +40,14 @@ export function fechaLarga(fecha: string | null | undefined): string {
   return `${dia}, ${hora}`;
 }
 
-/** Constante MESES_CORTOS: valor fijo (meses cortos) que se reutiliza en varias partes. */
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-/** Constante DIAS_CORTOS: valor fijo (días cortos) que se reutiliza en varias partes. */
 const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
-/** "2026-10-06" (fecha local de hoy). */
 export function hoyIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** "yyyy-MM-dd" -> "mar 06 oct 2026" (sin problemas de zona horaria). */
 export function fechaCorta(iso: string | null | undefined, conDia = false): string {
   if (!iso) return '';
   const [a, m, d] = iso.substring(0, 10).split('-').map(Number);
@@ -67,14 +55,12 @@ export function fechaCorta(iso: string | null | undefined, conDia = false): stri
   return `${conDia ? DIAS_CORTOS[dia] + ' ' : ''}${String(d).padStart(2, '0')} ${MESES_CORTOS[m - 1]} ${a}`;
 }
 
-/** Fecha y hora ISO local "2026-10-06T23:59:00" -> "06 oct 2026, 23:59". */
 export function fechaHora(iso: string | null | undefined): string {
   if (!iso) return '';
   const hora = iso.length >= 16 ? iso.substring(11, 16) : '';
   return `${fechaCorta(iso)}${hora ? ', ' + hora : ''}`;
 }
 
-/** Tiempo restante hasta una fecha ISO: "Vence en 2 días", "Venció hace 3 horas". */
 export function plazo(iso: string): string {
   const diff = new Date(iso).getTime() - Date.now();
   const abs = Math.abs(diff);
@@ -83,7 +69,6 @@ export function plazo(iso: string): string {
   return diff >= 0 ? `Vence en ${txt}` : `Venció hace ${txt}`;
 }
 
-/** 12.5 -> "12.5", 12 -> "12", null -> "—" */
 export function num(v: number | null | undefined, decimales = 2): string {
   if (v === null || v === undefined) return '—';
   return Number.isInteger(v) ? String(v) : v.toFixed(decimales).replace(/0+$/, '').replace(/\.$/, '');

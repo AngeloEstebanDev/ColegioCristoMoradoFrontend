@@ -1,4 +1,3 @@
-/** Editor de horario de una sección. Horas en texto "HH:mm". */
 export interface BloqueHorario {
   id?: number | null;
   seccionCursoId: number;
@@ -6,15 +5,11 @@ export interface BloqueHorario {
   color: string;
   docente: string | null;
   estadoCurso?: string;
-  dia: number;            // 1 = Lunes ... 5 = Viernes
+  dia: number;
   horaInicio: string;
   horaFin: string;
 }
 
-/**
- * Modelo Horario: describe la forma de los datos de «horario». Es lo que viaja en JSON entre el
- * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Horario {
   seccionId: number;
   grado: string;
@@ -28,27 +23,19 @@ export interface Horario {
   bloques: BloqueHorario[];
 }
 
-/** Constante DIAS_SEMANA: valor fijo (días semana) que se reutiliza en varias partes. */
 export const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
-/** Convierte el valor a minutos. */
 export function aMinutos(h: string): number {
   const [hh, mm] = h.split(':').map(Number);
   return hh * 60 + mm;
 }
 
-/** Convierte el valor a hora. */
 export function aHora(min: number): string {
   return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 }
 
-/** Fila del cuadro del horario: 15 minutos, el recreo, o una franja fuera del turno (datos antiguos). */
 export interface FilaHorario { inicio: number; fin: number; receso: boolean; fuera: boolean; }
 
-/**
- * Filas del cuadro semanal. Parten del turno (inicio–fin, con su recreo), pero se amplían si algún bloque
- * guardado queda antes o después, para que ningún curso se dibuje fuera del cuadro.
- */
 export function filasHorario(
   h: { inicio: string; fin: string; recesoInicio?: string | null; recesoFin?: string | null; minutosBloque?: number | null },
   bloques: { horaInicio: string; horaFin: string }[] = [],
@@ -72,10 +59,6 @@ export function filasHorario(
   return filas;
 }
 
-/**
- * Índice (desde 0) de la fila donde empieza una hora, o donde termina (esFin): la fila que contiene la hora,
- * aunque no coincida exacto con el inicio de una fila. Así un bloque con horas antiguas se dibuja dentro del cuadro.
- */
 export function filaDeHora(filas: FilaHorario[], hora: string, esFin = false): number {
   const m = aMinutos(hora);
   if (esFin) {

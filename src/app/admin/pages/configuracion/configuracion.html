@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «configuracion», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en configuracion.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="max-w-lg space-y-5">
 
   <div>
@@ -18,7 +11,6 @@
     @if (cargando()) {
       <p class="text-[13px] text-[#6B5A67]">Cargando...</p>
     } @else if (!correoVerificado()) {
-      <!-- Sin Gmail verificado: no se puede cambiar -->
       <div class="rounded-lg bg-[#FDF1DC] border border-[#B08900]/30 px-4 py-3.5 space-y-2">
         <p class="text-[13.5px] font-medium text-[#241521]">Primero vincula tu Gmail</p>
         <p class="text-[12.5px] text-[#6B5A67]">
@@ -55,7 +47,6 @@
           <app-campo-password formControlName="confirmarPassword" autocomplete="new-password" claseInput="px-3 py-2.5 text-[13.5px] rounded-lg bg-[#FAF6EF]" />
         </div>
 
-        <!-- Verificación por Gmail -->
         <div class="rounded-lg border border-[#E3D5C4] bg-[#FAF6EF] p-4 space-y-3">
           <div class="flex items-start justify-between gap-3">
             <div>

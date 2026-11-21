@@ -1,16 +1,8 @@
-<!--
-  Vista (HTML) de «actividad panel», que se muestra en varias pantallas (componente compartido).
-  La lógica (datos, eventos y llamadas al backend) está en actividad-panel.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 @let act = a();
 @let tipo = infoTipo(act.tipo);
 <div class="fixed inset-0 z-50 flex justify-end">
   <div class="absolute inset-0 bg-black/30" (click)="cerrar.emit()"></div>
   <div class="relative w-full max-w-2xl bg-[#FBF7F1] h-full shadow-xl flex flex-col">
-    <!-- Cabecera -->
     <div class="flex items-start gap-3 px-6 py-4 border-b border-[#E3D5C4]">
       <span class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-[12px] font-bold" [style.background]="tipo.fondo" [style.color]="tipo.color">
         {{ tipo.etiqueta.charAt(0) }}
@@ -61,7 +53,6 @@
         <div class="bg-[#E7F3EA] border border-[#1E7A3B]/30 text-[#1E7A3B] text-[13px] rounded-xl px-4 py-3">{{ exito() }}</div>
       }
 
-      <!-- Entrega ya enviada -->
       @if (entrega(); as e) {
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 space-y-3">
           <div class="flex items-center justify-between gap-2">
@@ -95,7 +86,6 @@
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 text-[13px] text-[#6B5A67]">Aún no hay entrega.</div>
       }
 
-      <!-- Cuestionario: preguntas -->
       @if (esCuestionario() && act.preguntas.length && (mostrarFormulario() || entrega())) {
         <div class="space-y-3">
           @if (mostrarFormulario()) {
@@ -120,7 +110,6 @@
         </div>
       }
 
-      <!-- Formulario de tarea -->
       @if (mostrarFormulario() && !esCuestionario()) {
         <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 space-y-4">
           <p class="text-[11.5px] font-bold uppercase tracking-wide text-[#241521]">{{ entrega() ? 'Modificar entrega' : 'Tu respuesta' }}</p>

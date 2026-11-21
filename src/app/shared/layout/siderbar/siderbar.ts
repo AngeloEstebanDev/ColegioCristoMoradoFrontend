@@ -4,24 +4,20 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ConfirmService } from '../../../core/services/confirm.service';
 
-/** Un enlace simple del menú (sin subitems). */
 export interface SidebarLink {
   type: 'link';
   id: string;
   label: string;
-  route: string[]; // comandos completos para routerLink, ej: ['/home','admin','inicio']
-  icon: string;     // path del SVG (24x24)
-  /** Permiso necesario para verlo (Directiva). Sin permiso = visible para todos. */
+  route: string[];
+  icon: string;
   permiso?: string;
 }
 
-/** Un grupo desplegable con subitems. */
 export interface SidebarGroup {
   type: 'group';
   id: string;
   label: string;
   icon: string;
-  /** Permiso necesario para ver el grupo (Directiva). */
   permiso?: string;
   children: {
     id: string;
@@ -30,14 +26,8 @@ export interface SidebarGroup {
   }[];
 }
 
-/** Tipo SidebarEntry: describe la forma de los datos de «sidebar entry». */
 export type SidebarEntry = SidebarLink | SidebarGroup;
 
-/**
- * Componente «siderbar» compartido (lo usan varias pantallas y roles). Se usa en el HTML con la
- * etiqueta <app-siderbar>. Su vista está en siderbar.html; aquí (en el .ts) va la lógica: los datos
- * que se muestran, lo que pasa al hacer clic y las llamadas a los servicios.
- */
 @Component({
   imports: [CommonModule, RouterLink, RouterLinkActive],
   selector: 'app-siderbar',
@@ -46,22 +36,16 @@ export type SidebarEntry = SidebarLink | SidebarGroup;
   templateUrl: './siderbar.html',
 })
 export class Siderbar implements OnChanges {
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
-  /** Rol mostrado en el badge inferior. */
   @Input() rol: string = '';
 
-  /** Estructura del menú: la define cada layout de rol (admin, docente, etc). */
   @Input() items: SidebarEntry[] = [];
 
-  /** ids de los grupos actualmente abiertos */
   gruposAbiertos = new Set<string>();
 
-  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(private router: Router, private authService: AuthService) {}
 
-  /** Nombre del rol para el badge ("ALUMNO" -> "Estudiante"). */
   get rolVisible(): string {
     const r = (this.rol ?? '').toLowerCase();
     if (['admin', 'administrador'].includes(r)) return 'Administrador';
@@ -72,22 +56,13 @@ export class Siderbar implements OnChanges {
     return this.rol;
   }
 
-  /**
-   * Cierra sesión. Al terminar, lleva al usuario a otra página (router.navigate). Antes pide
-   * confirmación al usuario.
-   */
   async cerrarSesion(): Promise<void> {
     if (!await this.confirmar.pedir('¿Deseas cerrar sesión?')) return;
     this.authService.cerrarSesion();
     this.router.navigate(['/login']);
   }
 
-  /**
-   * Se ejecuta cuando cambia alguno de los datos que recibe el componente desde su padre (@Input).
-   */
   ngOnChanges(): void {
-    // Abre automáticamente el grupo que contiene la ruta activa,
-    // así al recargar la página el submenú correcto ya se ve desplegado.
     const url = this.router.url;
     for (const item of this.items) {
       if (item.type === 'group') {
@@ -101,17 +76,14 @@ export class Siderbar implements OnChanges {
     }
   }
 
-  /** Indica si es grupo (devuelve verdadero o falso). */
   esGrupo(item: SidebarEntry): item is SidebarGroup {
     return item.type === 'group';
   }
 
-  /** Indica «grupo abierto» (devuelve verdadero o falso). */
   grupoAbierto(id: string): boolean {
     return this.gruposAbiertos.has(id);
   }
 
-  /** Muestra u oculta grupo. */
   toggleGrupo(id: string): void {
     if (this.gruposAbiertos.has(id)) {
       this.gruposAbiertos.delete(id);

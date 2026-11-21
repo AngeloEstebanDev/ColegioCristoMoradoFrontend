@@ -13,22 +13,11 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
 
-/** Tipo FiltroLectura: describe la forma de los datos de «filtro lectura». */
 type FiltroLectura = 'todos' | 'leidos' | 'no-leidos';
-/** Tipo ModoDocente: describe la forma de los datos de «modo docente». */
 type ModoDocente = 'PADRES_TODAS' | 'ALUMNOS_TODAS' | 'PADRES_UNA' | 'ALUMNOS_UNA';
 
-/**
- * Constante IMAGEN_MAX_BYTES: valor fijo (imagen max bytes) que se reutiliza en varias partes.
- */
 const IMAGEN_MAX_BYTES = 2 * 1024 * 1024;
 
-/**
- * Componente «lista comunicados» del panel de Administración (administrador y directiva). Se usa en el
- * HTML con la etiqueta <app-lista-comunicados>. Su vista está en lista-comunicados.html; aquí (en el
- * .ts) va la lógica: los datos que se muestran, lo que pasa al hacer clic y las llamadas a los
- * servicios.
- */
 @Component({
   selector: 'app-lista-comunicados',
   standalone: true,
@@ -36,9 +25,7 @@ const IMAGEN_MAX_BYTES = 2 * 1024 * 1024;
   templateUrl: './lista-comunicados.html',
 })
 export class ListaComunicados implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
   readonly grupos = GRUPOS_DESTINO;
@@ -48,90 +35,61 @@ export class ListaComunicados implements OnInit {
   readonly textoPlano = textoPlano;
   readonly iniciales = iniciales;
 
-  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
-  /** Servicio ComunicadoService (inyectado por Angular). */
   private comunicadoService = inject(ComunicadoService);
-  /** Servicio NotificacionService (inyectado por Angular). */
   private notificaciones = inject(NotificacionService);
 
   private usuario = this.auth.obtenerUsuario();
-  /** Administrador, o Directiva con el permiso "Crear comunicados". */
   readonly esAdmin = this.auth.tienePermiso('COMUNICADOS');
-  /** HU-25: el docente pública comunicados para los alumnos y/o padres de sus secciones. */
   readonly esDocente = ['docente', 'profesor'].includes(this.auth.obtenerRol().toLowerCase());
   readonly puedeCrear = this.esAdmin || this.esDocente;
 
-  /** Grupos que se pueden elegir (el docente solo Alumnos y Padres). */
   readonly gruposDisponibles = this.esAdmin
     ? GRUPOS_DESTINO
     : GRUPOS_DESTINO.filter(g => g.valor === 'ALUMNOS' || g.valor === 'PADRES');
 
-  /** Secciones a las que puede dirigir el comunicado. */
   seccionesDisponibles = signal<SeccionDestino[]>([]);
-  /** Estado (signal): f secciones. */
   fSecciones = signal<number[]>([]);
 
-  /** Docente: a quién va dirigido (padres o alumnos, de todas sus clases o de una). */
   readonly opcionesDocente: { valor: ModoDocente; etiqueta: string }[] = [
     { valor: 'PADRES_TODAS', etiqueta: 'Todos los padres de las aulas dictadas' },
     { valor: 'ALUMNOS_TODAS', etiqueta: 'Todos los alumnos de las clases dictadas' },
     { valor: 'PADRES_UNA', etiqueta: 'Todos los padres de una clase' },
     { valor: 'ALUMNOS_UNA', etiqueta: 'Todos los alumnos de una clase' },
   ];
-  /** Estado (signal): f modo docente. */
   fModoDocente = signal<ModoDocente | ''>('');
-  /** Estado (signal): f clase. */
   fClase = signal<number | null>(null);
 
-  /** Estado (signal): comunicados. */
   comunicados = signal<Comunicado[]>([]);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
 
-  /** Estado (signal): búsqueda. */
   busqueda = signal('');
-  /** Estado (signal): año. */
   anio = signal<number>(new Date().getFullYear());
-  /** Estado (signal): filtro. */
   filtro = signal<FiltroLectura>('todos');
 
-  // Panel de detalle (lateral)
   detalle = signal<Comunicado | null>(null);
 
-  // Anuncio grande (modal centrado)
   anuncioActual = signal<Comunicado | null>(null);
   private anunciosMostrados = new Set<number>();
 
-  // Modal crear / editar
   modalAbierto = signal(false);
-  /** Estado (signal): editando id. */
   editandoId = signal<number | null>(null);
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): error modal. */
   errorModal = signal<string | null>(null);
-  /** Estado (signal): selector grupos abierto. */
   selectorGruposAbierto = signal(false);
   fTitulo = '';
   fContenido = '';
-  /** Estado (signal): f imagen. */
   fImagen = signal<string | null>(null);
-  /** Estado (signal): f anuncio. */
   fAnuncio = signal(false);
-  /** Estado (signal): f grupos. */
   fGrupos = signal<GrupoDestino[]>([]);
 
-  /** Valor calculado (computed): anios. Se actualiza solo. */
   anios = computed(() => {
     const set = new Set<number>([new Date().getFullYear()]);
     this.comunicados().forEach(c => set.add(anioDe(c.fechaCreacion)));
     return [...set].sort((a, b) => b - a);
   });
 
-  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
     return this.comunicados().filter(c => {
@@ -145,16 +103,9 @@ export class ListaComunicados implements OnInit {
     });
   });
 
-  /** Valor calculado (computed): no leidos. Se actualiza solo. */
   noLeidos = computed(() => this.comunicados().filter(c => !c.leido).length);
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales. Pide los datos al backend con comunicadoService.secciones() y actualiza la
-   * pantalla cuando llega la respuesta.
-   */
   ngOnInit(): void {
-    // Los anuncios importantes sin leer ya se muestran al entrar a la cuenta (AvisosInicio en el Layout).
     this.cargar();
     if (this.puedeCrear && this.usuario) {
       this.comunicadoService.secciones(this.usuario.id).subscribe({
@@ -163,10 +114,6 @@ export class ListaComunicados implements OnInit {
     }
   }
 
-  /**
-   * Carga los datos de esta pantalla. Pide los datos al backend con comunicadoService.listar() y
-   * actualiza la pantalla cuando llega la respuesta.
-   */
   cargar(mostrarAnuncio = false): void {
     if (!this.usuario) return;
     this.cargando.set(true);
@@ -183,41 +130,29 @@ export class ListaComunicados implements OnInit {
     });
   }
 
-  // ---------------- Anuncio grande ----------------
-
-  /** Muestra el anuncio más reciente que el usuario todavía no ha leído. */
   private siguienteAnuncio(): void {
     const pendiente = this.comunicados().find(c => c.anuncio && !c.leido && !this.anunciosMostrados.has(c.id));
     this.anuncioActual.set(pendiente ?? null);
   }
 
-  /** Cierra anuncio. */
   cerrarAnuncio(): void {
     const a = this.anuncioActual();
     if (!a) return;
     this.anunciosMostrados.add(a.id);
     this.marcarLeido(a);
     this.anuncioActual.set(null);
-    // Si había más de un anuncio sin leer, aparece el siguiente.
     setTimeout(() => this.siguienteAnuncio(), 250);
   }
-
-  // ---------------- Detalle ----------------
 
   abrirDetalle(c: Comunicado): void {
     this.detalle.set(c);
     this.marcarLeido(c);
   }
 
-  /** Cierra detalle. */
   cerrarDetalle(): void {
     this.detalle.set(null);
   }
 
-  /**
-   * Marca leido. Pide los datos al backend con comunicadoService.marcarLeido() y actualiza la pantalla
-   * cuando llega la respuesta.
-   */
   private marcarLeido(c: Comunicado): void {
     if (c.leido || !this.usuario) return;
     this.comunicadoService.marcarLeido(c.id, this.usuario.id).subscribe({
@@ -227,8 +162,6 @@ export class ListaComunicados implements OnInit {
       },
     });
   }
-
-  // ---------------- Crear / editar (solo administración) ----------------
 
   abrirCrear(): void {
     this.editandoId.set(null);
@@ -246,7 +179,6 @@ export class ListaComunicados implements OnInit {
     this.modalAbierto.set(true);
   }
 
-  /** Abre editar. */
   abrirEditar(c: Comunicado, ev?: Event): void {
     ev?.stopPropagation();
     this.detalle.set(null);
@@ -269,24 +201,17 @@ export class ListaComunicados implements OnInit {
     this.modalAbierto.set(true);
   }
 
-  /** Cierra modal. */
   cerrarModal(): void {
     this.modalAbierto.set(false);
     this.selectorGruposAbierto.set(false);
   }
 
-  /** Muestra u oculta sección. */
   alternarSeccion(id: number): void {
     this.fSecciones.update(l => l.includes(id) ? l.filter(x => x !== id) : [...l, id]);
   }
 
-  /** Grupos individuales (sin "Todos"). */
   private readonly individuales = this.gruposDisponibles.map(x => x.valor).filter(v => v !== 'TODOS');
 
-  /**
-   * "Todos" marca (o desmarca) todas las casillas. Si se marcan los grupos uno por uno hasta tenerlos
-   * todos, "Todos" se marca solo; si se desmarca uno, "Todos" se desmarca.
-   */
   alternarGrupo(g: GrupoDestino): void {
     this.limpiarError('destino');
     this.fGrupos.update(lista => {
@@ -298,12 +223,10 @@ export class ListaComunicados implements OnInit {
     });
   }
 
-  /** Devuelve el texto de «nombres secciones». */
   nombresSecciones(): string {
     return this.seccionesDisponibles().map(x => x.nombre).join(', ');
   }
 
-  /** Devuelve el resumen de grupos. */
   resumenGrupos(): string {
     const g = this.fGrupos();
     if (!g.length) return 'Seleccionar grupo(s)';
@@ -311,7 +234,6 @@ export class ListaComunicados implements OnInit {
     return g.map(etiquetaGrupo).join(', ');
   }
 
-  /** Elige imagen. */
   elegirImagen(ev: Event): void {
     const input = ev.target as HTMLInputElement;
     const archivo = input.files?.[0];
@@ -326,15 +248,12 @@ export class ListaComunicados implements OnInit {
       return;
     }
     const lector = new FileReader();
-    // Con signals la vista se actualiza aunque esto ocurra fuera de un evento de Angular.
     lector.onload = () => this.fImagen.set(lector.result as string);
     lector.readAsDataURL(archivo);
   }
 
-  /** Errores por campo del formulario (se muestran debajo de cada uno). */
   errores = signal<Record<string, string>>({});
 
-  /** Valida el formulario completo; devuelve true si está correcto. */
   private validar(): boolean {
     const e: Record<string, string> = {};
     const titulo = this.fTitulo.trim();
@@ -361,13 +280,11 @@ export class ListaComunicados implements OnInit {
     return n === 0;
   }
 
-  /** Limpia error. */
   limpiarError(campo: string): void {
     if (!this.errores()[campo]) return;
     this.errores.update(e => { const n = { ...e }; delete n[campo]; return n; });
   }
 
-  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     if (!this.usuario) return;
     if (!this.validar()) return;
@@ -376,7 +293,6 @@ export class ListaComunicados implements OnInit {
       this.fGrupos.set([grupo as GrupoDestino]);
       this.fSecciones.set(alcance === 'UNA' ? [this.fClase()!] : this.seccionesDisponibles().map(x => x.id));
     } else {
-      // Administración y Directiva: el comunicado va a todo el colegio (según los destinatarios elegidos).
       this.fSecciones.set([]);
     }
 
@@ -385,7 +301,6 @@ export class ListaComunicados implements OnInit {
       contenido: this.fContenido,
       imagen: this.fImagen(),
       anuncio: this.fAnuncio(),
-      // Con "Todos" marcado basta con enviar TODOS (el backend lo guarda así).
       destinatarios: this.fGrupos().includes('TODOS') ? ['TODOS'] : this.fGrupos(),
       secciones: this.fSecciones(),
     };
@@ -411,11 +326,6 @@ export class ListaComunicados implements OnInit {
     });
   }
 
-  /**
-   * Elimina los datos de esta pantalla. Pide los datos al backend con comunicadoService.eliminar() y
-   * actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado. Antes
-   * pide confirmación al usuario.
-   */
   async eliminar(c: Comunicado, ev?: Event): Promise<void> {
     ev?.stopPropagation();
     if (!this.usuario) return;
@@ -431,7 +341,6 @@ export class ListaComunicados implements OnInit {
     });
   }
 
-  /** Se ejecuta al presionar la tecla Esc. */
   @HostListener('document:keydown.escape')
   alPresionarEscape(): void {
     if (this.selectorGruposAbierto()) { this.selectorGruposAbierto.set(false); return; }
@@ -439,13 +348,11 @@ export class ListaComunicados implements OnInit {
     if (this.detalle()) { this.cerrarDetalle(); }
   }
 
-  /** Devuelve el texto de «lista grupos». */
   listaGrupos(c: Comunicado): string {
     const grupos = c.destinatarios.map(etiquetaGrupo).join(', ');
     return c.secciones?.length ? `${grupos} de ${c.secciones.join(', ')}` : grupos;
   }
 
-  /** Devuelve las clases CSS de chip. */
   claseChip(activo: boolean): string {
     return activo
       ? 'bg-[#EFEAF3] text-[#4A1F52] border-[#4A1F52]/20'

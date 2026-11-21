@@ -1,13 +1,5 @@
 import { SidebarEntry } from '../shared/layout/siderbar/siderbar';
 
-/**
- * Menú lateral del rol Administrador. Las rutas ('route') deben coincidir
- * exactamente con los paths hijos definidos bajo /home/admin en app.routes.ts.
- *
- * Si en el futuro agregas otro rol (docente, padre...), crea un archivo
- * análogo (ej. docente-sidebar.config.ts) y selecciónalo en Layout según
- * el rol del usuario logeado.
- */
 export const ADMIN_SIDEBAR_ITEMS: SidebarEntry[] = [
   {
     type: 'link',

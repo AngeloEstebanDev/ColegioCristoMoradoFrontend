@@ -1,14 +1,6 @@
-<!--
-  Vista (HTML) de «seccion detalle», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en seccion-detalle.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 @if (seccion(); as s) {
 <div class="space-y-5">
 
-  <!-- Encabezado -->
   <div class="flex items-start justify-between flex-wrap gap-3">
     <div class="flex items-start gap-3">
       <button type="button" (click)="volver()" title="Volver a Grados y Secciones"
@@ -48,7 +40,6 @@
     </div>
   </div>
 
-  <!-- Ocupación -->
   <div class="flex items-center gap-4">
     <div class="flex-1 h-2 rounded-full bg-[#F0E6D8] overflow-hidden">
       <div class="h-full rounded-full transition-all duration-300"
@@ -72,7 +63,6 @@
     </div>
   }
 
-  <!-- Pestañas -->
   <div>
     <div class="flex gap-1 border-b border-[#E3D5C4]">
       <button type="button" (click)="pestana.set('alumnos')" class="flex items-center gap-2 px-4 py-2.5 text-[13.5px] font-medium border-b-2 -mb-px"
@@ -96,7 +86,6 @@
 
     <div class="bg-white rounded-b-xl rounded-tr-xl border border-t-0 border-[#E3D5C4] shadow-sm p-5">
 
-      <!-- ============ Alumnos ============ -->
       @if (pestana() === 'alumnos') {
         <div class="flex items-center justify-between gap-3 mb-4">
           <h4 class="text-[13px] font-bold tracking-wide text-[#241521] uppercase">Alumnos matriculados</h4>
@@ -134,7 +123,6 @@
         </div>
       }
 
-      <!-- ============ Cursos ============ -->
       @if (pestana() === 'cursos') {
         <div class="flex items-center justify-between gap-3 mb-4">
           <h4 class="text-[13px] font-bold tracking-wide text-[#241521] uppercase">Cursos asignados - {{ anio }}</h4>
@@ -196,7 +184,6 @@
         </div>
       }
 
-      <!-- ============ Horario (vacío por ahora) ============ -->
       @if (pestana() === 'horario') {
         <div class="flex flex-col items-center text-center py-12">
           <div class="w-20 h-20 rounded-full bg-[#EFEAF3] flex items-center justify-center shadow-[0_0_0_10px_rgba(239,234,243,0.5)]">
@@ -215,7 +202,6 @@
   </div>
 </div>
 
-<!-- ===================== Panel lateral (matricular / curso / docente / tutor / editar) ===================== -->
 @if (panel(); as p) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-black/30" (click)="cerrarPanel()"></div>

@@ -1,21 +1,13 @@
-/** Categorías del Catálogo de Cursos (iguales a CategoriaCurso.java). */
 export type CategoriaClave =
   'MATEMATICA' | 'COMUNICACION' | 'CIENCIA' | 'SOCIALES' | 'IDIOMAS' | 'ARTE' | 'FORMACION' | 'COMPUTACION' | 'OTROS';
 
-/**
- * Modelo CategoriaCurso: describe la forma de los datos de «categoría curso». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface CategoriaCurso {
   clave: CategoriaClave;
   nombre: string;
-  color: string;      // color del curso (secciones y horario)
-  fondo: string;      // fondo suave para íconos y etiquetas
+  color: string;
+  fondo: string;
 }
 
-/**
- * Constante CATEGORIAS_CURSO: valor fijo (categorías curso) que se reutiliza en varias partes.
- */
 export const CATEGORIAS_CURSO: CategoriaCurso[] = [
   { clave: 'MATEMATICA', nombre: 'Matemática', color: '#2563EB', fondo: '#E6EEFB' },
   { clave: 'COMUNICACION', nombre: 'Comunicación y Literatura', color: '#D97706', fondo: '#FDF1DC' },
@@ -28,15 +20,10 @@ export const CATEGORIAS_CURSO: CategoriaCurso[] = [
   { clave: 'OTROS', nombre: 'Otros', color: '#6B7280', fondo: '#EEEFF1' },
 ];
 
-/** Función categoriaDe: categoría de. */
 export function categoriaDe(clave: string | null | undefined): CategoriaCurso {
   return CATEGORIAS_CURSO.find(c => c.clave === clave) ?? CATEGORIAS_CURSO[CATEGORIAS_CURSO.length - 1];
 }
 
-/**
- * Modelo Curso: describe la forma de los datos de «curso». Es lo que viaja en JSON entre el backend y
- * el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface Curso {
   id: number;
   nombre: string;
@@ -44,13 +31,9 @@ export interface Curso {
   categoriaNombre: string;
   color: string;
   estado: string;
-  secciones: number;   // en cuántas secciones está asignado
+  secciones: number;
 }
 
-/**
- * Modelo CursoRequest: describe la forma de los datos de «curso request». Es lo que viaja en JSON
- * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
- */
 export interface CursoRequest {
   nombre: string;
   categoria: CategoriaClave;

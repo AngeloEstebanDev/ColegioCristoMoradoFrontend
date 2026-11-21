@@ -1,13 +1,10 @@
 import { MAX_FILAS_PDF, TablaReporte } from '../models/reporte.model';
 
-/** Constante MORADO: valor fijo (morado) que se reutiliza en varias partes. */
 const MORADO: [number, number, number] = [74, 31, 82];
-/** Constante COLORES_ESTADO: valor fijo (colores estado) que se reutiliza en varias partes. */
 const COLORES_ESTADO: Record<string, [number, number, number]> = {
   'Asistió': [30, 122, 59], 'Tardanza': [176, 110, 0], 'Falta': [166, 38, 57], 'Justificada': [37, 99, 235],
 };
 
-/** "Registro de notas - 5° Primaria A" -> "Registro_de_notas_5_Primaria_A_2026-10-20.pdf" */
 export function nombreArchivo(titulo: string, extension: 'pdf' | 'xlsx'): string {
   const base = (titulo || 'Reporte').normalize('NFD').replace(/\p{M}/gu, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
   const d = new Date();
@@ -15,7 +12,6 @@ export function nombreArchivo(titulo: string, extension: 'pdf' | 'xlsx'): string
   return `${base || 'Reporte'}_${hoy}.${extension}`;
 }
 
-/** Función logo: logo. */
 async function logo(): Promise<string | null> {
   try {
     const r = await fetch('logo-cristo-morado.png');
@@ -25,11 +21,6 @@ async function logo(): Promise<string | null> {
   } catch { return null; }
 }
 
-/**
- * Genera y descarga el PDF de un reporte (A4 horizontal, encabezado del colegio, indicadores,
- * tabla con encabezado repetido en cada página y número de página).
- * Devuelve true si el PDF se recortó a MAX_FILAS_PDF filas.
- */
 export async function descargarPdf(t: TablaReporte, nombre?: string): Promise<boolean> {
   const [{ jsPDF }, { autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });

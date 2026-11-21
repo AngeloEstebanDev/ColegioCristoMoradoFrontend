@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «parents», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en parents.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
   <div class="flex items-start justify-between flex-wrap gap-3">
@@ -24,7 +17,6 @@
     {{ error() }}
   </div>
 
-  <!-- Filtros -->
   <div class="bg-white rounded-xl border border-[#E3D5C4] p-4 flex flex-wrap gap-3 items-center">
     <div class="relative flex-1 min-w-[220px]">
       <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
@@ -39,7 +31,6 @@
     </select>
   </div>
 
-  <!-- Tabla -->
   <div class="bg-white rounded-xl border border-[#E3D5C4] overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-[13px]">
@@ -137,7 +128,6 @@
   </div>
 </div>
 
-<!-- Panel: Crear / Editar padre de familia -->
 <div *ngIf="panelAbierto()" class="fixed inset-0 z-50 flex justify-end">
   <div class="absolute inset-0 bg-black/30" (click)="cerrarPanel()"></div>
 
@@ -182,7 +172,6 @@
 
       <div>
         <label class="block text-[12.5px] font-medium text-[#241521] mb-1.5">Fecha de nacimiento</label>
-        <!-- Solo se muestra en su perfil (no en la tabla) -->
         <input type="date" formControlName="fechaNacimiento" [max]="hoy"
                class="w-full px-3 py-2.5 text-[13.5px] rounded-lg border border-[#E3D5C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#4A1F52]/30" />
 <app-error-campo [control]="form.get('fechaNacimiento')" />
@@ -209,7 +198,6 @@
 <app-error-campo [control]="form.get('direccion')" />
       </div>
 
-      <!-- Hijos: solo lectura. Se vinculan en Académico > Vínculo Padre-Hijo -->
       @if (padreSeleccionado(); as ps) {
         <div class="rounded-lg border border-[#E3D5C4] bg-white p-3.5 space-y-2">
           <div class="flex items-center justify-between gap-2">
@@ -246,7 +234,6 @@
         </select>
       </div>
 
-      <!-- Cuenta de acceso: usuario APO + N.º de documento (automático) -->
       <div class="pt-2 border-t border-[#E3D5C4] space-y-4">
         <div class="pt-3">
           <h4 class="text-[12px] font-semibold text-[#4A1F52] uppercase tracking-wide">Cuenta de acceso</h4>

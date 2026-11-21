@@ -1,12 +1,4 @@
-<!--
-  Vista (HTML) de «mis citas», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en mis-citas.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-4">
-  <!-- Resumen -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
     <div class="flex items-center gap-3 bg-white rounded-2xl border border-[#E3D5C4] shadow-sm px-4 py-3">
       <span class="min-w-9 h-9 px-1.5 rounded-lg bg-[#E6EEFB] text-[#2563EB] text-[13px] font-bold flex items-center justify-center">{{ totales().total }}</span>
@@ -41,7 +33,6 @@
     </div>
   }
 
-  <!-- Agenda de citas -->
   <section class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm">
     <div class="flex items-center gap-4 flex-wrap px-5 py-4 border-b border-[#F0E6D8]">
       <span class="w-12 h-12 rounded-xl bg-[#EFEAF3] text-[#4A1F52] flex items-center justify-center shrink-0">
@@ -146,7 +137,6 @@
   </section>
 </div>
 
-<!-- ===================== Ver detalle ===================== -->
 @if (detalle(); as c) {
   @let est = estados[c.estado];
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -194,7 +184,6 @@
   </div>
 }
 
-<!-- ===================== Cancelar cita ===================== -->
 @if (cancelando(); as c) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-[#241521]/45" (click)="cancelando.set(null)"></div>
@@ -247,7 +236,6 @@
   </div>
 }
 
-<!-- ===================== Nueva cita (docente / administración) ===================== -->
 @if (panelNueva()) {
   <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
     <div class="absolute inset-0 bg-[#241521]/50" (click)="panelNueva.set(false)"></div>
@@ -270,7 +258,6 @@
 
       <div class="flex-1 overflow-y-auto px-6 py-4 space-y-5">
         @if (!esAdmin) {
-          <!-- 1. Aula -->
           <div class="flex gap-3">
             <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">1</span>
             <div class="flex-1">
@@ -286,7 +273,6 @@
           </div>
         }
 
-        <!-- 2. Padre / persona -->
         <div class="flex gap-3">
           <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 1 : 2 }}</span>
           <div class="flex-1">
@@ -324,7 +310,6 @@
           </div>
         </div>
 
-        <!-- 3. Detalles -->
         <div class="flex gap-3">
           <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 2 : 3 }}</span>
           <div class="flex-1">
@@ -346,7 +331,6 @@
           </div>
         </div>
 
-        <!-- 4. Fecha y hora -->
         <div class="flex gap-3">
           <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 3 : 4 }}</span>
           <div class="flex-1 min-w-0">
@@ -407,7 +391,6 @@
           </div>
         </div>
 
-        <!-- 5. Descripción -->
         <div class="flex gap-3">
           <span class="w-7 h-7 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[13px] font-bold flex items-center justify-center shrink-0">{{ esAdmin ? 4 : 5 }}</span>
           <div class="flex-1">
@@ -435,7 +418,6 @@
   </div>
 }
 
-<!-- ===================== Padre: nueva cita (convocar a profesor / administrativo) ===================== -->
 @if (panelSolicitar()) {
   <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
     <div class="fixed inset-0 bg-[#241521]/45" (click)="panelSolicitar.set(false)"></div>
@@ -455,7 +437,6 @@
       </div>
 
       <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-        <!-- 1. Profesor / administrativo -->
         <section>
           <div class="flex items-start gap-3 mb-2">
             <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
@@ -494,7 +475,6 @@
           }
         </section>
 
-        <!-- 2. Detalles -->
         <section>
           <div class="flex items-center gap-3 mb-3">
             <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0">2</span>
@@ -521,7 +501,6 @@
           </div>
         </section>
 
-        <!-- 3. Horario libre -->
         <section>
           <div class="flex items-start gap-3 mb-3">
             <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
@@ -587,7 +566,6 @@
           </div>
         </section>
 
-        <!-- 4. Descripción -->
         <section>
           <div class="flex items-start gap-3 mb-3">
             <span class="w-6 h-6 rounded-full bg-[#EFEAF3] text-[#4A1F52] text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5">4</span>

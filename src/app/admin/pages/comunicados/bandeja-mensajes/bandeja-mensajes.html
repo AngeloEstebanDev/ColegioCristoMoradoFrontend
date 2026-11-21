@@ -1,10 +1,3 @@
-<!--
-  Vista (HTML) de «bandeja mensajes», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en bandeja-mensajes.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-3">
 
   @if (error()) {
@@ -16,7 +9,6 @@
 
   <div class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm overflow-hidden flex h-[calc(100vh-240px)] min-h-[480px]">
 
-    <!-- ===================== Lista de chats ===================== -->
     <aside class="w-full md:w-[320px] md:shrink-0 border-r border-[#F0E6D8] flex-col bg-[#FBF7F1]"
            [ngClass]="abiertoId() !== null ? 'hidden md:flex' : 'flex'">
       <div class="px-4 pt-4 pb-3 space-y-3 border-b border-[#F0E6D8]">
@@ -82,10 +74,8 @@
       </div>
     </aside>
 
-    <!-- ===================== Chat abierto ===================== -->
     <section class="flex-1 min-w-0 flex-col bg-[#FAF6EF]" [ngClass]="abiertoId() === null ? 'hidden md:flex' : 'flex'">
       @if (abierto(); as chat) {
-        <!-- Cabecera -->
         <header class="flex items-center gap-3 px-4 py-3 bg-white border-b border-[#F0E6D8]">
           <button type="button" (click)="cerrarChat()" class="md:hidden -ml-1 p-1 text-[#4A1F52]" title="Volver">
             <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -124,7 +114,6 @@
           </div>
         </header>
 
-        <!-- Mensajes -->
         <div #zonaMensajes class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-1">
           @if (cargandoChat() && !chat.mensajes.length) {
             <p class="text-center text-[13px] text-[#6B5A67] py-10">Cargando mensajes...</p>
@@ -135,7 +124,6 @@
               </div>
               @for (m of d.mensajes; track m.id) {
                 @if (m.aviso) {
-                  <!-- Aviso del colegio -->
                   <div class="flex justify-start py-1">
                     <div class="max-w-[85%] sm:max-w-[70%] bg-white rounded-2xl rounded-tl-md border border-[#E3D5C4] border-l-4 border-l-[#4A1F52] shadow-sm px-4 py-3">
                       <p class="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#4A1F52]">
@@ -184,7 +172,6 @@
           }
         </div>
 
-        <!-- Escribir -->
         @if (chat.conversacion.puedeEscribir) {
           <footer class="bg-white border-t border-[#F0E6D8] px-3 sm:px-4 py-3">
             @if (errorChat()) {
@@ -227,7 +214,6 @@
   </div>
 </div>
 
-<!-- ===================== Nuevo chat ===================== -->
 @if (modalNuevo()) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-[#241521]/40" (click)="cerrarNuevo()"></div>
@@ -239,7 +225,6 @@
         </button>
       </div>
 
-        <!-- Elegir persona (los mensajes son siempre de persona a persona) -->
         <div class="px-6 pt-4 pb-3">
           <div class="relative">
             <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B5A67]" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>

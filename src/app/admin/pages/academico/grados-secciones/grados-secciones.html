@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «grados secciones», que se muestra en el panel de Administración (administrador y directiva).
-  La lógica (datos, eventos y llamadas al backend) está en grados-secciones.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
-  <!-- Encabezado -->
   <div class="flex items-start justify-between flex-wrap gap-3">
     <div>
       <h2 class="font-serif font-bold text-2xl text-[#241521]">Grados y Secciones</h2>
@@ -33,7 +25,6 @@
     </div>
   }
 
-  <!-- Fila de grados -->
   <div class="flex items-center gap-2">
     <button type="button" (click)="desplazar(-1)" title="Anterior"
             class="w-8 h-8 shrink-0 rounded-full bg-white border border-[#E3D5C4] flex items-center justify-center text-[#241521] hover:bg-[#FAF6EF] shadow-sm">
@@ -57,7 +48,6 @@
     </button>
   </div>
 
-  <!-- Secciones del grado -->
   <div class="bg-white rounded-2xl border border-[#E3D5C4] shadow-sm p-5 sm:p-6 space-y-4">
     <div class="flex items-end justify-between flex-wrap gap-3">
       <div>
@@ -121,7 +111,6 @@
   </div>
 </div>
 
-<!-- ===================== Panel lateral: Nueva sección ===================== -->
 @if (panelAbierto()) {
   <div class="fixed inset-0 z-50 flex justify-end">
     <div class="absolute inset-0 bg-black/30" (click)="panelAbierto.set(false)"></div>

@@ -9,10 +9,8 @@ import { dmy } from '../../../alumno/pages/cursos/curso-detalle';
 import { AvatarPersona, horaAmPm } from './curso-ui';
 import { ToastService } from '../../../../core/services/toast.service';
 
-/** Modelo Grupo: describe la forma de los datos de «grupo». */
 interface Grupo { clave: string; nombre: string; sesiones: SesionAsistencia[]; }
 
-/** Constante ESTADOS: valor fijo (estados) que se reutiliza en varias partes. */
 const ESTADOS: { id: EstadoAsistencia; nombre: string; color: string; fondo: string; borde: string }[] = [
   { id: 'PRESENTE', nombre: 'Presente', color: '#1E7A3B', fondo: '#E7F3EA', borde: '#1E7A3B' },
   { id: 'TARDANZA', nombre: 'Tardanza', color: '#9A6B00', fondo: '#FDF1DC', borde: '#D99A00' },
@@ -20,11 +18,6 @@ const ESTADOS: { id: EstadoAsistencia; nombre: string; color: string; fondo: str
   { id: 'JUSTIFICADA', nombre: 'Justificado', color: '#1D4ED8', fondo: '#E6EEFB', borde: '#1D4ED8' },
 ];
 
-/**
- * Docente > curso > Asistencia.
- * Regla: la asistencia solo se genera durante la hora de clase. Si no se generó queda en rojo;
- * generada y sin registrar = "Sin marcar"; generada y registrada = "Marcado".
- */
 @Component({
   selector: 'app-asistencia-curso',
   standalone: true,
@@ -32,9 +25,7 @@ const ESTADOS: { id: EstadoAsistencia; nombre: string; color: string; fondo: str
   templateUrl: './asistencia-curso.html',
 })
 export class AsistenciaCurso implements OnInit {
-  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
-  /** Servicio AsistenciaService (inyectado por Angular). */
   private asistencia = inject(AsistenciaService);
 
   @Input({ required: true }) curso!: CursoAula;
@@ -44,35 +35,21 @@ export class AsistenciaCurso implements OnInit {
   readonly horaAmPm = horaAmPm;
   readonly estados = ESTADOS;
 
-  /** Estado (signal): datos. */
   datos = signal<SesionesAsistencia | null>(null);
-  /** Estado (signal): cargando. */
   cargando = signal(true);
-  /** Estado (signal): generando. */
   generando = signal(false);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): éxito. */
   exito = signal<string | null>(null);
-  /** Estado (signal): orden asc. */
   ordenAsc = signal(true);
-  /** Estado (signal): cerrados. */
   cerrados = signal<Set<string>>(new Set());
 
-  // Modal "Tomar asistencia"
   dia = signal<DiaAsistencia | null>(null);
-  /** Estado (signal): sesión modal. */
   sesionModal = signal<SesionAsistencia | null>(null);
-  /** Estado (signal): solo ver. */
   soloVer = signal(false);
-  /** Estado (signal): marcas. */
   marcas = signal<Record<number, EstadoAsistencia | null>>({});
-  /** Estado (signal): guardando. */
   guardando = signal(false);
-  /** Estado (signal): error modal. */
   errorModal = signal<string | null>(null);
 
-  /** Valor calculado (computed): salon. Se actualiza solo. */
   salon = computed(() => `${infoGrado(this.curso.grado)?.titulo ?? this.curso.grado} “${this.curso.letra}”`);
 
   grupos = computed<Grupo[]>(() => {
@@ -93,19 +70,10 @@ export class AsistenciaCurso implements OnInit {
     return grupos;
   });
 
-  /** Valor calculado (computed): marcados modal. Se actualiza solo. */
   marcadosModal = computed(() => Object.values(this.marcas()).filter(v => !!v).length);
 
-  /**
-   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
-   * los datos iniciales.
-   */
   ngOnInit(): void { this.cargar(); }
 
-  /**
-   * Carga los datos de esta pantalla. Pide los datos al backend con asistencia.sesiones() y actualiza
-   * la pantalla cuando llega la respuesta.
-   */
   cargar(): void {
     this.cargando.set(true);
     this.asistencia.sesiones(this.curso.seccionCursoId).subscribe({
@@ -114,10 +82,6 @@ export class AsistenciaCurso implements OnInit {
     });
   }
 
-  /**
-   * Genera los datos de esta pantalla. Pide los datos al backend con asistencia.generar() y actualiza
-   * la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
-   */
   generar(): void {
     this.generando.set(true);
     this.error.set(null);
@@ -133,12 +97,10 @@ export class AsistenciaCurso implements OnInit {
     });
   }
 
-  /** Muestra u oculta los datos de esta pantalla. */
   alternar(clave: string): void {
     this.cerrados.update(s => { const n = new Set(s); if (n.has(clave)) n.delete(clave); else n.add(clave); return n; });
   }
 
-  /** Devuelve «estado». */
   estado(s: SesionAsistencia): { texto: string; color: string; fondo: string } {
     switch (s.estado) {
       case 'MARCADA': return { texto: 'Marcado', color: '#1E7A3B', fondo: '#E7F3EA' };
@@ -147,8 +109,6 @@ export class AsistenciaCurso implements OnInit {
       default: return { texto: 'No generada', color: '#A62639', fondo: '#FBE7E9' };
     }
   }
-
-  // ---------------- Modal ----------------
 
   abrir(s: SesionAsistencia, soloVer: boolean): void {
     this.sesionModal.set(s);
@@ -166,16 +126,13 @@ export class AsistenciaCurso implements OnInit {
     });
   }
 
-  /** Cierra modal. */
   cerrarModal(): void { this.sesionModal.set(null); this.dia.set(null); }
 
-  /** Marca los datos de esta pantalla. */
   marcar(id: number, e: EstadoAsistencia): void {
     if (this.soloVer()) return;
     this.marcas.update(m => ({ ...m, [id]: e }));
   }
 
-  /** Realiza la acción «todos presentes» de esta pantalla. */
   todosPresentes(): void {
     const d = this.dia();
     if (!d || this.soloVer()) return;
@@ -184,10 +141,6 @@ export class AsistenciaCurso implements OnInit {
     this.marcas.set(m);
   }
 
-  /**
-   * Guarda los datos de esta pantalla. Pide los datos al backend con asistencia.guardar() y actualiza
-   * la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
-   */
   guardar(): void {
     const d = this.dia(), s = this.sesionModal();
     if (!d || !s) return;
@@ -207,7 +160,6 @@ export class AsistenciaCurso implements OnInit {
     });
   }
 
-  /** Devuelve el nombre de periodo. */
   nombrePeriodo(fecha: string): string {
     const p = this.periodos.find(x => fecha >= x.fechaInicio && fecha <= x.fechaFin);
     return p ? `${ROMANOS[p.bimestre]} Bimestre - ${p.anio}` : 'Asistencia';

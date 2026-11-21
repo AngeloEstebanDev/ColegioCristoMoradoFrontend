@@ -1,13 +1,5 @@
-<!--
-  Vista (HTML) de «cursos», que se muestra en el panel del alumno.
-  La lógica (datos, eventos y llamadas al backend) está en cursos.ts.
-  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
-  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
-  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
--->
 <div class="space-y-5">
 
-  <!-- Encabezado -->
   <div class="flex items-start justify-between flex-wrap gap-4">
     <div>
       <h2 class="font-serif font-bold text-[26px] text-[#241521] leading-tight">Mis Cursos</h2>
@@ -38,7 +30,6 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       @for (c of filtrados(); track c.seccionCursoId) {
         <article class="group bg-white rounded-2xl border border-[#E3D5C4] shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col">
-          <!-- Portada con el color de la categoría -->
           <div class="relative h-28 flex items-center justify-center" [style.background]="'linear-gradient(135deg,' + c.color + ', ' + c.color + 'CC)'">
             <span class="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white text-[11px] font-medium text-[#241521] shadow-sm">
               <span class="w-2 h-2 rounded-full bg-[#1E9E4B]"></span>Activo

@@ -7,13 +7,10 @@ import { ArchivoInfo, ArchivoNuevo } from '../../../core/models/aula.model';
 import { ArchivoService, extension, guardarBlob, tamanioLegible } from '../../../core/services/archivo.service';
 import { environment } from '../../../../environments/environment';
 
-/** Cómo se muestra cada formato dentro del sistema. */
 type Clase = 'pdf' | 'imagen' | 'video' | 'audio' | 'texto' | 'docx' | 'hoja' | 'pptx' | 'ninguna';
 
-/** Modelo Diapositiva: describe la forma de los datos de «diapositiva». */
 interface Diapositiva { numero: number; titulo: string; textos: string[]; imagenes: string[]; }
 
-/** Constante EXT: valor fijo (ext) que se reutiliza en varias partes. */
 const EXT: Record<string, Clase> = {
   pdf: 'pdf',
   png: 'imagen', jpg: 'imagen', jpeg: 'imagen', gif: 'imagen', webp: 'imagen', bmp: 'imagen', svg: 'imagen',
@@ -25,25 +22,18 @@ const EXT: Record<string, Clase> = {
   pptx: 'pptx',
 };
 
-/** Constante MIME: valor fijo (mime) que se reutiliza en varias partes. */
 const MIME: Record<string, string> = {
   pdf: 'application/pdf', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
   gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp', mp4: 'video/mp4', webm: 'video/webm',
   ogv: 'video/ogg', mov: 'video/quicktime', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4',
 };
 
-/** Devuelve las clases CSS de previa. */
 export function clasePrevia(nombre: string | null | undefined): Clase {
   const n = (nombre ?? '').toLowerCase();
   const ext = n.includes('.') ? n.substring(n.lastIndexOf('.') + 1) : '';
   return EXT[ext] ?? 'ninguna';
 }
 
-/**
- * Vista previa de documentos DENTRO del navegador (sin descargar):
- * PDF, imágenes, video/audio, texto, Word (.docx), Excel (.xlsx/.xls/.csv) y PowerPoint (.pptx, en texto).
- * Las librerías de Word/Excel/PowerPoint se cargan solo cuando se necesitan.
- */
 @Component({
   selector: 'app-vista-previa',
   standalone: true,
@@ -69,28 +59,19 @@ export function clasePrevia(nombre: string | null | undefined): Clase {
   `],
 })
 export class VistaPrevia {
-  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
-  /** Servicio DomSanitizer (inyectado por Angular). */
   private sanitizer = inject(DomSanitizer);
-  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
 
-  /** Archivo del servidor a mostrar. */
   archivo = input<ArchivoInfo | null | undefined>(null);
-  /** Archivo elegido en el equipo y aún NO enviado (base64): se previsualiza antes de subirlo. */
   local = input<ArchivoNuevo | null | undefined>(null);
-  /** Botón "Quitar" (solo para archivos locales). */
   quitar = output<void>();
-  /** Alto del área de vista previa (clase de Tailwind). */
   alto = input('h-[560px]');
-  /** Mostrar la barra con nombre, tamaño y botones. */
   barra = input(true);
 
   readonly ext = extension;
   readonly tam = tamanioLegible;
 
-  /** Datos para la barra (del servidor o del archivo local). */
   info = computed<{ nombre: string; tamanio: number; local: boolean } | null>(() => {
     const l = this.local();
     if (l) return { nombre: l.nombre, tamanio: bytesDe(l.contenido), local: true };
@@ -98,29 +79,19 @@ export class VistaPrevia {
     return a ? { nombre: a.nombre, tamanio: a.tamanio, local: false } : null;
   });
   clase = computed<Clase>(() => clasePrevia(this.info()?.nombre));
-  /** Estado (signal): cargando. */
   cargando = signal(false);
-  /** Estado (signal): error. */
   error = signal<string | null>(null);
-  /** Estado (signal): url. */
   url = signal<string | null>(null);
-  /** Estado (signal): url segura. */
   urlSegura = signal<SafeResourceUrl | null>(null);
-  /** Estado (signal): texto. */
   texto = signal<string | null>(null);
-  /** Estado (signal): html. */
   html = signal<string | null>(null);
-  /** Estado (signal): hojas. */
   hojas = signal<{ nombre: string; html: SafeHtml }[]>([]);
-  /** Estado (signal): hoja. */
   hoja = signal(0);
-  /** Estado (signal): diapositivas. */
   diapositivas = signal<Diapositiva[]>([]);
 
   private urls: string[] = [];
   private pedido = 0;
 
-  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor() {
     inject(DestroyRef).onDestroy(() => this.limpiar());
     effect(() => {
@@ -130,7 +101,6 @@ export class VistaPrevia {
     });
   }
 
-  /** Descarga los datos de esta pantalla. */
   descargar(): void {
     const l = this.local();
     if (l) { guardarBlob(blobDe(l), l.nombre); return; }
@@ -138,7 +108,6 @@ export class VistaPrevia {
     if (a) this.archivos.descargar(a);
   }
 
-  /** Vista previa de un archivo del equipo que todavía no se envió. */
   private async cargarLocal(l: ArchivoNuevo): Promise<void> {
     const n = ++this.pedido;
     this.limpiar();
@@ -156,16 +125,11 @@ export class VistaPrevia {
     }
   }
 
-  /** Abre en pestaña. */
   abrirEnPestana(): void {
     const u = this.url();
     if (u) window.open(u, '_blank');
   }
 
-  /**
-   * Carga los datos de esta pantalla. Llama al backend: GET /api/archivos/{id}. Devuelve un Observable
-   * (los datos llegan al hacer subscribe).
-   */
   private async cargar(a: ArchivoInfo | null): Promise<void> {
     const n = ++this.pedido;
     this.limpiar();
@@ -185,7 +149,6 @@ export class VistaPrevia {
     }
   }
 
-  /** Muestra los datos de esta pantalla. */
   private async mostrar(clase: Clase, a: ArchivoInfo, blob: Blob, n: number): Promise<void> {
     const ext = a.nombre.toLowerCase().split('.').pop() ?? '';
     switch (clase) {
@@ -205,7 +168,6 @@ export class VistaPrevia {
         const lib = mammoth.default ?? mammoth;
         const r = await lib.convertToHtml({ arrayBuffer: await blob.arrayBuffer() });
         if (n !== this.pedido) return;
-        // El HTML de mammoth es simple (párrafos, tablas, listas, imágenes); Angular lo sanitiza igual.
         this.html.set(r.value?.trim() ? r.value : '<p><em>El documento no tiene texto.</em></p>');
         return;
       }
@@ -260,14 +222,12 @@ export class VistaPrevia {
     }
   }
 
-  /** Devuelve el texto de «objeto». */
   private objeto(b: Blob): string {
     const u = URL.createObjectURL(b);
     this.urls.push(u);
     return u;
   }
 
-  /** Limpia los datos de esta pantalla. */
   private limpiar(): void {
     this.urls.forEach(u => URL.revokeObjectURL(u));
     this.urls = [];
@@ -282,7 +242,6 @@ export class VistaPrevia {
   }
 }
 
-/** Convierte el contenido base64 (data URL) en un Blob. */
 function blobDe(l: ArchivoNuevo): Blob {
   const c = l.contenido ?? '';
   const coma = c.indexOf(',');
@@ -293,7 +252,6 @@ function blobDe(l: ArchivoNuevo): Blob {
   return new Blob([bytes], { type: l.tipo || 'application/octet-stream' });
 }
 
-/** Tamaño aproximado en bytes de un data URL base64. */
 function bytesDe(contenido: string | null | undefined): number {
   const c = contenido ?? '';
   const coma = c.indexOf(',');
@@ -301,7 +259,6 @@ function bytesDe(contenido: string | null | undefined): number {
   return Math.floor(b64.length * 3 / 4);
 }
 
-/** Deja solo la tabla de SheetJS (sin scripts ni estilos) por seguridad. */
 function limpiarTabla(html: string): string {
   const d = new DOMParser().parseFromString(html, 'text/html');
   d.querySelectorAll('script, style, link, iframe, object').forEach(e => e.remove());

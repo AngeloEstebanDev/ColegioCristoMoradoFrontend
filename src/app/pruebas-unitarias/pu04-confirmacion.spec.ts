@@ -1,15 +1,9 @@
 import { FormBuilder, Validators } from '@angular/forms';
 import { coincideConNueva } from '../admin/pages/configuracion/configuracion';
 
-/**
- * PU-04 – HU-33: Cambio de contraseña (Épica 1, Sprint 1).
- * El caso 2 se prueba en el frontend porque la confirmación de la contraseña
- * solo existe en el formulario "Configuración" (el backend recibe una sola contraseña nueva).
- */
 describe('PU-04 – HU-33: Cambio de contraseña (formulario Configuración)', () => {
   const fb = new FormBuilder();
 
-  /** Función formulario: formulario. */
   function formulario(nueva: string, confirmar: string) {
     return fb.group({
       passwordActual: ['1234', Validators.required],
