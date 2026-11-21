@@ -9,8 +9,16 @@ import { ToastService } from '../../core/services/toast.service';
 import { FiltroEntrada } from '../../shared/components/error-campo/filtro-entrada';
 import { Val, revisar } from '../../core/utils/validadores';
 import { SOPORTE_TELEFONO, enlaceSoporte } from '../../core/utils/soporte';
+import { mensajeHttp } from '../../core/utils/error-http';
+
+/** Tipo Modo: describe la forma de los datos de «modo». */
 type Modo = 'login' | 'recuperar';
 
+/**
+ * Componente «login» de acceso (login). Se usa en el HTML con la etiqueta <app-login>. Su vista está
+ * en login.html; aquí (en el .ts) va la lógica: los datos que se muestran, lo que pasa al hacer clic y
+ * las llamadas a los servicios.
+ */
 @Component({
   imports: [FiltroEntrada, CommonModule, FormsModule, CampoPassword],
   selector: 'app-login',
@@ -18,9 +26,12 @@ type Modo = 'login' | 'recuperar';
   templateUrl: './login.html',
 })
 export class Login implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
+  /** Servicio AuthService (inyectado por Angular). */
   private authService = inject(AuthService);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
 
   // La app no usa zone.js: todo lo que cambia tras una respuesta del
@@ -29,33 +40,53 @@ export class Login implements OnInit {
 
   // ---- Login ----
   usuario = signal('');
+  /** Estado (signal): contraseña. */
   password = signal('');
+  /** Estado (signal): guardar contraseña. */
   guardarPassword = signal(false);
+  /** Estado (signal): cargando. */
   cargando = signal(false);
+  /** Estado (signal): error usuario. */
   errorUsuario = signal<string | null>(null);
+  /** Estado (signal): error contraseña. */
   errorPassword = signal<string | null>(null);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
   // ---- ¿Olvidaste tu contraseña? ----
   pasoRecuperar = signal<1 | 2>(1);
+  /** Estado (signal): rec usuario. */
   recUsuario = signal('');
+  /** Estado (signal): rec código. */
   recCodigo = signal('');
+  /** Estado (signal): rec nueva. */
   recNueva = signal('');
+  /** Estado (signal): rec confirmar. */
   recConfirmar = signal('');
+  /** Estado (signal): rec correo. */
   recCorreo = signal('');
+  /** Estado (signal): rec error. */
   recError = signal<string | null>(null);
 
   /** Soporte por WhatsApp (el mensaje incluye el usuario escrito, si hay). */
   readonly telefonoSoporte = SOPORTE_TELEFONO;
+  /** Devuelve el texto de «enlace soporte». */
   enlaceSoporte(): string {
     const u = (this.usuario() || this.recUsuario() || '').trim();
     return enlaceSoporte('Hola, necesito ayuda para acceder al Portal de la I.E. 2092 Cristo Morado.' + (u ? ` Mi usuario es ${u}.` : ''));
   }
+  /** Estado (signal): rec cargando. */
   recCargando = signal(false);
+  /** Estado (signal): segundos reenvio. */
   segundosReenvio = signal(0);
   private temporizador?: ReturnType<typeof setInterval>;
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     // "Guardar contraseña": se recuerda el usuario en este equipo y el
     // navegador (Chrome/Edge) rellena la contraseña que guardó.
@@ -67,6 +98,10 @@ export class Login implements OnInit {
     }
   }
 
+  /**
+   * Se ejecuta cuando ocurre el evento «submit» (por ejemplo, un clic o un cambio del usuario). Al
+   * terminar, lleva al usuario a otra página (router.navigate).
+   */
   onSubmit(): void {
     this.errorUsuario.set(null);
     this.errorPassword.set(null);
@@ -119,11 +154,16 @@ export class Login implements OnInit {
     this.recError.set(null);
   }
 
+  /** Vuelve al login. */
   volverAlLogin(): void {
     this.modo.set('login');
     this.detenerTemporizador();
   }
 
+  /**
+   * Envía código recuperacion. Pide los datos al backend con authService.solicitarRecuperacion() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   enviarCodigoRecuperacion(): void {
     const usuario = this.recUsuario().trim();
     if (!usuario) { this.recError.set('Escribe tu usuario.'); return; }
@@ -138,11 +178,12 @@ export class Login implements OnInit {
       },
       error: (err) => {
         this.recCargando.set(false);
-        this.recError.set(err?.error?.mensaje ?? 'No se pudo enviar el código.');
+        this.recError.set(mensajeHttp(err, 'No se pudo enviar el código.'));
       },
     });
   }
 
+  /** Restablece los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   restablecer(): void {
     this.recError.set(null);
     if (!/^\d{6}$/.test(this.recCodigo().trim())) { this.recError.set('Escribe el código de 6 dígitos.'); return; }
@@ -161,11 +202,12 @@ export class Login implements OnInit {
       },
       error: (err) => {
         this.recCargando.set(false);
-        this.recError.set(err?.error?.mensaje ?? 'No se pudo cambiar la contraseña.');
+        this.recError.set(mensajeHttp(err, 'No se pudo cambiar la contraseña.'));
       },
     });
   }
 
+  /** Inicia temporizador. */
   private iniciarTemporizador(segundos: number): void {
     this.detenerTemporizador();
     this.segundosReenvio.set(segundos);
@@ -176,6 +218,7 @@ export class Login implements OnInit {
     }, 1000);
   }
 
+  /** Realiza la acción «detener temporizador» de esta pantalla. */
   private detenerTemporizador(): void {
     if (this.temporizador) clearInterval(this.temporizador);
     this.temporizador = undefined;

@@ -21,6 +21,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { AuthService } from '../../../../services/auth';
 import { Hijo, HijosService } from '../../../../core/services/hijos.service';
 
+/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'contenido' | 'actividades' | 'asistencia' | 'examenes';
 
 /** Elemento del "Contenido del curso": un material o una actividad. */
@@ -40,6 +41,9 @@ interface Carpeta { clave: string; nombre: string; desde: string | null; hasta: 
 /** Estilo del ícono de cada tipo de elemento. */
 interface Estilo { etiqueta: string; color: string; fondo: string; icono: 'doc' | 'texto' | 'enlace' | 'tarea' | 'cuestionario' | 'actividad'; }
 
+/**
+ * Constante ESTADO_ASISTENCIA: valor fijo (estado asistencia) que se reutiliza en varias partes.
+ */
 const ESTADO_ASISTENCIA: Record<EstadoAsistencia, { etiqueta: string; color: string; fondo: string }> = {
   PRESENTE: { etiqueta: 'Asistió', color: '#1E7A3B', fondo: '#E7F3EA' },
   TARDANZA: { etiqueta: 'Tardanza', color: '#9A6B00', fondo: '#FDF1DC' },
@@ -72,17 +76,28 @@ const COLOR_EVALUACION: Record<string, { color: string; fondo: string }> = {
   templateUrl: './curso-detalle.html',
 })
 export class AlumnoCursoDetalle implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
+  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
+  /** Servicio AsistenciaService (inyectado por Angular). */
   private asistenciaService = inject(AsistenciaService);
+  /** Servicio NotaService (inyectado por Angular). */
   private notaService = inject(NotaService);
+  /** Servicio PeriodoService (inyectado por Angular). */
   private periodoService = inject(PeriodoService);
+  /** Servicio MiHorarioService (inyectado por Angular). */
   private miHorarioService = inject(MiHorarioService);
+  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
+  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
+  /** Servicio DestroyRef (inyectado por Angular). */
   private destroyRef = inject(DestroyRef);
+  /** Servicio HijosService (inyectado por Angular). */
   private hijosService = inject(HijosService);
 
   /**
@@ -92,6 +107,7 @@ export class AlumnoCursoDetalle implements OnInit {
    */
   readonly esPadre = ['padre', 'familiar', 'apoderado'].includes((inject(AuthService).obtenerRol() ?? '').toLowerCase());
   estudianteId: number | null = null;
+  /** Estado (signal): hijo. */
   hijo = signal<Hijo | null>(null);
   /** Ruta de "Volver". */
   volver: (string | number)[] = ['/home', 'alumno', 'cursos'];
@@ -117,44 +133,68 @@ export class AlumnoCursoDetalle implements OnInit {
   ];
 
   id = 0;
+  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('contenido');
+  /** Estado (signal): curso. */
   curso = signal<CursoAula | null>(null);
+  /** Estado (signal): materiales. */
   materiales = signal<Material[]>([]);
+  /** Estado (signal): actividades. */
   actividades = signal<Actividad[]>([]);
+  /** Estado (signal): carpetas curso. */
   carpetasCurso = signal<CarpetaCurso[]>([]);
+  /** Estado (signal): participantes. */
   participantes = signal<Participantes | null>(null);
+  /** Estado (signal): periodos. */
   periodos = signal<Periodo[]>([]);
+  /** Estado (signal): bloques. */
   bloques = signal<BloqueHorario[]>([]);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): cargando contenido. */
   cargandoContenido = signal(true);
 
+  /** Estado (signal): asistencia. */
   asistencia = signal<AsistenciaAlumno | null>(null);
+  /** Estado (signal): cargando asistencia. */
   cargandoAsistencia = signal(false);
+  /** Estado (signal): orden asc. */
   ordenAsc = signal(false);
+  /** Estado (signal): boleta. */
   boleta = signal<CursoBoleta | null>(null);
+  /** Estado (signal): periodos boleta. */
   periodosBoleta = signal<PeriodoCorto[]>([]);
+  /** Estado (signal): cargando notas. */
   cargandoNotas = signal(false);
 
   /** Carpetas / semanas desplegadas. */
   abiertas = signal<Set<string>>(new Set());
+  /** Estado (signal): ver estructura. */
   verEstructura = signal(true);
+  /** Estado (signal): ver profesor. */
   verProfesor = signal(true);
+  /** Estado (signal): ver participantes. */
   verParticipantes = signal(true);
 
   // Paneles laterales
   material = signal<Material | null>(null);
+  /** Estado (signal): actividad. */
   actividad = signal<Actividad | null>(null);
 
   readonly anio = new Date().getFullYear();
 
+  /** Valor calculado (computed): categoría. Se actualiza solo. */
   categoria = computed(() => categoriaDe(this.curso()?.categoria));
+  /** Valor calculado (computed): salon. Se actualiza solo. */
   salon = computed(() => {
     const c = this.curso();
     return c ? `${infoGrado(c.grado)?.titulo ?? c.grado} “${c.letra}”` : '';
   });
+  /** Valor calculado (computed): nivel. Se actualiza solo. */
   nivel = computed(() => (this.curso()?.grado ?? '').includes('Secundaria') ? 'Secundaria' : 'Primaria');
   /** Periodos del año en curso, en orden. */
   periodosAnio = computed(() => this.periodos().filter(p => p.anio === this.anio).sort((a, b) => a.bimestre - b.bimestre));
+  /** Valor calculado (computed): periodo activo. Se actualiza solo. */
   periodoActivo = computed(() => this.periodos().find(p => p.activo) ?? null);
 
   /** Contenido del curso agrupado en bimestres y semanas. */
@@ -190,6 +230,7 @@ export class AlumnoCursoDetalle implements OnInit {
     return grupos.filter(g => g.filas.length || this.periodosAnio().length);
   });
 
+  /** Valor calculado (computed): resumen asistencia. Se actualiza solo. */
   resumenAsistencia = computed(() => {
     const c = this.curso();
     return this.asistencia()?.cursos.find(x => x.seccionCursoId === c?.seccionCursoId)?.conteo ?? null;
@@ -205,6 +246,12 @@ export class AlumnoCursoDetalle implements OnInit {
     return !!a && !a.miEntrega && this.vencio(a.fechaLimite);
   }
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales. Pide los datos al backend con hijosService.listar(), aula.curso(),
+   * aula.materiales() y actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast) con
+   * el resultado.
+   */
   ngOnInit(): void {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
     const est = this.route.snapshot.paramMap.get('estudianteId');
@@ -250,6 +297,7 @@ export class AlumnoCursoDetalle implements OnInit {
     });
   }
 
+  /** Cambia pestaña. Al terminar, lleva al usuario a otra página (router.navigate). */
   cambiarPestana(p: Pestana): void {
     this.pestana.set(p);
     this.router.navigate([], { queryParams: { tab: p === 'contenido' ? null : p }, queryParamsHandling: 'merge', replaceUrl: true });
@@ -257,6 +305,7 @@ export class AlumnoCursoDetalle implements OnInit {
     if (p === 'examenes' && !this.boleta() && !this.cargandoNotas()) this.cargarNotas();
   }
 
+  /** Carga asistencia. */
   private cargarAsistencia(): void {
     this.cargandoAsistencia.set(true);
     const desde = `${this.anio}-01-01`, hasta = `${this.anio}-12-31`;
@@ -269,6 +318,7 @@ export class AlumnoCursoDetalle implements OnInit {
     });
   }
 
+  /** Carga notas. */
   private cargarNotas(): void {
     this.cargandoNotas.set(true);
     const notas$ = this.esPadre && this.estudianteId ? this.notaService.boleta(this.estudianteId, this.anio) : this.notaService.mias(this.anio);
@@ -388,10 +438,12 @@ export class AlumnoCursoDetalle implements OnInit {
     }
   }
 
+  /** Indica si está abierta (devuelve verdadero o falso). */
   estaAbierta(clave: string): boolean {
     return this.abiertas().has(clave);
   }
 
+  /** Abre los datos de esta pantalla. */
   abrir(clave: string, forzar = false): void {
     this.abiertas.update(s => {
       const n = new Set(s);
@@ -417,6 +469,7 @@ export class AlumnoCursoDetalle implements OnInit {
     return { etiqueta: 'Texto', color: '#2563EB', fondo: '#E6EEFB', icono: 'texto' };
   }
 
+  /** Devuelve el texto de «título». */
   titulo(i: Item): string {
     return i.actividad ? i.actividad.titulo : i.material!.titulo;
   }
@@ -448,6 +501,7 @@ export class AlumnoCursoDetalle implements OnInit {
     return { color: '#A62639', fondo: '#FBE7E9' };
   }
 
+  /** Devuelve el texto de pastilla. */
   textoPastilla(a: Actividad): string {
     const e = a.miEntrega;
     if (e?.estado === 'CALIFICADA') return `${num(e.nota20, 1)}/20`;
@@ -455,6 +509,7 @@ export class AlumnoCursoDetalle implements OnInit {
     return this.abierta(a) ? 'Pendiente' : 'No entregada';
   }
 
+  /** Devuelve el color de evaluación. */
   colorEvaluacion(tipo: string): { color: string; fondo: string } {
     return COLOR_EVALUACION[tipo] ?? COLOR_EVALUACION['OTRO'];
   }
@@ -466,11 +521,13 @@ export class AlumnoCursoDetalle implements OnInit {
     return b ? horaAmPm(b.horaInicio) : '—';
   }
 
+  /** Devuelve el nombre de periodo. */
   nombrePeriodo(id: number): string {
     const p = this.periodosBoleta().find(x => x.id === id);
     return p ? `${ROMANOS[p.bimestre]} Bimestre - ${p.anio}` : 'Periodo';
   }
 
+  /** Devuelve el texto de «rango periodo». */
   rangoPeriodo(id: number): string {
     const p = this.periodos().find(x => x.id === id);
     return p ? `${dmy(p.fechaInicio)} - ${dmy(p.fechaFin)}` : '';
@@ -483,41 +540,49 @@ export class AlumnoCursoDetalle implements OnInit {
     else this.abrirMaterial(i.material!);
   }
 
+  /** Abre actividad. */
   abrirActividad(a: Actividad): void {
     this.material.set(null);
     this.actividad.set(a);
   }
 
+  /** Abre material. */
   abrirMaterial(m: Material): void {
     this.actividad.set(null);
     this.material.set(m);
   }
 
+  /** Descarga los datos de esta pantalla. */
   descargar(m: Material): void {
     if (m.archivo) this.archivos.descargar(m.archivo);
   }
 
+  /** Cierra panel. */
   cerrarPanel(): void {
     this.material.set(null);
     this.actividad.set(null);
   }
 
+  /** Navega a entrega. Al terminar, lleva al usuario a otra página (router.navigate). */
   irAEntrega(a: Actividad): void {
     if (this.esPadre) return;   // el padre solo mira
     this.router.navigate(['/home', 'alumno', 'cursos', this.id, 'actividad', a.id]);
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     this.cerrarPanel();
   }
 }
 
+/** Convierte el valor a fecha. */
 function aFecha(iso: string): Date {
   const [y, m, d] = iso.substring(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
+/** Convierte el valor a iso. */
 function aIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }

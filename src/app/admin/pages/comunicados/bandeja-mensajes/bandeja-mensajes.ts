@@ -14,6 +14,7 @@ import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usu
 /** Grupo de burbujas de un mismo día. */
 interface Dia { etiqueta: string; mensajes: MensajeChat[]; }
 
+/** Constante MAX_CHAT: valor fijo (max chat) que se reutiliza en varias partes. */
 const MAX_CHAT = 2000;
 /** Cada cuánto se buscan mensajes nuevos (ms). */
 const REFRESCO = 15000;
@@ -31,14 +32,22 @@ const REFRESCO = 15000;
   templateUrl: './bandeja-mensajes.html',
 })
 export class BandejaMensajes implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
+  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
+  /** Servicio MensajeService (inyectado por Angular). */
   private mensajeService = inject(MensajeService);
+  /** Servicio NotificacionService (inyectado por Angular). */
   private notificaciones = inject(NotificacionService);
+  /** Servicio Injector (inyectado por Angular). */
   private injector = inject(Injector);
+  /** Servicio DestroyRef (inyectado por Angular). */
   private destroyRef = inject(DestroyRef);
+  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
 
   readonly iniciales = iniciales;
@@ -48,30 +57,45 @@ export class BandejaMensajes implements OnInit {
   private usuario = this.auth.obtenerUsuario();
   readonly esAlumno = ['alumno', 'estudiante'].includes((this.usuario?.rol ?? '').toLowerCase());
 
+  /** Estado (signal): conversaciones. */
   conversaciones = signal<Conversacion[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
 
   /** Chat abierto. */
   abierto = signal<Chat | null>(null);
+  /** Estado (signal): abierto id. */
   abiertoId = signal<number | null>(null);
+  /** Estado (signal): cargando chat. */
   cargandoChat = signal(false);
+  /** Estado (signal): texto. */
   texto = signal('');
+  /** Estado (signal): enviando. */
   enviando = signal(false);
+  /** Estado (signal): error chat. */
   errorChat = signal<string | null>(null);
+  /** Estado (signal): menú abierto. */
   menuAbierto = signal(false);
 
   // ---- Nuevo chat ----
   modalNuevo = signal(false);
+  /** Estado (signal): contactos. */
   contactos = signal<Contactos | null>(null);
+  /** Estado (signal): filtro contacto. */
   filtroContacto = signal('');
+  /** Estado (signal): error modal. */
   errorModal = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
   @ViewChild('zonaMensajes') zonaMensajes?: ElementRef<HTMLDivElement>;
   @ViewChild('campo') campo?: ElementRef<HTMLTextAreaElement>;
 
+  /** Valor calculado (computed): filtradas. Se actualiza solo. */
   filtradas = computed(() => {
     const t = this.busqueda().toLowerCase().trim();
     if (!t) return this.conversaciones();
@@ -103,6 +127,10 @@ export class BandejaMensajes implements OnInit {
     };
   });
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargarLista();
     // ?chat=<usuarioId> abre directamente la conversación (p. ej. "Enviar mensaje" al docente desde Mis Cursos).
@@ -180,6 +208,7 @@ export class BandejaMensajes implements OnInit {
     });
   }
 
+  /** Cierra chat. */
   cerrarChat(): void {
     this.abiertoId.set(null);
     this.abierto.set(null);
@@ -194,11 +223,16 @@ export class BandejaMensajes implements OnInit {
     }
   }
 
+  /** Realiza la acción «ajustar alto» de esta pantalla. */
   ajustarAlto(el: HTMLTextAreaElement): void {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 140) + 'px';
   }
 
+  /**
+   * Envía los datos de esta pantalla. Pide los datos al backend con mensajeService.enviarChat() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   enviar(): void {
     const chat = this.abierto();
     const texto = this.texto().trim();
@@ -227,6 +261,11 @@ export class BandejaMensajes implements OnInit {
     });
   }
 
+  /**
+   * Elimina chat. Pide los datos al backend con mensajeService.eliminarConversacion() y actualiza la
+   * pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado. Antes pide
+   * confirmación al usuario.
+   */
   async eliminarChat(): Promise<void> {
     const chat = this.abierto();
     this.menuAbierto.set(false);
@@ -243,6 +282,7 @@ export class BandejaMensajes implements OnInit {
     });
   }
 
+  /** Realiza la acción «bajar» de esta pantalla. */
   private bajar(): void {
     afterNextRender(() => {
       const el = this.zonaMensajes?.nativeElement;
@@ -250,6 +290,7 @@ export class BandejaMensajes implements OnInit {
     }, { injector: this.injector });
   }
 
+  /** Pone el foco en los datos de esta pantalla. */
   private enfocar(): void {
     afterNextRender(() => this.campo?.nativeElement.focus(), { injector: this.injector });
   }
@@ -268,10 +309,12 @@ export class BandejaMensajes implements OnInit {
     }
   }
 
+  /** Cierra nuevo. */
   cerrarNuevo(): void {
     this.modalNuevo.set(false);
   }
 
+  /** Elige persona. */
   elegirPersona(c: Contacto): void {
     this.modalNuevo.set(false);
     const existente = this.conversaciones().find(x => x.id === c.usuarioId);
@@ -281,6 +324,7 @@ export class BandejaMensajes implements OnInit {
     });
   }
 
+  /** Se ejecuta al presionar la tecla Esc. */
   @HostListener('document:keydown.escape')
   alPresionarEscape(): void {
     if (this.menuAbierto()) { this.menuAbierto.set(false); return; }
@@ -295,6 +339,7 @@ export class BandejaMensajes implements OnInit {
     return r.includes('padre') || r.includes('apoderado') || r.includes('famil');
   }
 
+  /** Devuelve la hora de los datos de esta pantalla. */
   hora(fecha: string | null): string {
     if (!fecha) return '';
     return new Date(fecha).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
@@ -311,6 +356,7 @@ export class BandejaMensajes implements OnInit {
     return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: '2-digit' });
   }
 
+  /** Devuelve la etiqueta de día. */
   private etiquetaDia(fecha: string): string {
     const d = new Date(fecha);
     const dias = diasDesde(d);
@@ -319,6 +365,7 @@ export class BandejaMensajes implements OnInit {
     return d.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
 
+  /** Devuelve las clases CSS de rol. */
   claseRol(rol: string): string {
     switch (rol) {
       case 'Docente': return 'bg-[#EFEAF3] text-[#4A1F52]';
@@ -329,6 +376,7 @@ export class BandejaMensajes implements OnInit {
   }
 }
 
+/** Función diasDesde: días desde. */
 function diasDesde(d: Date): number {
   const hoy = new Date();
   const a = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();

@@ -1,5 +1,9 @@
 import { TipoDocumento } from './documento.model';
 
+/**
+ * Modelo Docente: describe la forma de los datos de «docente». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Docente {
   id: number;
   nombreCompleto: string;
@@ -25,6 +29,10 @@ export interface Docente {
   cuentaActiva: boolean | null;
 }
 
+/**
+ * Modelo DocenteRequest: describe la forma de los datos de «docente request». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface DocenteRequest {
   nombreCompleto: string;
   tipoDocumento: TipoDocumento;
@@ -43,10 +51,12 @@ export interface DocenteRequest {
   password?: string | null;
 }
 
+/** Constante ESPECIALIDADES: valor fijo (especialidades) que se reutiliza en varias partes. */
 export const ESPECIALIDADES = [
   'Matemática', 'Comunicación', 'Ciencia y Tecnología', 'Personal Social',
   'Inglés', 'Educación Física', 'Arte y Cultura', 'Educación Religiosa',
   'Tutoría', 'Otra',
 ];
 
+/** Constante ESTADOS_DOCENTE: valor fijo (estados docente) que se reutiliza en varias partes. */
 export const ESTADOS_DOCENTE = ['Activo', 'De licencia', 'Inactivo'];

@@ -1,3 +1,10 @@
+<!--
+  Vista (HTML) de «avisos inicio», que se muestra en varias pantallas (componente compartido).
+  La lógica (datos, eventos y llamadas al backend) está en avisos-inicio.ts.
+  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
+  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
+  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
+-->
 @if (abierto() && actual(); as n) {
   <div class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6">
     <div class="absolute inset-0 bg-[#241521]/65 backdrop-blur-[2px]" (click)="cerrar()"></div>

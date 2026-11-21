@@ -1,6 +1,8 @@
 import { MAX_FILAS_PDF, TablaReporte } from '../models/reporte.model';
 
+/** Constante MORADO: valor fijo (morado) que se reutiliza en varias partes. */
 const MORADO: [number, number, number] = [74, 31, 82];
+/** Constante COLORES_ESTADO: valor fijo (colores estado) que se reutiliza en varias partes. */
 const COLORES_ESTADO: Record<string, [number, number, number]> = {
   'Asistió': [30, 122, 59], 'Tardanza': [176, 110, 0], 'Falta': [166, 38, 57], 'Justificada': [37, 99, 235],
 };
@@ -13,6 +15,7 @@ export function nombreArchivo(titulo: string, extension: 'pdf' | 'xlsx'): string
   return `${base || 'Reporte'}_${hoy}.${extension}`;
 }
 
+/** Función logo: logo. */
 async function logo(): Promise<string | null> {
   try {
     const r = await fetch('logo-cristo-morado.png');

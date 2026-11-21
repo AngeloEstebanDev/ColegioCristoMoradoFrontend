@@ -28,10 +28,15 @@ import { Configuracion } from './admin/pages/configuracion/configuracion';
 // Las páginas de los Sprints 4, 5 y 6 se cargan bajo demanda (loadComponent)
 // para que el paquete inicial no crezca.
 const misCitas = () => import('./admin/pages/agenda/mis-citas/mis-citas').then(m => m.MisCitas);
+/** Función disponibilidad: disponibilidad. */
 const disponibilidad = () => import('./admin/pages/agenda/disponibilidad/disponibilidad').then(m => m.Disponibilidad);
 import { AlumnoDashboard } from './pages/alumno/pages/dashboard/dashboard';
 import { AlumnoCursos } from './pages/alumno/pages/cursos/cursos';
 
+/**
+ * Rutas de la aplicación: dicen qué componente se muestra para cada dirección (URL) y qué guards
+ * protegen cada sección.
+ */
 export const routes: Routes = [
   {
     path: '',

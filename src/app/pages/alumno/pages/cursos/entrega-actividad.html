@@ -1,3 +1,10 @@
+<!--
+  Vista (HTML) de «entrega actividad», que se muestra en el panel del alumno.
+  La lógica (datos, eventos y llamadas al backend) está en entrega-actividad.ts.
+  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
+  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
+  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
+-->
 <ng-template #cabeceraSeccion let-titulo let-abierta="abierta" let-icono="icono">
   <span class="flex items-center gap-3">
     <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-[#4A1F52]" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="icono"/></svg>

@@ -14,6 +14,7 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
 
+/** Tipo Campo: describe la forma de los datos de «campo». */
 type Campo = 'alumno' | 'padre';
 
 /**
@@ -28,44 +29,67 @@ type Campo = 'alumno' | 'padre';
   templateUrl: './vinculo-padre-hijo.html',
 })
 export class VinculoPadreHijo implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
+  /** Servicio VinculoService (inyectado por Angular). */
   private vinculoService = inject(VinculoService);
+  /** Servicio EstudianteService (inyectado por Angular). */
   private estudianteService = inject(EstudianteService);
+  /** Servicio PadreService (inyectado por Angular). */
   private padreService = inject(PadreService);
 
   readonly parentescos = PARENTESCOS;
   readonly grados = GRADOS;
   readonly iniciales = iniciales;
 
+  /** Estado (signal): vinculos. */
   vinculos = signal<Vinculo[]>([]);
+  /** Estado (signal): alumnos. */
   alumnos = signal<Estudiante[]>([]);
+  /** Estado (signal): padres. */
   padres = signal<PadreFamilia[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
   // Filtros y paginación
   busqueda = signal('');
+  /** Estado (signal): filtro grado. */
   filtroGrado = signal('');
+  /** Estado (signal): filtro parentesco. */
   filtroParentesco = signal('');
+  /** Estado (signal): página. */
   pagina = signal(1);
   readonly porPagina = 10;
 
   // Panel lateral (nuevo / editar parentesco)
   panelAbierto = signal(false);
+  /** Estado (signal): editando. */
   editando = signal<Vinculo | null>(null);
+  /** Estado (signal): alumno sel. */
   alumnoSel = signal<Estudiante | null>(null);
+  /** Estado (signal): padre sel. */
   padreSel = signal<PadreFamilia | null>(null);
+  /** Estado (signal): parentesco. */
   parentesco = signal('Apoderado');
+  /** Estado (signal): guardando. */
   guardando = signal(false);
+  /** Estado (signal): error panel. */
   errorPanel = signal<string | null>(null);
 
   // Comboboxes con búsqueda
   abierto = signal<Campo | null>(null);
+  /** Estado (signal): texto alumno. */
   textoAlumno = signal('');
+  /** Estado (signal): texto padre. */
   textoPadre = signal('');
+  /** Estado (signal): resaltado. */
   resaltado = signal(-1);
 
   // ---------------- Derivados ----------------
@@ -79,27 +103,33 @@ export class VinculoPadreHijo implements OnInit {
       && (!this.filtroParentesco() || v.parentesco === this.filtroParentesco()));
   });
 
+  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtrados().length / this.porPagina)));
+  /** Valor calculado (computed): página datos. Se actualiza solo. */
   paginaDatos = computed(() => {
     const ini = (this.pagina() - 1) * this.porPagina;
     return this.filtrados().slice(ini, ini + this.porPagina);
   });
 
+  /** Valor calculado (computed): alumnos sin apoderado. Se actualiza solo. */
   alumnosSinApoderado = computed(() => {
     const con = new Set(this.vinculos().map(v => v.estudianteId));
     return this.alumnos().filter(a => !con.has(a.id)).length;
   });
+  /** Valor calculado (computed): padres sin hijos. Se actualiza solo. */
   padresSinHijos = computed(() => {
     const con = new Set(this.vinculos().map(v => v.padreId));
     return this.padres().filter(p => !con.has(p.id)).length;
   });
 
+  /** Valor calculado (computed): opciones alumno. Se actualiza solo. */
   opcionesAlumno = computed(() => {
     const t = this.textoAlumno().toLowerCase().trim();
     return this.alumnos()
       .filter(a => !t || a.nombreCompleto.toLowerCase().includes(t) || a.dni.toLowerCase().includes(t))
       .slice(0, 30);
   });
+  /** Valor calculado (computed): opciones padre. Se actualiza solo. */
   opcionesPadre = computed(() => {
     const t = this.textoPadre().toLowerCase().trim();
     return this.padres()
@@ -131,6 +161,7 @@ export class VinculoPadreHijo implements OnInit {
     this.cargar();
   }
 
+  /** Carga los datos de esta pantalla. */
   cargar(): void {
     this.cargando.set(true);
     forkJoin({
@@ -148,10 +179,12 @@ export class VinculoPadreHijo implements OnInit {
     });
   }
 
+  /** Devuelve la etiqueta de doc. */
   etiquetaDoc(tipo: string | null | undefined): string {
     return infoDocumento(tipo).corto;
   }
 
+  /** Devuelve las clases CSS de parentesco. */
   claseParentesco(p: string): string {
     switch (p) {
       case 'Padre': return 'bg-[#E6EEF8] text-[#1F4E8C]';
@@ -161,6 +194,7 @@ export class VinculoPadreHijo implements OnInit {
     }
   }
 
+  /** Navega a página. */
   irAPagina(n: number): void {
     if (n >= 1 && n <= this.totalPaginas()) this.pagina.set(n);
   }
@@ -179,6 +213,7 @@ export class VinculoPadreHijo implements OnInit {
     this.panelAbierto.set(true);
   }
 
+  /** Abre editar. */
   abrirEditar(v: Vinculo): void {
     this.editando.set(v);
     this.alumnoSel.set(this.alumnos().find(a => a.id === v.estudianteId) ?? null);
@@ -189,11 +224,13 @@ export class VinculoPadreHijo implements OnInit {
     this.panelAbierto.set(true);
   }
 
+  /** Cierra panel. */
   cerrarPanel(): void {
     this.abierto.set(null);
     this.panelAbierto.set(false);
   }
 
+  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     const ed = this.editando();
     const a = this.alumnoSel(), p = this.padreSel();
@@ -220,6 +257,11 @@ export class VinculoPadreHijo implements OnInit {
     });
   }
 
+  /**
+   * Quita el vínculo de los datos de esta pantalla. Pide los datos al backend con
+   * vinculoService.eliminar() y actualiza la pantalla cuando llega la respuesta. Muestra un aviso
+   * (toast) con el resultado. Antes pide confirmación al usuario.
+   */
   async desvincular(v: Vinculo): Promise<void> {
     if (!await this.confirmar.pedir(`¿Quitar el vínculo entre ${v.padreNombre} y ${v.estudianteNombre}? Ninguna cuenta se elimina.`)) return;
     this.vinculoService.eliminar(v.id).subscribe({
@@ -240,23 +282,27 @@ export class VinculoPadreHijo implements OnInit {
     this.resaltado.set(-1);
   }
 
+  /** Abre lista. */
   abrirLista(campo: Campo): void {
     this.abierto.set(campo);
     this.resaltado.set(-1);
   }
 
+  /** Muestra u oculta lista. */
   alternarLista(campo: Campo, input: HTMLInputElement | null): void {
     if (this.abierto() === campo) { this.abierto.set(null); return; }
     input?.focus();
     this.abrirLista(campo);
   }
 
+  /** Elige alumno. */
   elegirAlumno(a: Estudiante): void {
     this.alumnoSel.set(a);
     this.textoAlumno.set(a.nombreCompleto);
     this.abierto.set(null);
   }
 
+  /** Elige padre. */
   elegirPadre(p: PadreFamilia): void {
     this.padreSel.set(p);
     this.textoPadre.set(p.nombreCompleto);
@@ -287,6 +333,7 @@ export class VinculoPadreHijo implements OnInit {
     }
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     if (this.abierto()) { this.abierto.set(null); return; }

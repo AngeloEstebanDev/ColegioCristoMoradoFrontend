@@ -3,6 +3,10 @@ import { Estudiante } from './estudiante.model';
 import { PadreFamilia } from './padre.model';
 import { Personal } from './personal.model';
 
+/**
+ * Modelo Perfil: describe la forma de los datos de «perfil». Es lo que viaja en JSON entre el backend
+ * y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Perfil {
   usuarioId: number;
   nombre: string;
@@ -45,6 +49,11 @@ export interface PerfilUpdateRequest {
   quitarFoto?: boolean;
 }
 
+/**
+ * Modelo CambiarPasswordRequest: describe la forma de los datos de «cambiar contraseña request». Es lo
+ * que viaja en JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se
+ * usa mal un campo.
+ */
 export interface CambiarPasswordRequest {
   passwordActual: string;
   passwordNueva: string;

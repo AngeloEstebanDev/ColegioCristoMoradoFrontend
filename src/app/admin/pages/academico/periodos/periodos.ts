@@ -7,6 +7,7 @@ import { BIMESTRES, Periodo, ROMANOS } from '../../../../core/models/periodo.mod
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
+/** Constante MESES: valor fijo (meses) que se reutiliza en varias partes. */
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 /** Académico > Periodos: bimestres del año escolar. El activo es el que contiene la fecha de hoy. */
@@ -17,9 +18,12 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
   templateUrl: './periodos.html',
 })
 export class Periodos implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
+  /** Servicio PeriodoService (inyectado por Angular). */
   private periodoService = inject(PeriodoService);
 
   readonly bimestres = BIMESTRES;
@@ -27,33 +31,54 @@ export class Periodos implements OnInit {
   /** Fecha de hoy (local, se actualiza cada día). */
   private get hoy(): string { return hoyIso(); }
 
+  /** Estado (signal): periodos. */
   periodos = signal<Periodo[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
   // Panel "Nuevo periodo" / "Editar periodo"
   panelAbierto = signal(false);
   /** Periodo que se está editando (null = se crea uno nuevo). */
   editando = signal<Periodo | null>(null);
+  /** Estado (signal): nombre. */
   nombre = signal('');
+  /** Estado (signal): nombre tocado. */
   nombreTocado = signal(false);
+  /** Estado (signal): año. */
   anio = signal(new Date().getFullYear());
+  /** Estado (signal): bimestre. */
   bimestre = signal<number | null>(null);
+  /** Estado (signal): inicio. */
   inicio = signal('');
+  /** Estado (signal): fin. */
   fin = signal('');
+  /** Estado (signal): lista bimestres. */
   listaBimestres = signal(false);
+  /** Estado (signal): guardando. */
   guardando = signal(false);
+  /** Estado (signal): error panel. */
   errorPanel = signal<string | null>(null);
 
   /** Bimestres ya registrados en el año elegido en el formulario. */
   usados = computed(() => new Set(this.periodos()
     .filter(p => p.anio === Number(this.anio()) && p.id !== this.editando()?.id).map(p => p.bimestre)));
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargar();
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con periodoService.listar() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.periodoService.listar().subscribe({
@@ -88,6 +113,7 @@ export class Periodos implements OnInit {
     return Math.round((hoy - ini) / (fin - ini) * 100);
   }
 
+  /** Devuelve el texto de «situacion». */
   situacion(p: Periodo): string {
     if (this.hoy < p.fechaInicio) return 'Por iniciar';
     if (this.hoy > p.fechaFin) return 'Finalizado';
@@ -133,22 +159,26 @@ export class Periodos implements OnInit {
     if (!this.nombreTocado()) this.nombre.set(b ? `${ROMANOS[b]} Bimestre ${this.anio()}` : '');
   }
 
+  /** Escribe nombre. */
   escribirNombre(v: string): void {
     this.nombre.set(v);
     this.nombreTocado.set(!!v.trim());
   }
 
+  /** Cambia año. */
   cambiarAnio(v: number): void {
     this.anio.set(v);
     this.sugerirNombre();
     this.errorPanel.set(null);
   }
 
+  /** Muestra u oculta bimestres. */
   alternarBimestres(ev: Event): void {
     ev.stopPropagation();
     this.listaBimestres.set(!this.listaBimestres());
   }
 
+  /** Elige bimestre. */
   elegirBimestre(n: number, ev: Event): void {
     ev.stopPropagation();
     if (this.usados().has(n)) return;
@@ -158,6 +188,7 @@ export class Periodos implements OnInit {
     this.errorPanel.set(null);
   }
 
+  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     const anio = Number(this.anio()), b = this.bimestre();
     if (!anio || anio < 2000 || anio > 2100) { this.errorPanel.set('Ingresa un año válido.'); return; }
@@ -193,11 +224,13 @@ export class Periodos implements OnInit {
     });
   }
 
+  /** Cierra lista. */
   @HostListener('document:click')
   cerrarLista(): void {
     this.listaBimestres.set(false);
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     if (this.listaBimestres()) { this.listaBimestres.set(false); return; }

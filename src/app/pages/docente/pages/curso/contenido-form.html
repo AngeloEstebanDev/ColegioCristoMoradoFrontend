@@ -1,3 +1,10 @@
+<!--
+  Vista (HTML) de «contenido form», que se muestra en el panel del docente.
+  La lógica (datos, eventos y llamadas al backend) está en contenido-form.ts.
+  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
+  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
+  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
+-->
 <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
   <div class="absolute inset-0 bg-[#241521]/50" (click)="cerrar.emit()"></div>
   <div class="relative w-full max-w-5xl bg-[#FBF7F1] rounded-2xl shadow-2xl flex flex-col max-h-[calc(100vh-24px)]">

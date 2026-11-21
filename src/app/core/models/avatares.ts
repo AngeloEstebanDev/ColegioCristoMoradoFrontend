@@ -4,11 +4,16 @@ export interface Avatar {
   nombre: string;
 }
 
+/**
+ * Modelo GrupoAvatares: describe la forma de los datos de «grupo avatares». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface GrupoAvatares {
   titulo: string;
   avatares: Avatar[];
 }
 
+/** Constante GRUPOS_AVATARES: valor fijo (grupos avatares) que se reutiliza en varias partes. */
 export const GRUPOS_AVATARES: GrupoAvatares[] = [
   {
     titulo: 'Alumnos',

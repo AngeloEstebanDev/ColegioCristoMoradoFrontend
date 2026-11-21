@@ -43,10 +43,12 @@ export class EditorTexto implements AfterViewInit {
     { cmd: 'removeFormat', titulo: 'Quitar formato', html: 'T̶' },
   ];
 
+  /** Se ejecuta cuando la vista (HTML) ya está dibujada en pantalla. */
   ngAfterViewInit(): void {
     if (this.pendiente) this.area.nativeElement.innerHTML = this.pendiente;
   }
 
+  /** Realiza la acción «ejecutar» de esta pantalla. */
   ejecutar(cmd: string): void {
     this.area.nativeElement.focus();
     // execCommand sigue funcionando en todos los navegadores para esto.
@@ -54,6 +56,7 @@ export class EditorTexto implements AfterViewInit {
     this.emitir();
   }
 
+  /** Realiza la acción «emitir» de esta pantalla. */
   emitir(): void {
     const el = this.area.nativeElement;
     // Si solo quedó un <br> vacío, lo tratamos como vacío.

@@ -93,17 +93,21 @@ import { BloqueHorario, DIAS_SEMANA, aHora, aMinutos, FilaHorario, filasHorario,
   `,
 })
 export class HorarioSemana {
+  /** Dato de entrada «datos» que envía el componente padre. */
   readonly datos = input<MiHorario | null>(null);
   /** Enlace opcional en el detalle del bloque (p. ej. a Mis Hijos). */
   readonly enlace = input<string | null>(null);
+  /** Dato de entrada «texto enlace» que envía el componente padre. */
   readonly textoEnlace = input('Ver cursos');
 
   readonly dias = DIAS_SEMANA;
   readonly aHora = aHora;
   /** 1 = lunes ... 5 = viernes; 0 si es fin de semana. */
   readonly hoy = (() => { const d = new Date().getDay(); return d >= 1 && d <= 5 ? d : 0; })();
+  /** Estado (signal): seleccionado. */
   seleccionado = signal<BloqueHorario | null>(null);
 
+  /** Valor calculado (computed): hay horario. Se actualiza solo. */
   hayHorario = computed(() => !!this.datos()?.matriculado && (this.datos()?.bloques.length ?? 0) > 0 && this.filas().length > 0);
 
   filas = computed<FilaHorario[]>(() => {
@@ -112,16 +116,20 @@ export class HorarioSemana {
     return filasHorario({ inicio: h.inicio!, fin: h.fin!, recesoInicio: h.recesoInicio, recesoFin: h.recesoFin, minutosBloque: h.minutosBloque }, this.datos()?.bloques ?? []);
   });
 
+  /** Valor calculado (computed): plantilla filas. Se actualiza solo. */
   plantillaFilas = computed(() => ['40px', ...this.filas().map(f => f.receso ? '36px' : '28px')].join(' '));
 
+  /** Calcula «fila de» (devuelve un número). */
   filaDe(hora: string, esFin = false): number {
     return filaDeHora(this.filas(), hora, esFin) + 2;
   }
 
+  /** Calcula «filas de» (devuelve un número). */
   filasDe(b: BloqueHorario): number {
     return (aMinutos(b.horaFin) - aMinutos(b.horaInicio)) / (this.datos()?.minutosBloque || 15);
   }
 
+  /** Devuelve el texto de sobre. */
   textoSobre(color: string): string {
     const c = (color || '#4A1F52').replace('#', '');
     const r = parseInt(c.substring(0, 2), 16), g = parseInt(c.substring(2, 4), 16), b = parseInt(c.substring(4, 6), 16);

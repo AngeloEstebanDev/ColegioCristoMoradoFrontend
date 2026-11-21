@@ -5,6 +5,10 @@ export interface Indicador {
   detalle: string | null;
 }
 
+/**
+ * Modelo TablaReporte: describe la forma de los datos de «tabla reporte». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface TablaReporte {
   tipo: string;
   titulo: string;
@@ -14,11 +18,19 @@ export interface TablaReporte {
   indicadores: Indicador[];
 }
 
+/**
+ * Modelo Opcion: describe la forma de los datos de «opción». Es lo que viaja en JSON entre el backend
+ * y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Opcion {
   id: number;
   nombre: string;
 }
 
+/**
+ * Modelo SeccionOpcion: describe la forma de los datos de «sección opción». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface SeccionOpcion {
   id: number;
   grado: string;
@@ -26,6 +38,10 @@ export interface SeccionOpcion {
   nombre: string;
 }
 
+/**
+ * Modelo AlumnoOpcion: describe la forma de los datos de «alumno opción». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface AlumnoOpcion {
   id: number;
   nombre: string;

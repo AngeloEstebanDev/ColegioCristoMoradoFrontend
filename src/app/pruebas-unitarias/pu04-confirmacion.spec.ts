@@ -9,6 +9,7 @@ import { coincideConNueva } from '../admin/pages/configuracion/configuracion';
 describe('PU-04 – HU-33: Cambio de contraseña (formulario Configuración)', () => {
   const fb = new FormBuilder();
 
+  /** Función formulario: formulario. */
   function formulario(nueva: string, confirmar: string) {
     return fb.group({
       passwordActual: ['1234', Validators.required],

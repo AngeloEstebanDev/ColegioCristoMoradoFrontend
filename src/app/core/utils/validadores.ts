@@ -2,15 +2,18 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 /**
  * Reglas de validación de campos del sistema. Son las mismas que aplica el backend
- * (util/Campos.java), así el usuario ve el error antes de enviar el formulario.
+ * (útil/Campos.java), así el usuario ve el error antes de enviar el formulario.
  *
  * Cada validador devuelve { campo: 'mensaje' } para que <app-error-campo> lo muestre.
  */
 
 const LETRAS = /^[\p{L}][\p{L} .'’-]*$/u;
+/** Constante CORREO: valor fijo (correo) que se reutiliza en varias partes. */
 const CORREO = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
+/** Función vacio: vacío. */
 const vacio = (v: unknown) => v === null || v === undefined || String(v).trim() === '';
+/** Err. */
 const err = (mensaje: string): ValidationErrors => ({ campo: mensaje });
 
 /** Solo los dígitos de un teléfono (quita espacios y guiones). */
@@ -32,6 +35,7 @@ export function edad(iso: string): number {
   return e;
 }
 
+/** Val. */
 export const Val = {
   /** Celular de 9 dígitos que empieza con 9. */
   telefono(obligatorio = false): ValidatorFn {
@@ -170,6 +174,7 @@ export const Val = {
   },
 };
 
+/** Función may: may. */
 function may(s: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s;
 }

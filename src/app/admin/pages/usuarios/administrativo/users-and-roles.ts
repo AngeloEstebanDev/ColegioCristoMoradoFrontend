@@ -11,33 +11,51 @@ import { ErrorCampo } from '../../../../shared/components/error-campo/error-camp
 import { FiltroEntrada } from '../../../../shared/components/error-campo/filtro-entrada';
 import { Val, limpiarTexto } from '../../../../core/utils/validadores';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
+/**
+ * Componente «users and roles» del panel de Administración (administrador y directiva). Se usa en el
+ * HTML con la etiqueta <app-users-and-roles>. Su vista está en users-and-roles.html; aquí (en el .ts)
+ * va la lógica: los datos que se muestran, lo que pasa al hacer clic y las llamadas a los servicios.
+ */
 @Component({
   imports: [FotoUsuario, ErrorCampo, FiltroEntrada, CommonModule, ReactiveFormsModule, FormsModule, CampoPassword],
   selector: 'app-users-and-roles',
   templateUrl: './users-and-roles.html',
 })
 export class UsersAndRoles implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
   roles = ROLES_SISTEMA;
   etiquetaRol = etiquetaRol;
 
+  /** Estado (signal): usuarios. */
   usuarios = signal<Usuario[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): guardando. */
   guardando = signal(false);
 
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
+  /** Estado (signal): filtro rol. */
   filtroRol = signal('');
+  /** Estado (signal): filtro estado. */
   filtroEstado = signal('');
 
+  /** Estado (signal): panel abierto. */
   panelAbierto = signal(false);
+  /** Estado (signal): modo edicion. */
   modoEdicion = signal(false);
+  /** Estado (signal): usuario seleccionado. */
   usuarioSeleccionado = signal<Usuario | null>(null);
 
+  /** Estado (signal): página actual. */
   paginaActual = signal(1);
   porPagina = 8;
 
+  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
     return this.usuarios().filter(u => {
@@ -52,13 +70,16 @@ export class UsersAndRoles implements OnInit {
     });
   });
 
+  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtrados().length / this.porPagina)));
 
+  /** Valor calculado (computed): página datos. Se actualiza solo. */
   paginaDatos = computed(() => {
     const inicio = (this.paginaActual() - 1) * this.porPagina;
     return this.filtrados().slice(inicio, inicio + this.porPagina);
   });
 
+  /** Valor calculado (computed): conteo por rol. Se actualiza solo. */
   conteoPorRol = computed(() => {
     const conteo: Record<string, number> = {};
     for (const u of this.usuarios()) {
@@ -73,6 +94,7 @@ export class UsersAndRoles implements OnInit {
   /** Id del administrador logeado: no puede editar, apagar ni eliminar su propia cuenta. */
   private miId: number | null;
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(private fb: FormBuilder, private usuarioService: UsuarioService, auth: AuthService) {
     this.miId = auth.obtenerUsuario()?.id ?? null;
     this.form = this.fb.group({
@@ -86,6 +108,10 @@ export class UsersAndRoles implements OnInit {
     });
   }
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargar();
     // Según el rol elegido se pide "Usuario" (Administración) o "DNI" (Directiva: DIR + DNI).
@@ -99,14 +125,17 @@ export class UsersAndRoles implements OnInit {
     return this.modoEdicion() ? todos : todos.filter(r => r.valor === 'ADMIN');
   }
 
+  /** Indica si es directiva (devuelve verdadero o falso). */
   esDirectiva(): boolean {
     return (this.form.get('rol')?.value ?? '').toUpperCase() === 'DIRECTIVO';
   }
 
+  /** Devuelve el texto de «usuario directiva». */
   usuarioDirectiva(): string {
     return usuarioConDni(PREFIJO_USUARIO.DIRECTIVA, this.form.get('dni')?.value);
   }
 
+  /** Realiza la acción «ajustar validadores» de esta pantalla. */
   private ajustarValidadores(): void {
     const vinculado = !!this.usuarioSeleccionado()?.vinculadoA;
     const usuario = this.form.get('usuario')!;
@@ -117,6 +146,10 @@ export class UsersAndRoles implements OnInit {
     dni.updateValueAndValidity({ emitEvent: false });
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con usuarioService.listar() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.usuarioService.listar().subscribe({
@@ -125,6 +158,7 @@ export class UsersAndRoles implements OnInit {
     });
   }
 
+  /** Abre crear. */
   abrirCrear(): void {
     this.modoEdicion.set(false);
     this.usuarioSeleccionado.set(null);
@@ -137,10 +171,12 @@ export class UsersAndRoles implements OnInit {
     this.panelAbierto.set(true);
   }
 
+  /** Indica si es mi cuenta (devuelve verdadero o falso). */
   esMiCuenta(u: Usuario): boolean {
     return this.miId !== null && u.id === this.miId;
   }
 
+  /** Abre editar. */
   abrirEditar(usuario: Usuario): void {
     if (this.esMiCuenta(usuario)) return;
     this.modoEdicion.set(true);
@@ -167,10 +203,12 @@ export class UsersAndRoles implements OnInit {
     this.panelAbierto.set(true);
   }
 
+  /** Cierra panel. */
   cerrarPanel(): void {
     this.panelAbierto.set(false);
   }
 
+  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -208,6 +246,10 @@ export class UsersAndRoles implements OnInit {
     });
   }
 
+  /**
+   * Muestra u oculta estado. Pide los datos al backend con usuarioService.cambiarEstado() y actualiza
+   * la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
+   */
   toggleEstado(usuario: Usuario): void {
     if (this.esMiCuenta(usuario)) return;
     this.usuarioService.cambiarEstado(usuario.id, !usuario.estado).subscribe({
@@ -216,6 +258,7 @@ export class UsersAndRoles implements OnInit {
     });
   }
 
+  /** Navega a página. */
   irAPagina(n: number): void {
     if (n < 1 || n > this.totalPaginas()) return;
     this.paginaActual.set(n);

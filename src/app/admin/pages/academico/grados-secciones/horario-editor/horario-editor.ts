@@ -10,6 +10,7 @@ import { ConfirmService } from '../../../../../core/services/confirm.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 
+/** Modelo FormBloque: describe la forma de los datos de «form bloque». */
 interface FormBloque {
   indice: number | null;          // null = bloque nuevo
   seccionCursoId: number | null;
@@ -30,28 +31,44 @@ interface FormBloque {
   templateUrl: './horario-editor.html',
 })
 export class HorarioEditor implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
+  /** Servicio SeccionService (inyectado por Angular). */
   private seccionService = inject(SeccionService);
+  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
 
   readonly dias = DIAS_SEMANA;
   readonly aHora = aHora;
 
+  /** Estado (signal): horario. */
   horario = signal<Horario | null>(null);
+  /** Estado (signal): cursos. */
   cursos = signal<CursoSeccion[]>([]);
+  /** Estado (signal): bloques. */
   bloques = signal<BloqueHorario[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): guardando. */
   guardando = signal(false);
+  /** Estado (signal): sucio. */
   sucio = signal(false);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
+  /** Estado (signal): form. */
   form = signal<FormBloque | null>(null);
+  /** Estado (signal): error form. */
   errorForm = signal<string | null>(null);
 
+  /** Valor calculado (computed): título. Se actualiza solo. */
   titulo = computed(() => infoGrado(this.horario()?.grado)?.titulo ?? this.horario()?.grado ?? '');
 
   /** Filas del cuadro: bloques de 15 min y una fila para el receso. */
@@ -64,6 +81,7 @@ export class HorarioEditor implements OnInit {
   /** grid-template-rows: cabecera + filas (el receso un poco más alto). */
   plantillaFilas = computed(() => ['40px', ...this.filas().map(f => f.receso ? '40px' : '30px')].join(' '));
 
+  /** Valor calculado (computed): cursos activos. Se actualiza solo. */
   cursosActivos = computed(() => this.cursos().filter(c => c.estado === 'Activo'));
 
   /** Horas de inicio posibles (dentro del turno y sin el receso). */
@@ -83,6 +101,10 @@ export class HorarioEditor implements OnInit {
     return res;
   });
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     const id = this.id;
     forkJoin({ horario: this.seccionService.horario(id), seccion: this.seccionService.obtener(id) }).subscribe({
@@ -99,6 +121,7 @@ export class HorarioEditor implements OnInit {
     });
   }
 
+  /** Propiedad calculada (getter): devuelve id. */
   private get id(): number {
     return Number(this.route.snapshot.paramMap.get('id'));
   }
@@ -122,6 +145,7 @@ export class HorarioEditor implements OnInit {
     return (aMinutos(b.horaFin) - aMinutos(b.horaInicio)) / (this.horario()?.minutosBloque || 15);
   }
 
+  /** Indica «ocupado» (devuelve verdadero o falso). */
   ocupado(dia: number, inicio: number): boolean {
     return this.bloques().some(b => b.dia === dia && aMinutos(b.horaInicio) <= inicio && inicio < aMinutos(b.horaFin));
   }
@@ -146,12 +170,14 @@ export class HorarioEditor implements OnInit {
     this.form.set({ indice: null, seccionCursoId: null, dia, inicio: aHora(ini), fin: aHora(fin) });
   }
 
+  /** Edita bloque. */
   editarBloque(i: number): void {
     const b = this.bloques()[i];
     this.errorForm.set(null);
     this.form.set({ indice: i, seccionCursoId: b.seccionCursoId, dia: b.dia, inicio: b.horaInicio, fin: b.horaFin });
   }
 
+  /** Cambia form. */
   setForm<K extends keyof FormBloque>(campo: K, valor: FormBloque[K]): void {
     this.form.update(f => {
       if (!f) return f;
@@ -165,10 +191,12 @@ export class HorarioEditor implements OnInit {
     this.errorForm.set(null);
   }
 
+  /** Cierra form. */
   cerrarForm(): void {
     this.form.set(null);
   }
 
+  /** Aplica bloque. */
   aplicarBloque(): void {
     const f = this.form();
     if (!f) return;
@@ -192,6 +220,7 @@ export class HorarioEditor implements OnInit {
     this.form.set(null);
   }
 
+  /** Elimina bloque. */
   eliminarBloque(): void {
     const f = this.form();
     if (!f || f.indice === null) return;
@@ -221,6 +250,10 @@ export class HorarioEditor implements OnInit {
     });
   }
 
+  /**
+   * Vuelve a los datos de esta pantalla. Al terminar, lleva al usuario a otra página
+   * (router.navigate). Antes pide confirmación al usuario.
+   */
   async volver(): Promise<void> {
     if (this.sucio() && !await this.confirmar.pedir('Hay cambios sin guardar. ¿Salir de todas formas?')) return;
     this.sucio.set(false);
@@ -229,11 +262,13 @@ export class HorarioEditor implements OnInit {
     this.router.navigate(['/home/admin/academico/grados-secciones', this.id], { queryParams: { pestana: 'horario' } });
   }
 
+  /** Avisa salida. */
   @HostListener('window:beforeunload', ['$event'])
   avisarSalida(ev: BeforeUnloadEvent): void {
     if (this.sucio()) ev.preventDefault();
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     this.form.set(null);

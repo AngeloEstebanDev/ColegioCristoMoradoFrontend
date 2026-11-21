@@ -1,3 +1,7 @@
+/**
+ * Modelo Usuario: describe la forma de los datos de «usuario». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Usuario {
   id: number;
   nombre: string;
@@ -10,6 +14,10 @@ export interface Usuario {
   vinculadoA: 'Alumno' | 'Docente' | 'Apoderado' | 'Directiva' | null;
 }
 
+/**
+ * Modelo UsuarioRequest: describe la forma de los datos de «usuario request». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface UsuarioRequest {
   nombre: string;
   usuario?: string | null;   // solo Administración
@@ -37,6 +45,7 @@ export const ROLES_SISTEMA = [
   { valor: 'DIRECTIVO', etiqueta: 'Directivo', descripcion: 'Gestiona la institución y el personal' },
 ] as const;
 
+/** Devuelve la etiqueta de rol. */
 export function etiquetaRol(rol: string): string {
   const encontrado = ROLES_SISTEMA.find(r => r.valor.toLowerCase() === (rol ?? '').toLowerCase());
   return encontrado?.etiqueta ?? rol;

@@ -14,7 +14,9 @@ import { ConfirmService } from '../../../../../core/services/confirm.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { FotoUsuario } from '../../../../../shared/components/foto-usuario/foto-usuario';
 
+/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'alumnos' | 'cursos' | 'horario';
+/** Tipo Panel: describe la forma de los datos de «panel». */
 type Panel = 'matricular' | 'curso' | 'docente' | 'tutor' | 'editar' | 'descripcion' | null;
 
 /** Detalle de una sección: Alumnos, Cursos y Horario. */
@@ -25,13 +27,20 @@ type Panel = 'matricular' | 'curso' | 'docente' | 'tutor' | 'editar' | 'descripc
   templateUrl: './seccion-detalle.html',
 })
 export class SeccionDetalle implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
+  /** Servicio SeccionService (inyectado por Angular). */
   private seccionService = inject(SeccionService);
+  /** Servicio EstudianteService (inyectado por Angular). */
   private estudianteService = inject(EstudianteService);
+  /** Servicio DocenteService (inyectado por Angular). */
   private docenteService = inject(DocenteService);
+  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
 
   readonly iniciales = iniciales;
@@ -40,44 +49,66 @@ export class SeccionDetalle implements OnInit {
   readonly recreoDe = recreoDe;
   readonly anio = new Date().getFullYear();
 
+  /** Estado (signal): sección. */
   seccion = signal<Seccion | null>(null);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
+  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('alumnos');
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
+  /** Estado (signal): menú curso. */
   menuCurso = signal<number | null>(null);
 
   // Datos para los paneles
   estudiantes = signal<Estudiante[]>([]);
+  /** Estado (signal): docentes. */
   docentes = signal<Docente[]>([]);
+  /** Estado (signal): catalogo. */
   catalogo = signal<CursoCatalogo[]>([]);
   /** Todas las secciones: para saber qué docentes ya son tutores (1 sección por docente). */
   todasSecciones = signal<Seccion[]>([]);
 
   // Formulario "Agregar curso"
   cursoNuevo = signal<number | null>(null);
+  /** Estado (signal): descripción nueva. */
   descripcionNueva = signal('');
+  /** Estado (signal): docente nuevo. */
   docenteNuevo = signal<number | null>(null);
 
+  /** Estado (signal): panel. */
   panel = signal<Panel>(null);
+  /** Estado (signal): curso sel. */
   cursoSel = signal<CursoSeccion | null>(null);   // para "Asignar docente"
+  /** Estado (signal): buscar panel. */
   buscarPanel = signal('');
+  /** Estado (signal): descripción ed. */
   descripcionEd = signal('');
+  /** Estado (signal): capacidad ed. */
   capacidadEd = signal(35);
+  /** Estado (signal): procesando. */
   procesando = signal(false);
+  /** Estado (signal): error panel. */
   errorPanel = signal<string | null>(null);
 
+  /** Valor calculado (computed): título. Se actualiza solo. */
   titulo = computed(() => infoGrado(this.seccion()?.grado)?.titulo ?? this.seccion()?.grado ?? '');
+  /** Valor calculado (computed): libres. Se actualiza solo. */
   libres = computed(() => {
     const s = this.seccion();
     return s ? Math.max(0, s.capacidad - s.totalAlumnos) : 0;
   });
+  /** Valor calculado (computed): ocupacion. Se actualiza solo. */
   ocupacion = computed(() => {
     const s = this.seccion();
     return s && s.capacidad ? Math.min(100, Math.round(s.totalAlumnos / s.capacidad * 100)) : 0;
   });
 
+  /** Valor calculado (computed): alumnos filtrados. Se actualiza solo. */
   alumnosFiltrados = computed(() => {
     const t = this.busqueda().toLowerCase().trim();
     return (this.seccion()?.alumnos ?? []).filter(a => !t
@@ -97,6 +128,7 @@ export class SeccionDetalle implements OnInit {
       .sort((a, b) => Number(!!a.grado) - Number(!!b.grado) || a.nombreCompleto.localeCompare(b.nombreCompleto));
   });
 
+  /** Valor calculado (computed): cursos disponibles. Se actualiza solo. */
   cursosDisponibles = computed(() => {
     const usados = new Set((this.seccion()?.cursos ?? []).map(c => c.cursoId));
     return this.catalogo().filter(c => !usados.has(c.id));
@@ -110,6 +142,7 @@ export class SeccionDetalle implements OnInit {
       .filter(g => g.cursos.length);
   });
 
+  /** Valor calculado (computed): docentes filtrados. Se actualiza solo. */
   docentesFiltrados = computed(() => {
     const t = this.buscarPanel().toLowerCase().trim();
     return this.docentes()
@@ -117,6 +150,10 @@ export class SeccionDetalle implements OnInit {
       .filter(d => !t || d.nombreCompleto.toLowerCase().includes(t) || (d.especialidad ?? '').toLowerCase().includes(t));
   });
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     const p = this.route.snapshot.queryParamMap.get('pestana');
     if (p === 'alumnos' || p === 'cursos' || p === 'horario') this.pestana.set(p);
@@ -130,10 +167,15 @@ export class SeccionDetalle implements OnInit {
     if (!w) this.router.navigateByUrl(url);   // si el navegador bloquea la ventana, se abre aquí
   }
 
+  /** Propiedad calculada (getter): devuelve id. */
   private get id(): number {
     return Number(this.route.snapshot.paramMap.get('id'));
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con seccionService.obtener() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.seccionService.obtener(this.id).subscribe({
@@ -145,6 +187,10 @@ export class SeccionDetalle implements OnInit {
     });
   }
 
+  /**
+   * Vuelve a los datos de esta pantalla. Al terminar, lleva al usuario a otra página
+   * (router.navigate).
+   */
   volver(): void {
     const s = this.seccion();
     this.router.navigate(['/home/admin/academico/grados-secciones'], { queryParams: s ? { grado: s.grado } : {} });
@@ -156,16 +202,19 @@ export class SeccionDetalle implements OnInit {
     return p.length >= 3 ? p[p.length - 2] : p[p.length - 1] ?? '';
   }
 
+  /** Devuelve el texto de matricula. */
   textoMatricula(e: Estudiante): string {
     return e.grado ? `Ahora en ${e.grado} "${e.seccion}" (se moverá aquí)` : 'Sin matrícula';
   }
 
+  /** Actualiza los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   private actualizar(s: Seccion, mensaje: string): void {
     this.seccion.set(s);
     this.toast.exito(mensaje);
     this.error.set(null);
   }
 
+  /** Realiza la acción «fallo» de esta pantalla. */
   private fallo(err: any, porDefecto: string): void {
     this.procesando.set(false);
     const msg = err?.error?.mensaje ?? porDefecto;
@@ -196,6 +245,7 @@ export class SeccionDetalle implements OnInit {
     this.panel.set(p);
   }
 
+  /** Cierra panel. */
   cerrarPanel(): void {
     this.panel.set(null);
   }
@@ -219,6 +269,10 @@ export class SeccionDetalle implements OnInit {
     });
   }
 
+  /**
+   * Devuelve «retirar». Pide los datos al backend con seccionService.retirar() y actualiza la pantalla
+   * cuando llega la respuesta. Antes pide confirmación al usuario.
+   */
   async retirar(a: { id: number; nombreCompleto: string }): Promise<void> {
     const s = this.seccion();
     if (!s || !await this.confirmar.pedir(`¿Retirar a ${a.nombreCompleto} de la sección ${s.letra}? Quedará sin matrícula.`)) return;
@@ -242,6 +296,7 @@ export class SeccionDetalle implements OnInit {
     return otra ? `Tutor(a) de ${otra.grado} - Sección ${otra.letra}` : null;
   }
 
+  /** Agrega curso. */
   agregarCurso(): void {
     const s = this.seccion();
     const c = this.catalogo().find(x => x.id === this.cursoNuevo());
@@ -261,6 +316,7 @@ export class SeccionDetalle implements OnInit {
     });
   }
 
+  /** Elige docente. */
   elegirDocente(d: Docente | null): void {
     const s = this.seccion();
     if (!s || this.procesando()) return;
@@ -282,6 +338,10 @@ export class SeccionDetalle implements OnInit {
     });
   }
 
+  /**
+   * Muestra u oculta curso. Pide los datos al backend con seccionService.cambiarEstadoCurso() y
+   * actualiza la pantalla cuando llega la respuesta. Antes pide confirmación al usuario.
+   */
   async alternarCurso(c: CursoSeccion): Promise<void> {
     this.menuCurso.set(null);
     const s = this.seccion();
@@ -294,6 +354,7 @@ export class SeccionDetalle implements OnInit {
     });
   }
 
+  /** Guarda descripción. */
   guardarDescripcion(): void {
     const s = this.seccion();
     const c = this.cursoSel();
@@ -321,11 +382,13 @@ export class SeccionDetalle implements OnInit {
     });
   }
 
+  /** Cierra menú. */
   @HostListener('document:click')
   cerrarMenu(): void {
     this.menuCurso.set(null);
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     if (this.menuCurso() !== null) { this.menuCurso.set(null); return; }

@@ -24,18 +24,31 @@ interface Detalle { cargando: boolean; error: string | null; horario: MiHorario 
   templateUrl: './dashboard.html',
 })
 export class PadreDashboard implements OnInit {
+  /** Servicio HijosService (inyectado por Angular). */
   private hijosService = inject(HijosService);
+  /** Servicio MiHorarioService (inyectado por Angular). */
   private miHorario = inject(MiHorarioService);
+  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
 
   readonly iniciales = iniciales;
 
+  /** Estado (signal): hijos. */
   hijos = signal<Hijo[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): abiertos. */
   abiertos = signal<Set<number>>(new Set());
+  /** Estado (signal): detalles. */
   detalles = signal<Record<number, Detalle>>({});
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales. Pide los datos al backend con hijosService.listar() y actualiza la pantalla
+   * cuando llega la respuesta.
+   */
   ngOnInit(): void {
     this.hijosService.listar().subscribe({
       next: (h) => {
@@ -47,16 +60,20 @@ export class PadreDashboard implements OnInit {
     });
   }
 
+  /** Indica «abierto» (devuelve verdadero o falso). */
   abierto(id: number): boolean { return this.abiertos().has(id); }
 
+  /** Muestra u oculta los datos de esta pantalla. */
   alternar(id: number): void {
     const s = new Set(this.abiertos());
     if (s.has(id)) s.delete(id); else { s.add(id); this.cargar(id); }
     this.abiertos.set(s);
   }
 
+  /** Devuelve «detalle». */
   detalle(id: number): Detalle | undefined { return this.detalles()[id]; }
 
+  /** Carga los datos de esta pantalla. */
   private cargar(id: number): void {
     if (this.detalles()[id] && !this.detalles()[id].error) return;   // ya cargado
     this.detalles.update(d => ({ ...d, [id]: { cargando: true, error: null, horario: null, pendientes: 0 } }));
@@ -81,10 +98,12 @@ export class PadreDashboard implements OnInit {
     return h.grado ? `${h.grado}${h.seccion ? ' - ' + h.seccion : ''}` : 'Sin sección asignada';
   }
 
+  /** Devuelve el texto de «título». */
   titulo(h: MiHorario | null): string {
     return infoGrado(h?.grado)?.titulo ?? h?.grado ?? '';
   }
 
+  /** Devuelve el texto de «nivel». */
   nivel(h: MiHorario | null): string {
     return (h?.grado ?? '').includes('Secundaria') ? 'Secundaria' : 'Primaria';
   }

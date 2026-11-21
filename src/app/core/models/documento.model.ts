@@ -3,6 +3,10 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 /** Tipos de documento de identidad (mismas reglas que TipoDocumento.java en el backend). */
 export type TipoDocumento = 'DNI' | 'CE' | 'PASAPORTE' | 'OTRO';
 
+/**
+ * Modelo InfoDocumento: describe la forma de los datos de «info documento». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface InfoDocumento {
   valor: TipoDocumento;
   nombre: string;        // para el combobox
@@ -13,6 +17,7 @@ export interface InfoDocumento {
   error: string;
 }
 
+/** Constante TIPOS_DOCUMENTO: valor fijo (tipos documento) que se reutiliza en varias partes. */
 export const TIPOS_DOCUMENTO: InfoDocumento[] = [
   { valor: 'DNI', nombre: 'DNI', corto: 'DNI', max: 8, ayuda: '8 dígitos',
     patron: /^\d{8}$/, error: 'El DNI debe tener 8 dígitos.' },
@@ -24,10 +29,12 @@ export const TIPOS_DOCUMENTO: InfoDocumento[] = [
     patron: /^[0-9A-Z]{6,15}$/, error: 'El número de documento debe tener entre 6 y 15 caracteres (números o letras).' },
 ];
 
+/** Función infoDocumento: info documento. */
 export function infoDocumento(tipo: string | null | undefined): InfoDocumento {
   return TIPOS_DOCUMENTO.find(t => t.valor === (tipo || 'DNI')) ?? TIPOS_DOCUMENTO[0];
 }
 
+/** Limpia documento. */
 export function limpiarDocumento(numero: string | null | undefined): string {
   return (numero ?? '').replace(/\s/g, '').toUpperCase();
 }

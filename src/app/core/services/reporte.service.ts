@@ -7,12 +7,18 @@ import { environment } from '../../../environments/environment';
 /** HU-30/31 Reportes (requiere el permiso REPORTES). */
 @Injectable({ providedIn: 'root' })
 export class ReporteService {
+  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
+  /** Dirección base del backend para este servicio: /api/reportes. */
   private api = `${environment.apiUrl}/reportes`;
 
   /** Periodos, grados, secciones, cursos y alumnos para los filtros. */
   opciones(): Observable<OpcionesReporte> { return this.http.get<OpcionesReporte>(`${this.api}/opciones`); }
 
+  /**
+   * Genera los datos de esta pantalla. Llama al backend: GET /api/reportes/{tipo}. Devuelve un
+   * Observable (los datos llegan al hacer subscribe).
+   */
   generar(tipo: TipoReporte, p: ParametrosReporte): Observable<TablaReporte> {
     return this.http.get<TablaReporte>(`${this.api}/${tipo}`, { params: parametros(p) });
   }
@@ -23,6 +29,7 @@ export class ReporteService {
   }
 }
 
+/** Función parametros: parametros. */
 function parametros(p: ParametrosReporte): Record<string, string> {
   const r: Record<string, string> = {};
   if (p.periodoId) r['periodoId'] = String(p.periodoId);

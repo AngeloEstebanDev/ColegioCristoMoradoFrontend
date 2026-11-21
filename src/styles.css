@@ -1,3 +1,4 @@
+/* Estilos de styles: reglas CSS propias además de las clases de Tailwind. */
 @import "tailwindcss";
 /* Texto con formato de comunicados y mensajes (editor + vista).
    Tailwind quita los estilos de listas; aquí se devuelven. */

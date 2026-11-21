@@ -9,6 +9,10 @@ export interface Periodo {
   activo: boolean;
 }
 
+/**
+ * Modelo PeriodoRequest: describe la forma de los datos de «periodo request». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface PeriodoRequest {
   nombre: string;
   anio: number;
@@ -17,6 +21,7 @@ export interface PeriodoRequest {
   fechaFin: string;
 }
 
+/** Constante ROMANOS: valor fijo (romanos) que se reutiliza en varias partes. */
 export const ROMANOS = ['', 'I', 'II', 'III', 'IV'];
 
 /** Color de cada bimestre (punto del combo y número de la tarjeta). */

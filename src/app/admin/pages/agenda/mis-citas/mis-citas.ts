@@ -10,10 +10,13 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
 
+/** Tipo Filtro: describe la forma de los datos de «filtro». */
 type Filtro = 'TODOS' | 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'REALIZADA';
 
+/** Constante MESES: valor fijo (meses) que se reutiliza en varias partes. */
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+/** Constante ESTADO: valor fijo (estado) que se reutiliza en varias partes. */
 const ESTADO: Record<EstadoCita, { etiqueta: string; color: string; fondo: string }> = {
   PENDIENTE: { etiqueta: 'Pendiente', color: '#9A6B00', fondo: '#FDF1DC' },
   CONFIRMADA: { etiqueta: 'Confirmada', color: '#1E7A3B', fondo: '#E7F3EA' },
@@ -22,6 +25,7 @@ const ESTADO: Record<EstadoCita, { etiqueta: string; color: string; fondo: strin
   REALIZADA: { etiqueta: 'Realizada', color: '#2563EB', fondo: '#E6EEFB' },
 };
 
+/** Modelo Dia: describe la forma de los datos de «día». */
 interface Dia { fecha: string; numero: number; delMes: boolean; habil: boolean; }
 
 /**
@@ -38,10 +42,15 @@ interface Dia { fecha: string; numero: number; delMes: boolean; habil: boolean; 
   templateUrl: './mis-citas.html',
 })
 export class MisCitas implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
+  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
+  /** Servicio AgendaService (inyectado por Angular). */
   private agenda = inject(AgendaService);
+  /** Servicio HijosService (inyectado por Angular). */
   private hijosService = inject(HijosService);
 
   readonly estados = ESTADO;
@@ -54,12 +63,18 @@ export class MisCitas implements OnInit {
   readonly diasSemana = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
   readonly duraciones = [15, 30, 45, 60];
 
+  /** Estado (signal): citas. */
   citas = signal<Cita[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
+  /** Estado (signal): filtro. */
   filtro = signal<Filtro>('TODOS');
 
+  /** Valor calculado (computed): totales. Se actualiza solo. */
   totales = computed(() => {
     const l = this.citas();
     return {
@@ -70,6 +85,7 @@ export class MisCitas implements OnInit {
     };
   });
 
+  /** Valor calculado (computed): lista. Se actualiza solo. */
   lista = computed(() => {
     const f = this.filtro();
     return this.citas()
@@ -84,32 +100,50 @@ export class MisCitas implements OnInit {
 
   // ---- Ver / cancelar
   detalle = signal<Cita | null>(null);
+  /** Estado (signal): cancelando. */
   cancelando = signal<Cita | null>(null);
   motivoCancelacion = '';
+  /** Estado (signal): procesando. */
   procesando = signal(false);
+  /** Estado (signal): error acción. */
   errorAccion = signal<string | null>(null);
 
   // ---- Nueva cita (docente / administración)
   panelNueva = signal(false);
+  /** Estado (signal): padres. */
   padres = signal<PadreContacto[]>([]);
+  /** Estado (signal): personas. */
   personas = signal<PersonaCita[]>([]);
+  /** Estado (signal): aula elegida. */
   aulaElegida = signal<string>('');
+  /** Estado (signal): buscar. */
   buscar = signal('');
+  /** Estado (signal): padre elegido. */
   padreElegido = signal<{ id: number; nombre: string; detalle: string; estudianteId: number | null } | null>(null);
   nMotivo = '';
   nDuracion = 30;
   nDetalle = '';
+  /** Estado (signal): n fecha. */
   nFecha = signal<string | null>(null);
+  /** Estado (signal): n hora. */
   nHora = signal<string | null>(null);
   nHoraLibre = '';
+  /** Estado (signal): horas libres. */
   horasLibres = signal<string[]>([]);
+  /** Estado (signal): cargando horas. */
   cargandoHoras = signal(false);
+  /** Estado (signal): días disponibles. */
   diasDisponibles = signal<Set<number>>(new Set());
+  /** Estado (signal): mes. */
   mes = signal(primerDiaMes(new Date()));
+  /** Estado (signal): error panel. */
   errorPanel = signal<string | null>(null);
+  /** Estado (signal): enviando. */
   enviando = signal(false);
 
+  /** Valor calculado (computed): aulas. Se actualiza solo. */
   aulas = computed(() => [...new Set(this.padres().flatMap(p => p.hijos.map(h => h.salon)))].sort());
+  /** Valor calculado (computed): candidatos. Se actualiza solo. */
   candidatos = computed(() => {
     const t = this.buscar().toLowerCase().trim();
     if (this.esAdmin) {
@@ -124,6 +158,7 @@ export class MisCitas implements OnInit {
       id: p.usuarioId, nombre: p.nombre, detalle: `Padre/tutor de ${h.nombre}`, estudianteId: h.id as number | null,
     }))).filter(p => !t || p.nombre.toLowerCase().includes(t) || p.detalle.toLowerCase().includes(t));
   });
+  /** Valor calculado (computed): título mes. Se actualiza solo. */
   tituloMes = computed(() => `${MESES[this.mes().getMonth()]} ${this.mes().getFullYear()}`);
   calendario = computed<Dia[]>(() => {
     const m = this.mes();
@@ -143,27 +178,38 @@ export class MisCitas implements OnInit {
 
   // ---- Padre: solicitar
   panelSolicitar = signal(false);
+  /** Estado (signal): hijos. */
   hijos = signal<Hijo[]>([]);
+  /** Estado (signal): responsables. */
   responsables = signal<Responsable[]>([]);
+  /** Estado (signal): responsable. */
   responsable = signal<Responsable | null>(null);
+  /** Estado (signal): horarios. */
   horarios = signal<HorarioLibre[]>([]);
+  /** Estado (signal): cargando horarios. */
   cargandoHorarios = signal(false);
+  /** Estado (signal): horario elegido. */
   horarioElegido = signal<HorarioLibre | null>(null);
   hijoElegido: number | null = null;
   motivo = '';
+  /** Valor calculado (computed): días. Se actualiza solo. */
   dias = computed(() => {
     const mapa = new Map<string, HorarioLibre[]>();
     this.horarios().forEach(h => mapa.set(h.fecha, [...(mapa.get(h.fecha) ?? []), h]));
     return [...mapa.entries()].map(([fecha, horas]) => ({ fecha, horas }));
   });
+  /** Estado (signal): día elegido. */
   diaElegido = signal<string | null>(null);
   /** Descripción del caso (paso 4). */
   detalleCaso = '';
+  /** Estado (signal): buscar responsable. */
   buscarResponsable = signal('');
+  /** Estado (signal): ver sugerencias. */
   verSugerencias = signal(false);
   /** Lunes de la semana que se ve en el calendario (yyyy-MM-dd). */
   semana = signal<string>(lunesDe(hoyIso()));
 
+  /** Valor calculado (computed): responsables filtrados. Se actualiza solo. */
   responsablesFiltrados = computed(() => {
     const t = this.buscarResponsable().toLowerCase().trim();
     return this.responsables().filter(r => !t || r.nombre.toLowerCase().includes(t) || r.rol.toLowerCase().includes(t)
@@ -195,13 +241,23 @@ export class MisCitas implements OnInit {
     return filas;
   });
 
+  /** Valor calculado (computed): hay antes. Se actualiza solo. */
   hayAntes = computed(() => this.horarios().some(h => h.fecha < this.semana()));
+  /** Valor calculado (computed): hay despues. Se actualiza solo. */
   hayDespues = computed(() => this.horarios().some(h => h.fecha > sumarDias(this.semana(), 6)));
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargar();
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con agenda.citas() y actualiza la
+   * pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.agenda.citas().subscribe({
       next: (c) => { this.citas.set(c); this.cargando.set(false); },
@@ -225,10 +281,13 @@ export class MisCitas implements OnInit {
     return { nombre: creador.nombre, rol: creador.rol || (c.origen === 'SOLICITUD_PADRE' ? 'Padre / Tutor' : 'Docente') };
   }
 
+  /** Devuelve la fecha de hora. */
   fechaHora(c: Cita): string { return `${dmy(c.fecha)} ${c.horaInicio}`; }
 
+  /** Indica si es cancelada (devuelve verdadero o falso). */
   esCancelada(c: Cita): boolean { return c.estado === 'CANCELADA' || c.estado === 'RECHAZADA'; }
 
+  /** Actualiza los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   private actualizar(c: Cita, mensaje: string): void {
     this.citas.update(l => l.map(x => x.id === c.id ? c : x));
     if (this.detalle()?.id === c.id) this.detalle.set(c);
@@ -245,12 +304,17 @@ export class MisCitas implements OnInit {
     });
   }
 
+  /** Abre cancelar. */
   abrirCancelar(c: Cita): void {
     this.cancelando.set(c);
     this.motivoCancelacion = '';
     this.errorAccion.set(null);
   }
 
+  /**
+   * Cancela los datos de esta pantalla. Pide los datos al backend con agenda.cancelar() y actualiza la
+   * pantalla cuando llega la respuesta.
+   */
   cancelar(): void {
     const c = this.cancelando();
     if (!c) return;
@@ -264,6 +328,11 @@ export class MisCitas implements OnInit {
     });
   }
 
+  /**
+   * Elimina los datos de esta pantalla. Pide los datos al backend con agenda.eliminar() y actualiza la
+   * pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado. Antes pide
+   * confirmación al usuario.
+   */
   async eliminar(c: Cita): Promise<void> {
     if (!await this.confirmar.pedir(`¿Eliminar la solicitud de cita con ${this.otra(c).nombre} del ${this.fechaHora(c)}?`)) return;
     this.agenda.eliminar(c.id).subscribe({
@@ -305,17 +374,20 @@ export class MisCitas implements OnInit {
     }
   }
 
+  /** Elige aula. */
   elegirAula(a: string): void {
     this.aulaElegida.set(a);
     this.padreElegido.set(null);
     this.buscar.set('');
   }
 
+  /** Mueve mes. */
   moverMes(n: number): void {
     const m = this.mes();
     this.mes.set(new Date(m.getFullYear(), m.getMonth() + n, 1));
   }
 
+  /** Elige fecha. */
   elegirFecha(d: Dia): void {
     if (!d.habil) return;
     this.nFecha.set(d.fecha);
@@ -324,11 +396,16 @@ export class MisCitas implements OnInit {
     if (!this.esAdmin) this.cargarHoras();
   }
 
+  /** Cambia duracion. */
   cambiarDuracion(): void {
     this.nHora.set(null);
     if (!this.esAdmin && this.nFecha()) this.cargarHoras();
   }
 
+  /**
+   * Carga horas. Pide los datos al backend con agenda.misHorasLibres() y actualiza la pantalla cuando
+   * llega la respuesta.
+   */
   private cargarHoras(): void {
     const f = this.nFecha();
     if (!f) return;
@@ -339,6 +416,7 @@ export class MisCitas implements OnInit {
     });
   }
 
+  /** Envía convocatoria. Muestra un aviso (toast) con el resultado. */
   enviarConvocatoria(): void {
     const p = this.padreElegido();
     const hora = this.esAdmin ? this.nHoraLibre : this.nHora();
@@ -391,6 +469,10 @@ export class MisCitas implements OnInit {
     });
   }
 
+  /**
+   * Elige responsable. Pide los datos al backend con agenda.horarios() y actualiza la pantalla cuando
+   * llega la respuesta.
+   */
   elegirResponsable(r: Responsable): void {
     this.responsable.set(r);
     this.buscarResponsable.set(r.nombre);
@@ -423,14 +505,20 @@ export class MisCitas implements OnInit {
     }
   }
 
+  /** Mueve semana. */
   moverSemana(n: number): void { this.semana.set(sumarDias(this.semana(), 7 * n)); }
+  /** Realiza la acción «semana hoy» de esta pantalla. */
   semanaHoy(): void { this.semana.set(lunesDe(hoyIso())); }
 
   /** Fila (1-based, después de la cabecera) donde empieza un horario. */
   filaCal(h: HorarioLibre): number { return this.filasCal().indexOf(Math.floor(minutos(h.horaInicio) / 15) * 15) + 2; }
+  /** Calcula «alto cal» (devuelve un número). */
   altoCal(h: HorarioLibre): number { return Math.max(1, Math.round((minutos(h.horaFin) - minutos(h.horaInicio)) / 15)); }
+  /** Calcula «columna cal» (devuelve un número). */
   columnaCal(h: HorarioLibre): number { return this.diasSemana5().indexOf(h.fecha) + 2; }
+  /** Devuelve la hora de texto. */
   horaTexto(t: number): string { return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; }
+  /** Indica si es hoy (devuelve verdadero o falso). */
   esHoy(f: string): boolean { return f === this.hoy; }
 
   /** "Octubre 2026" del calendario. */
@@ -440,14 +528,17 @@ export class MisCitas implements OnInit {
     return `${nombre} ${d.getFullYear()}`;
   }
 
+  /** Devuelve «horas del día». */
   horasDelDia(): HorarioLibre[] {
     return this.dias().find(d => d.fecha === this.diaElegido())?.horas ?? [];
   }
 
+  /** Devuelve el texto de «día semana». */
   diaSemana(f: string): string {
     return fechaCorta(f, true).split(' ')[0];
   }
 
+  /** Solicita los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   solicitar(): void {
     const r = this.responsable(), h = this.horarioElegido();
     if (!r) { this.errorPanel.set('Elige con quién quieres reunirte.'); return; }
@@ -475,6 +566,7 @@ export class MisCitas implements OnInit {
       });
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     this.detalle.set(null);
@@ -484,16 +576,19 @@ export class MisCitas implements OnInit {
   }
 }
 
+/** Función minutos: minutos. */
 function minutos(h: string): number {
   const [hh, mm] = h.split(':').map(Number);
   return hh * 60 + mm;
 }
 
+/** Convierte el valor a fecha. */
 function aFecha(iso: string): Date {
   const [y, m, d] = iso.substring(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
+/** Suma días. */
 function sumarDias(iso: string, n: number): string {
   const d = aFecha(iso);
   d.setDate(d.getDate() + n);
@@ -509,12 +604,15 @@ function lunesDe(iso: string): string {
   return aIso(d);
 }
 
+/** Función primerDiaMes: primer día mes. */
 function primerDiaMes(d: Date): Date { return new Date(d.getFullYear(), d.getMonth(), 1); }
 
+/** Convierte el valor a iso. */
 function aIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** Función dmy: dmy. */
 function dmy(iso: string): string {
   const [y, m, d] = iso.substring(0, 10).split('-');
   return `${d}/${m}/${y}`;

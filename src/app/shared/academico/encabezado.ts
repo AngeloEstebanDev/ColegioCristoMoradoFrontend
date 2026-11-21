@@ -22,8 +22,11 @@ import { Component, input } from '@angular/core';
   `,
 })
 export class Encabezado {
+  /** Dato de entrada «título» que envía el componente padre. */
   titulo = input.required<string>();
+  /** Dato de entrada «subtitulo» que envía el componente padre. */
   subtitulo = input<string | null>(null);
+  /** Dato de entrada «icono» que envía el componente padre. */
   icono = input('M4 4h16v16H4z');
 }
 

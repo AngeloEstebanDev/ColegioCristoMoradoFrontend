@@ -1,3 +1,4 @@
+/* Estilos de siderbar: reglas CSS propias además de las clases de Tailwind. */
 .sidebar-item {
   display: flex;
   align-items: center;

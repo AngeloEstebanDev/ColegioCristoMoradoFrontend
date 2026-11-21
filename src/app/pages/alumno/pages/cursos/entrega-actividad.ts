@@ -29,11 +29,17 @@ import { Val, revisar } from '../../../../core/utils/validadores';
 })
 export class AlumnoEntregaActividad implements OnInit {
 
+  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
+  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
+  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
+  /** Servicio DestroyRef (inyectado por Angular). */
   private destroyRef = inject(DestroyRef);
 
   readonly num = num;
@@ -44,35 +50,54 @@ export class AlumnoEntregaActividad implements OnInit {
   readonly letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
   cursoId = 0;
+  /** Estado (signal): curso. */
   curso = signal<CursoAula | null>(null);
+  /** Estado (signal): actividad. */
   actividad = signal<Actividad | null>(null);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): enviando. */
   enviando = signal(false);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): éxito. */
   exito = signal<string | null>(null);
+  /** Estado (signal): editando. */
   editando = signal(false);
+  /** Estado (signal): arrastrando. */
   arrastrando = signal(false);
+  /** Estado (signal): ver instrucciones. */
   verInstrucciones = signal(true);
+  /** Estado (signal): ver adjuntos. */
   verAdjuntos = signal(true);
+  /** Estado (signal): ver entrega. */
   verEntrega = signal(true);
   /** Se actualiza cada 30 s para que el plazo se cierre solo al vencer. */
   ahora = signal(Date.now());
 
   texto = '';
   enlace = '';
+  /** Estado (signal): archivo. */
   archivo = signal<ArchivoNuevo | null>(null);
   /** Opciones marcadas en cada pregunta. */
   respuestas = signal<number[][]>([]);
 
+  /** Valor calculado (computed): tipo. Se actualiza solo. */
   tipo = computed(() => infoTipo(this.actividad()?.tipo));
+  /** Valor calculado (computed): es cuestionario. Se actualiza solo. */
   esCuestionario = computed(() => this.actividad()?.tipo === 'CUESTIONARIO');
+  /** Valor calculado (computed): entrega. Se actualiza solo. */
   entrega = computed(() => this.actividad()?.miEntrega ?? null);
+  /** Valor calculado (computed): vencida. Se actualiza solo. */
   vencida = computed(() => {
     const a = this.actividad();
     return !!a && new Date(a.fechaLimite).getTime() <= this.ahora();
   });
+  /** Valor calculado (computed): intentos usados. Se actualiza solo. */
   intentosUsados = computed(() => this.actividad()?.miEntrega ? (this.actividad()!.miEntrega!.intentos ?? 1) : 0);
+  /** Valor calculado (computed): intentos permitidos. Se actualiza solo. */
   intentosPermitidos = computed(() => this.actividad()?.intentosPermitidos ?? 1);
+  /** Valor calculado (computed): quedan. Se actualiza solo. */
   quedan = computed(() => Math.max(0, this.intentosPermitidos() - this.intentosUsados()));
   /** Venció, pero el docente acepta entregas tardías. */
   tarde = computed(() => this.vencida() && !!this.actividad()?.permiteTardia);
@@ -85,6 +110,7 @@ export class AlumnoEntregaActividad implements OnInit {
   });
   /** Historial "Entrega 1", "Entrega 2"... y el envío elegido (por defecto el último). */
   envios = computed<Envio[]>(() => this.entrega()?.envios ?? []);
+  /** Estado (signal): envio sel. */
   envioSel = signal<number | null>(null);
   envio = computed<Envio | null>(() => {
     const l = this.envios();
@@ -95,11 +121,20 @@ export class AlumnoEntregaActividad implements OnInit {
     const f = this.actividad()?.formatosPermitidos ?? [];
     return FORMATOS_ARCHIVO.filter(x => !f.length || f.includes(x.id)).map(x => x.nombre).join(', ');
   });
+  /** Valor calculado (computed): aceptar. Se actualiza solo. */
   aceptar = computed(() => extensionesDe(this.actividad()?.formatosPermitidos).map(e => '.' + e).join(','));
+  /** Valor calculado (computed): mostrar formulario. Se actualiza solo. */
   mostrarFormulario = computed(() => this.abierta() && (!this.entrega() || this.editando()));
+  /** Valor calculado (computed): respondidas. Se actualiza solo. */
   respondidas = computed(() => this.respuestas().filter(r => r.length > 0).length);
+  /** Valor calculado (computed): color nota. Se actualiza solo. */
   colorNota = computed(() => colorNota(this.entrega()?.estado === 'CALIFICADA' ? this.entrega()!.nota20 : null));
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales. Pide los datos al backend con aula.curso(), aula.actividad() y actualiza la
+   * pantalla cuando llega la respuesta.
+   */
   ngOnInit(): void {
     this.cursoId = Number(this.route.snapshot.paramMap.get('id'));
     const actividadId = Number(this.route.snapshot.paramMap.get('actividadId'));
@@ -127,6 +162,7 @@ export class AlumnoEntregaActividad implements OnInit {
     if (f) await this.leer(f);
   }
 
+  /** Suelta los datos de esta pantalla. */
   async soltar(ev: DragEvent): Promise<void> {
     ev.preventDefault();
     this.arrastrando.set(false);
@@ -134,11 +170,13 @@ export class AlumnoEntregaActividad implements OnInit {
     if (f) await this.leer(f);
   }
 
+  /** Realiza la acción «sobre» de esta pantalla. */
   sobre(ev: DragEvent): void {
     ev.preventDefault();
     this.arrastrando.set(true);
   }
 
+  /** Lee los datos de esta pantalla. */
   private async leer(f: File): Promise<void> {
     const ext = f.name.includes('.') ? f.name.substring(f.name.lastIndexOf('.') + 1).toLowerCase() : '';
     if (!extensionesDe(this.actividad()?.formatosPermitidos).includes(ext)) {
@@ -153,6 +191,7 @@ export class AlumnoEntregaActividad implements OnInit {
     }
   }
 
+  /** Descarga adjunto. */
   descargarAdjunto(): void {
     const a = this.actividad()?.archivo;
     if (a) this.archivos.descargar(a);
@@ -162,6 +201,7 @@ export class AlumnoEntregaActividad implements OnInit {
 
   multiple(i: number): boolean { return this.actividad()?.preguntas[i]?.tipo === 'MULTIPLE'; }
 
+  /** Responde los datos de esta pantalla. */
   responder(i: number, opcion: number): void {
     if (!this.mostrarFormulario()) return;
     const multiple = this.multiple(i);
@@ -182,6 +222,7 @@ export class AlumnoEntregaActividad implements OnInit {
     return e.selecciones?.[i] ?? (e.respuestas[i] !== undefined ? [e.respuestas[i]] : []);
   }
 
+  /** Devuelve las clases CSS de opción. */
   claseOpcion(i: number, k: number): string {
     const a = this.actividad();
     if (!a) return '';

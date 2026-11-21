@@ -15,6 +15,11 @@ import { PerfilService } from '../../../core/services/perfil.service';
 import { FotoService } from '../../../core/services/foto.service';
 import { AvisosInicio } from '../../components/avisos-inicio/avisos-inicio';
 
+/**
+ * Componente «layout» compartido (lo usan varias pantallas y roles). Se usa en el HTML con la etiqueta
+ * <app-layout>. Su vista está en layout.html; aquí (en el .ts) va la lógica: los datos que se
+ * muestran, lo que pasa al hacer clic y las llamadas a los servicios.
+ */
 @Component({
   imports: [CommonModule, RouterOutlet, Siderbar, Navbar, AvisosInicio],
   selector: 'app-layout',
@@ -23,10 +28,14 @@ import { AvisosInicio } from '../../components/avisos-inicio/avisos-inicio';
 })
 export class Layout {
 
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
+  /** Servicio AuthService (inyectado por Angular). */
   private authService = inject(AuthService);
 
+  /** Servicio NotificacionService (inyectado por Angular). */
   readonly notificaciones = inject(NotificacionService);
+  /** Servicio PerfilService (inyectado por Angular). */
   readonly perfilService = inject(PerfilService);
 
   usuario = this.authService.obtenerUsuario();
@@ -37,6 +46,10 @@ export class Layout {
   /** Permisos del panel (Directiva). Se refrescan al entrar por si el admin los cambió. */
   permisos = signal<string[]>(this.usuario?.permisos ?? []);
 
+  /**
+   * Constructor: Angular le entrega (inyecta) los servicios que usa. Pide los datos al backend con
+   * perfilService.obtener() y actualiza la pantalla cuando llega la respuesta.
+   */
   constructor() {
     inject(FotoService).cargar();
     if (this.usuario) {

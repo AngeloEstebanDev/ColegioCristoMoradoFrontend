@@ -4,19 +4,34 @@ import { Observable, tap } from 'rxjs';
 import { CambiarPasswordRequest, CodigoEnviado, Perfil, PerfilUpdateRequest } from '../models/perfil.model';
 import { environment } from '../../../environments/environment';
 
+/**
+ * Servicio PerfilService: se comunica con el backend en /api/perfil (envía y recibe JSON con
+ * HttpClient). Al ser providedIn: "root", Angular crea una sola instancia y la comparte en toda la
+ * aplicación.
+ */
 @Injectable({ providedIn: 'root' })
 export class PerfilService {
+  /** Dirección base del backend para este servicio: /api/perfil. */
   private apiUrl = `${environment.apiUrl}/perfil`;
 
   /** Foto del usuario logeado (la muestra el navbar). */
   readonly foto = signal<string | null>(null);
 
+  /** function Object() { [native code] } */
   constructor(private http: HttpClient) {}
 
+  /**
+   * Pide al backend un registro por su id. Llama al backend: GET /api/perfil/{usuarioId}. Devuelve un
+   * Observable (los datos llegan al hacer subscribe).
+   */
   obtener(usuarioId: number): Observable<Perfil> {
     return this.http.get<Perfil>(`${this.apiUrl}/${usuarioId}`).pipe(tap(p => this.foto.set(p.foto ?? null)));
   }
 
+  /**
+   * Envía al backend los cambios de un registro. Llama al backend: PUT /api/perfil/{usuarioId}.
+   * Devuelve un Observable (los datos llegan al hacer subscribe).
+   */
   actualizar(usuarioId: number, datos: PerfilUpdateRequest): Observable<Perfil> {
     return this.http.put<Perfil>(`${this.apiUrl}/${usuarioId}`, datos).pipe(tap(p => this.foto.set(p.foto ?? null)));
   }

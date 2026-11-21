@@ -1,3 +1,10 @@
+<!--
+  Vista (HTML) de «curso docente», que se muestra en el panel del docente.
+  La lógica (datos, eventos y llamadas al backend) está en curso-docente.ts.
+  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
+  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
+  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
+-->
 <ng-template #carpetaIcono let-oculta>
   <svg viewBox="0 0 24 24" class="w-8 h-8 shrink-0" [attr.fill]="oculta ? '#D9CDBD' : '#F5B83D'"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.2l2 2.2h6.8A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Z"/></svg>
 </ng-template>

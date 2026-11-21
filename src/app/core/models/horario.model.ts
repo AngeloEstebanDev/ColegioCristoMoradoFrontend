@@ -11,6 +11,10 @@ export interface BloqueHorario {
   horaFin: string;
 }
 
+/**
+ * Modelo Horario: describe la forma de los datos de «horario». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Horario {
   seccionId: number;
   grado: string;
@@ -24,13 +28,16 @@ export interface Horario {
   bloques: BloqueHorario[];
 }
 
+/** Constante DIAS_SEMANA: valor fijo (días semana) que se reutiliza en varias partes. */
 export const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
+/** Convierte el valor a minutos. */
 export function aMinutos(h: string): number {
   const [hh, mm] = h.split(':').map(Number);
   return hh * 60 + mm;
 }
 
+/** Convierte el valor a hora. */
 export function aHora(min: number): string {
   return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 }

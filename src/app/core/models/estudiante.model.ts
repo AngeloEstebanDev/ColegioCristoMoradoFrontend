@@ -1,6 +1,10 @@
 import { GRADOS_ACADEMICOS } from './seccion.model';
 import { TipoDocumento } from './documento.model';
 
+/**
+ * Modelo PadreResumen: describe la forma de los datos de «padre resumen». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface PadreResumen {
   id: number;
   nombreCompleto: string;
@@ -8,6 +12,10 @@ export interface PadreResumen {
   parentesco: string;
 }
 
+/**
+ * Modelo Estudiante: describe la forma de los datos de «estudiante». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Estudiante {
   id: number;
   nombreCompleto: string;
@@ -33,6 +41,11 @@ export interface Estudiante {
   correoVerificado: boolean;
 }
 
+/**
+ * Modelo EstudianteRequest: describe la forma de los datos de «estudiante request». Es lo que viaja en
+ * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
+ * campo.
+ */
 export interface EstudianteRequest {
   nombreCompleto: string;
   tipoDocumento: TipoDocumento;
@@ -53,5 +66,9 @@ export interface EstudianteRequest {
 
 /** 1° Primaria ... 5° Secundaria. */
 export const GRADOS = GRADOS_ACADEMICOS.map(g => g.valor);
+/** Constante SECCIONES: valor fijo (secciones) que se reutiliza en varias partes. */
 export const SECCIONES = ['A', 'B', 'C'];
+/**
+ * Constante ESTADOS_ESTUDIANTE: valor fijo (estados estudiante) que se reutiliza en varias partes.
+ */
 export const ESTADOS_ESTUDIANTE = ['Activo', 'En proceso', 'Inactivo'];

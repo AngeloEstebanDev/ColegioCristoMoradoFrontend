@@ -10,8 +10,10 @@ import { environment } from '../../../../environments/environment';
 /** Cómo se muestra cada formato dentro del sistema. */
 type Clase = 'pdf' | 'imagen' | 'video' | 'audio' | 'texto' | 'docx' | 'hoja' | 'pptx' | 'ninguna';
 
+/** Modelo Diapositiva: describe la forma de los datos de «diapositiva». */
 interface Diapositiva { numero: number; titulo: string; textos: string[]; imagenes: string[]; }
 
+/** Constante EXT: valor fijo (ext) que se reutiliza en varias partes. */
 const EXT: Record<string, Clase> = {
   pdf: 'pdf',
   png: 'imagen', jpg: 'imagen', jpeg: 'imagen', gif: 'imagen', webp: 'imagen', bmp: 'imagen', svg: 'imagen',
@@ -23,12 +25,14 @@ const EXT: Record<string, Clase> = {
   pptx: 'pptx',
 };
 
+/** Constante MIME: valor fijo (mime) que se reutiliza en varias partes. */
 const MIME: Record<string, string> = {
   pdf: 'application/pdf', svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
   gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp', mp4: 'video/mp4', webm: 'video/webm',
   ogv: 'video/ogg', mov: 'video/quicktime', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4',
 };
 
+/** Devuelve las clases CSS de previa. */
 export function clasePrevia(nombre: string | null | undefined): Clase {
   const n = (nombre ?? '').toLowerCase();
   const ext = n.includes('.') ? n.substring(n.lastIndexOf('.') + 1) : '';
@@ -65,8 +69,11 @@ export function clasePrevia(nombre: string | null | undefined): Clase {
   `],
 })
 export class VistaPrevia {
+  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
+  /** Servicio DomSanitizer (inyectado por Angular). */
   private sanitizer = inject(DomSanitizer);
+  /** Servicio ArchivoService (inyectado por Angular). */
   private archivos = inject(ArchivoService);
 
   /** Archivo del servidor a mostrar. */
@@ -91,19 +98,29 @@ export class VistaPrevia {
     return a ? { nombre: a.nombre, tamanio: a.tamanio, local: false } : null;
   });
   clase = computed<Clase>(() => clasePrevia(this.info()?.nombre));
+  /** Estado (signal): cargando. */
   cargando = signal(false);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): url. */
   url = signal<string | null>(null);
+  /** Estado (signal): url segura. */
   urlSegura = signal<SafeResourceUrl | null>(null);
+  /** Estado (signal): texto. */
   texto = signal<string | null>(null);
+  /** Estado (signal): html. */
   html = signal<string | null>(null);
+  /** Estado (signal): hojas. */
   hojas = signal<{ nombre: string; html: SafeHtml }[]>([]);
+  /** Estado (signal): hoja. */
   hoja = signal(0);
+  /** Estado (signal): diapositivas. */
   diapositivas = signal<Diapositiva[]>([]);
 
   private urls: string[] = [];
   private pedido = 0;
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor() {
     inject(DestroyRef).onDestroy(() => this.limpiar());
     effect(() => {
@@ -113,6 +130,7 @@ export class VistaPrevia {
     });
   }
 
+  /** Descarga los datos de esta pantalla. */
   descargar(): void {
     const l = this.local();
     if (l) { guardarBlob(blobDe(l), l.nombre); return; }
@@ -138,11 +156,16 @@ export class VistaPrevia {
     }
   }
 
+  /** Abre en pestaña. */
   abrirEnPestana(): void {
     const u = this.url();
     if (u) window.open(u, '_blank');
   }
 
+  /**
+   * Carga los datos de esta pantalla. Llama al backend: GET /api/archivos/{id}. Devuelve un Observable
+   * (los datos llegan al hacer subscribe).
+   */
   private async cargar(a: ArchivoInfo | null): Promise<void> {
     const n = ++this.pedido;
     this.limpiar();
@@ -162,6 +185,7 @@ export class VistaPrevia {
     }
   }
 
+  /** Muestra los datos de esta pantalla. */
   private async mostrar(clase: Clase, a: ArchivoInfo, blob: Blob, n: number): Promise<void> {
     const ext = a.nombre.toLowerCase().split('.').pop() ?? '';
     switch (clase) {
@@ -236,12 +260,14 @@ export class VistaPrevia {
     }
   }
 
+  /** Devuelve el texto de «objeto». */
   private objeto(b: Blob): string {
     const u = URL.createObjectURL(b);
     this.urls.push(u);
     return u;
   }
 
+  /** Limpia los datos de esta pantalla. */
   private limpiar(): void {
     this.urls.forEach(u => URL.revokeObjectURL(u));
     this.urls = [];

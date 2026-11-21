@@ -9,9 +9,12 @@ import { environment } from '../../../environments/environment';
  */
 @Injectable({ providedIn: 'root' })
 export class FotoService {
+  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
+  /** Dirección base del backend para este servicio: /api/fotos. */
   private apiUrl = `${environment.apiUrl}/fotos`;
 
+  /** Estado (signal): indice. */
   private indice = signal<Record<string, string>>({});
   private pedido = false;
 

@@ -30,8 +30,14 @@ export interface SidebarGroup {
   }[];
 }
 
+/** Tipo SidebarEntry: describe la forma de los datos de «sidebar entry». */
 export type SidebarEntry = SidebarLink | SidebarGroup;
 
+/**
+ * Componente «siderbar» compartido (lo usan varias pantallas y roles). Se usa en el HTML con la
+ * etiqueta <app-siderbar>. Su vista está en siderbar.html; aquí (en el .ts) va la lógica: los datos
+ * que se muestran, lo que pasa al hacer clic y las llamadas a los servicios.
+ */
 @Component({
   imports: [CommonModule, RouterLink, RouterLinkActive],
   selector: 'app-siderbar',
@@ -40,6 +46,7 @@ export type SidebarEntry = SidebarLink | SidebarGroup;
   templateUrl: './siderbar.html',
 })
 export class Siderbar implements OnChanges {
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
   /** Rol mostrado en el badge inferior. */
@@ -51,6 +58,7 @@ export class Siderbar implements OnChanges {
   /** ids de los grupos actualmente abiertos */
   gruposAbiertos = new Set<string>();
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(private router: Router, private authService: AuthService) {}
 
   /** Nombre del rol para el badge ("ALUMNO" -> "Estudiante"). */
@@ -64,12 +72,19 @@ export class Siderbar implements OnChanges {
     return this.rol;
   }
 
+  /**
+   * Cierra sesión. Al terminar, lleva al usuario a otra página (router.navigate). Antes pide
+   * confirmación al usuario.
+   */
   async cerrarSesion(): Promise<void> {
     if (!await this.confirmar.pedir('¿Deseas cerrar sesión?')) return;
     this.authService.cerrarSesion();
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Se ejecuta cuando cambia alguno de los datos que recibe el componente desde su padre (@Input).
+   */
   ngOnChanges(): void {
     // Abre automáticamente el grupo que contiene la ruta activa,
     // así al recargar la página el submenú correcto ya se ve desplegado.
@@ -86,14 +101,17 @@ export class Siderbar implements OnChanges {
     }
   }
 
+  /** Indica si es grupo (devuelve verdadero o falso). */
   esGrupo(item: SidebarEntry): item is SidebarGroup {
     return item.type === 'group';
   }
 
+  /** Indica «grupo abierto» (devuelve verdadero o falso). */
   grupoAbierto(id: string): boolean {
     return this.gruposAbiertos.has(id);
   }
 
+  /** Muestra u oculta grupo. */
   toggleGrupo(id: string): void {
     if (this.gruposAbiertos.has(id)) {
       this.gruposAbiertos.delete(id);

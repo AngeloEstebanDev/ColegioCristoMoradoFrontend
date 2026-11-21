@@ -12,6 +12,11 @@ export interface Disponibilidad {
   citasPorSemana: number;
 }
 
+/**
+ * Modelo DisponibilidadRequest: describe la forma de los datos de «disponibilidad request». Es lo que
+ * viaja en JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa
+ * mal un campo.
+ */
 export interface DisponibilidadRequest {
   dia: number;
   horaInicio: string;
@@ -21,6 +26,10 @@ export interface DisponibilidadRequest {
   lugar: string | null;
 }
 
+/**
+ * Modelo PersonaCita: describe la forma de los datos de «persona cita». Es lo que viaja en JSON entre
+ * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface PersonaCita {
   id: number;
   nombre: string;
@@ -28,12 +37,20 @@ export interface PersonaCita {
   detalle: string | null;
 }
 
+/**
+ * Modelo HijoCita: describe la forma de los datos de «hijo cita». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface HijoCita {
   id: number;
   nombre: string;
   salon: string;
 }
 
+/**
+ * Modelo Responsable: describe la forma de los datos de «responsable». Es lo que viaja en JSON entre
+ * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Responsable {
   usuarioId: number;
   nombre: string;
@@ -43,6 +60,10 @@ export interface Responsable {
   horarios: Disponibilidad[];
 }
 
+/**
+ * Modelo PadreContacto: describe la forma de los datos de «padre contacto». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface PadreContacto {
   usuarioId: number;
   nombre: string;
@@ -50,6 +71,10 @@ export interface PadreContacto {
   hijos: HijoCita[];
 }
 
+/**
+ * Modelo HorarioLibre: describe la forma de los datos de «horario libre». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface HorarioLibre {
   fecha: string;
   horaInicio: string;
@@ -58,8 +83,16 @@ export interface HorarioLibre {
   lugar: string | null;
 }
 
+/**
+ * Tipo EstadoCita: describe la forma de los datos de «estado cita». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export type EstadoCita = 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA' | 'CANCELADA' | 'REALIZADA';
 
+/**
+ * Modelo Cita: describe la forma de los datos de «cita». Es lo que viaja en JSON entre el backend y el
+ * frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Cita {
   id: number;
   fecha: string;
@@ -91,8 +124,10 @@ export interface Cita {
   puedeEliminar: boolean;
 }
 
+/** Constante DIAS_AGENDA: valor fijo (días agenda) que se reutiliza en varias partes. */
 export const DIAS_AGENDA = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
+/** Constante ESTADOS_CITA: valor fijo (estados cita) que se reutiliza en varias partes. */
 export const ESTADOS_CITA: Record<EstadoCita, { etiqueta: string; color: string; fondo: string }> = {
   PENDIENTE: { etiqueta: 'Pendiente', color: '#9A6B00', fondo: '#FDF1DC' },
   CONFIRMADA: { etiqueta: 'Confirmada', color: '#1E7A3B', fondo: '#E7F3EA' },

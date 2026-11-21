@@ -21,7 +21,9 @@ import { ArchivoService, extension, tamanioLegible } from '../../core/services/a
   `,
 })
 export class ArchivoChip {
+  /** Servicio ArchivoService (inyectado por Angular). */
   readonly archivos = inject(ArchivoService);
+  /** Dato de entrada «archivo» que envía el componente padre. */
   archivo = input<ArchivoInfo | null | undefined>(null);
   readonly ext = extension;
   readonly tam = tamanioLegible;

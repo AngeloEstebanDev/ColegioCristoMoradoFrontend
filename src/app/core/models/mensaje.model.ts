@@ -1,3 +1,7 @@
+/**
+ * Modelo Participante: describe la forma de los datos de «participante». Es lo que viaja en JSON entre
+ * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Participante {
   usuarioId: number | null;
   nombre: string;
@@ -5,6 +9,10 @@ export interface Participante {
   leido: boolean;
 }
 
+/**
+ * Modelo Mensaje: describe la forma de los datos de «mensaje». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Mensaje {
   id: number;
   asunto: string;
@@ -17,6 +25,10 @@ export interface Mensaje {
   bandeja: 'RECIBIDO' | 'ENVIADO';
 }
 
+/**
+ * Modelo MensajeRequest: describe la forma de los datos de «mensaje request». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface MensajeRequest {
   destinatariosIds: number[];
   asunto: string;
@@ -36,6 +48,11 @@ export interface Borrador {
   fecha: string;
 }
 
+/**
+ * Modelo BorradorRequest: describe la forma de los datos de «borrador request». Es lo que viaja en
+ * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
+ * campo.
+ */
 export interface BorradorRequest {
   id?: number | null;
   destinatarioId: number | null;
@@ -44,6 +61,10 @@ export interface BorradorRequest {
   respuestaAId?: number | null;
 }
 
+/**
+ * Modelo Contacto: describe la forma de los datos de «contacto». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Contacto {
   usuarioId: number;
   nombre: string;
@@ -51,6 +72,10 @@ export interface Contacto {
   detalle: string;   // "5° A" para alumnos, especialidad para docentes
 }
 
+/**
+ * Modelo GrupoContacto: describe la forma de los datos de «grupo contacto». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface GrupoContacto {
   clave: string;
   nombre: string;
@@ -58,11 +83,19 @@ export interface GrupoContacto {
   usuariosIds: number[];
 }
 
+/**
+ * Modelo Contactos: describe la forma de los datos de «contactos». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Contactos {
   contactos: Contacto[];
   grupos: GrupoContacto[];
 }
 
+/**
+ * Modelo Notificaciones: describe la forma de los datos de «notificaciones». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Notificaciones {
   comunicadosNoLeidos: number;
   mensajesNoLeidos: number;
@@ -74,6 +107,10 @@ export interface Notificaciones {
 /** id = usuarioId del otro; 0 = Avisos del colegio; -1 = cuenta eliminada. */
 export const CHAT_AVISOS = 0;
 
+/**
+ * Modelo Conversacion: describe la forma de los datos de «conversacion». Es lo que viaja en JSON entre
+ * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Conversacion {
   id: number;
   nombre: string;
@@ -86,6 +123,10 @@ export interface Conversacion {
   puedeEscribir: boolean;
 }
 
+/**
+ * Modelo MensajeChat: describe la forma de los datos de «mensaje chat». Es lo que viaja en JSON entre
+ * el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface MensajeChat {
   id: number;
   asunto: string | null;     // solo en avisos y mensajes antiguos
@@ -96,6 +137,10 @@ export interface MensajeChat {
   aviso: boolean;
 }
 
+/**
+ * Modelo Chat: describe la forma de los datos de «chat». Es lo que viaja en JSON entre el backend y el
+ * frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface Chat {
   conversacion: Conversacion;
   mensajes: MensajeChat[];

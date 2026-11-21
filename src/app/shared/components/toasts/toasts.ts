@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TipoToast, ToastService } from '../../../core/services/toast.service';
 
+/** Constante ESTILO: valor fijo (estilo) que se reutiliza en varias partes. */
 const ESTILO: Record<TipoToast, { color: string; fondo: string; titulo: string; icono: string }> = {
   exito: { color: '#1E7A3B', fondo: '#E7F3EA', titulo: 'Listo', icono: 'M5 12.5l4.5 4.5L19 7.5' },
   error: { color: '#A62639', fondo: '#FBE7E9', titulo: 'Atención', icono: 'M12 7.5v5.5M12 16.5v.5' },
@@ -44,6 +45,7 @@ const ESTILO: Record<TipoToast, { color: string; fondo: string; titulo: string; 
   `],
 })
 export class Toasts {
+  /** Servicio ToastService (inyectado por Angular). */
   readonly toasts = inject(ToastService);
   readonly estilo = ESTILO;
 }

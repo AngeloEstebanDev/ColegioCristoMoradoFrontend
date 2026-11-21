@@ -13,6 +13,10 @@ export interface MiCurso {
   bloques: BloqueHorario[];
 }
 
+/**
+ * Modelo MiHorario: describe la forma de los datos de «mi horario». Es lo que viaja en JSON entre el
+ * backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface MiHorario {
   matriculado: boolean;
   grado: string | null;

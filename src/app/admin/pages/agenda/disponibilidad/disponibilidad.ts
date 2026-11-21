@@ -5,6 +5,7 @@ import { Disponibilidad as Bloque } from '../../../../core/models/cita.model';
 import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
+/** Constante PASO: valor fijo (paso) que se reutiliza en varias partes. */
 const PASO = 15;
 
 /**
@@ -19,8 +20,11 @@ const PASO = 15;
   templateUrl: './disponibilidad.html',
 })
 export class Disponibilidad implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
+  /** Servicio AgendaService (inyectado por Angular). */
   private agenda = inject(AgendaService);
 
   readonly dias = [
@@ -28,12 +32,18 @@ export class Disponibilidad implements OnInit {
     { numero: 4, nombre: 'Jueves' }, { numero: 5, nombre: 'Viernes' },
   ];
 
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): guardando. */
   guardando = signal(false);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
+  /** Estado (signal): inicio. */
   inicio = signal(7 * 60);
+  /** Estado (signal): fin. */
   fin = signal(19 * 60);
   /** Celdas marcadas: "dia-minuto". */
   marcadas = signal<Set<string>>(new Set());
@@ -43,19 +53,30 @@ export class Disponibilidad implements OnInit {
 
   private pintando: boolean | null = null;
 
+  /** Valor calculado (computed): filas. Se actualiza solo. */
   filas = computed(() => {
     const l: number[] = [];
     for (let t = this.inicio(); t < this.fin(); t += PASO) l.push(t);
     return l;
   });
+  /** Valor calculado (computed): cambios. Se actualiza solo. */
   cambios = computed(() => {
     const m = this.marcadas();
     return m.size !== this.original.size || [...m].some(k => !this.original.has(k));
   });
+  /** Valor calculado (computed): horas semana. Se actualiza solo. */
   horasSemana = computed(() => this.marcadas().size * PASO / 60);
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void { this.cargar(); }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con agenda.disponibilidad() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.agenda.disponibilidad().subscribe({
@@ -64,6 +85,7 @@ export class Disponibilidad implements OnInit {
     });
   }
 
+  /** Aplica los datos de esta pantalla. */
   private aplicar(bloques: Bloque[]): void {
     const activos = bloques.filter(b => b.activo);
     this.sabado = activos.filter(b => b.dia === 6);
@@ -83,8 +105,10 @@ export class Disponibilidad implements OnInit {
     this.marcadas.set(s);
   }
 
+  /** Indica «marcada» (devuelve verdadero o falso). */
   marcada(dia: number, t: number): boolean { return this.marcadas().has(`${dia}-${t}`); }
 
+  /** Devuelve la hora de los datos de esta pantalla. */
   hora(t: number): string { return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; }
 
   // ---------------- Pintar ----------------
@@ -95,13 +119,16 @@ export class Disponibilidad implements OnInit {
     this.poner(dia, t);
   }
 
+  /** Realiza la acción «pasar» de esta pantalla. */
   pasar(dia: number, t: number): void {
     if (this.pintando !== null) this.poner(dia, t);
   }
 
+  /** Suelta los datos de esta pantalla. */
   @HostListener('document:mouseup')
   soltar(): void { this.pintando = null; }
 
+  /** Pone los datos de esta pantalla. */
   private poner(dia: number, t: number): void {
     const k = `${dia}-${t}`;
     this.marcadas.update(s => {
@@ -122,16 +149,22 @@ export class Disponibilidad implements OnInit {
     });
   }
 
+  /** Devuelve «vaciar». Antes pide confirmación al usuario. */
   async vaciar(): Promise<void> {
     if (this.marcadas().size && !await this.confirmar.pedir('¿Vaciar toda la disponibilidad de la semana? (Se aplica al guardar.)')) return;
     this.marcadas.set(new Set());
   }
 
+  /** Descarta los datos de esta pantalla. */
   descartar(): void {
     this.marcadas.set(new Set(this.original));
     this.aviso.set(null);
   }
 
+  /**
+   * Guarda los datos de esta pantalla. Pide los datos al backend con agenda.guardarSemana() y
+   * actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
+   */
   guardar(): void {
     const bloques: { dia: number; horaInicio: string; horaFin: string }[] = [];
     for (const d of this.dias) {
@@ -161,6 +194,7 @@ export class Disponibilidad implements OnInit {
   }
 }
 
+/** Función min: min. */
 function min(h: string): number {
   const [a, b] = h.split(':').map(Number);
   return a * 60 + b;

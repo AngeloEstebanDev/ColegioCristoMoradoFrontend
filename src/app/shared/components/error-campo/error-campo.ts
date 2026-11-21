@@ -17,10 +17,13 @@ import { mensajeError } from '../../../core/utils/validadores';
   `,
 })
 export class ErrorCampo {
+  /** Dato de entrada «control» que envía el componente padre. */
   control = input<AbstractControl | null | undefined>(null);
+  /** Estado (signal): mensaje. */
   protected mensaje = signal<string | null>(null);
   private sub?: Subscription;
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor() {
     inject(DestroyRef).onDestroy(() => this.sub?.unsubscribe());
     effect(() => {
@@ -31,6 +34,7 @@ export class ErrorCampo {
     });
   }
 
+  /** Actualiza los datos de esta pantalla. */
   private actualizar(c: AbstractControl | null | undefined): void {
     this.mensaje.set(c && c.invalid && (c.touched || c.dirty) ? mensajeError(c) : null);
   }

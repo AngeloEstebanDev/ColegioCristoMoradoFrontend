@@ -16,32 +16,50 @@ import { ErrorCampo } from '../../../../shared/components/error-campo/error-camp
 import { FiltroEntrada } from '../../../../shared/components/error-campo/filtro-entrada';
 import { Val, limpiarTexto, soloDigitos } from '../../../../core/utils/validadores';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
+/**
+ * Componente «parents» del panel de Administración (administrador y directiva). Se usa en el HTML con
+ * la etiqueta <app-parents>. Su vista está en parents.html; aquí (en el .ts) va la lógica: los datos
+ * que se muestran, lo que pasa al hacer clic y las llamadas a los servicios.
+ */
 @Component({
   imports: [FotoUsuario, ErrorCampo, FiltroEntrada, CommonModule, ReactiveFormsModule, FormsModule, CampoPassword, RouterLink],
   selector: 'app-parents',
   templateUrl: './parents.html',
 })
 export class Parents implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
   estadosPosibles = ESTADOS_PADRE;
 
+  /** Estado (signal): padres. */
   padres = signal<PadreFamilia[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): guardando. */
   guardando = signal(false);
 
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
+  /** Estado (signal): filtro estado. */
   filtroEstado = signal('');
+  /** Estado (signal): filtro grado. */
   filtroGrado = signal('');
 
+  /** Estado (signal): página actual. */
   paginaActual = signal(1);
   porPagina = 10;
 
+  /** Estado (signal): panel abierto. */
   panelAbierto = signal(false);
+  /** Estado (signal): padre seleccionado. */
   padreSeleccionado = signal<PadreFamilia | null>(null);
 
+  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
     return this.padres().filter(p => {
@@ -56,8 +74,10 @@ export class Parents implements OnInit {
     });
   });
 
+  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtrados().length / this.porPagina)));
 
+  /** Valor calculado (computed): página datos. Se actualiza solo. */
   paginaDatos = computed(() => {
     const inicio = (this.paginaActual() - 1) * this.porPagina;
     return this.filtrados().slice(inicio, inicio + this.porPagina);
@@ -65,6 +85,7 @@ export class Parents implements OnInit {
 
   form!: ReturnType<FormBuilder['group']>;
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(
     private fb: FormBuilder,
     private padreService: PadreService,
@@ -100,10 +121,12 @@ export class Parents implements OnInit {
     return this.form.errors?.['documento'] ?? null;
   }
 
+  /** Devuelve la etiqueta de doc. */
   etiquetaDoc(tipo: string | null | undefined): string {
     return infoDocumento(tipo).corto;
   }
 
+  /** Devuelve el nombre de doc. */
   nombreDoc(tipo: string | null | undefined): string {
     return infoDocumento(tipo).nombre;
   }
@@ -121,10 +144,18 @@ export class Parents implements OnInit {
     return !!this.padreSeleccionado()?.usuario;
   }
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargar();
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con padreService.listar() y actualiza
+   * la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.padreService.listar().subscribe({
@@ -133,10 +164,12 @@ export class Parents implements OnInit {
     });
   }
 
+  /** Devuelve las iniciales de los datos de esta pantalla. */
   iniciales(nombre: string): string {
     return nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p.charAt(0)).join('').toUpperCase();
   }
 
+  /** Devuelve las clases CSS de estado. */
   claseEstado(estado: string): string {
     switch (estado) {
       case 'Activo': return 'bg-[#E7F3EA] text-[#1E7A3B]';
@@ -146,6 +179,7 @@ export class Parents implements OnInit {
     }
   }
 
+  /** Abre crear. */
   abrirCrear(): void {
     this.padreSeleccionado.set(null);
     this.error.set(null);
@@ -153,6 +187,7 @@ export class Parents implements OnInit {
     this.panelAbierto.set(true);
   }
 
+  /** Abre editar. */
   abrirEditar(p: PadreFamilia): void {
     this.padreSeleccionado.set(p);
     this.form.reset({
@@ -165,10 +200,12 @@ export class Parents implements OnInit {
     this.panelAbierto.set(true);
   }
 
+  /** Cierra panel. */
   cerrarPanel(): void {
     this.panelAbierto.set(false);
   }
 
+  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -219,6 +256,7 @@ export class Parents implements OnInit {
     });
   }
 
+  /** Navega a página. */
   irAPagina(n: number): void {
     if (n < 1 || n > this.totalPaginas()) return;
     this.paginaActual.set(n);

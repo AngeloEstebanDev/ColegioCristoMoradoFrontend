@@ -45,11 +45,14 @@ import { ConfirmService } from '../../../core/services/confirm.service';
   `],
 })
 export class Confirmacion {
+  /** Servicio ConfirmService (inyectado por Angular). */
   readonly confirm = inject(ConfirmService);
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void { this.confirm.responder(false); }
 
+  /** Realiza la acción «enter» de esta pantalla. */
   @HostListener('document:keydown.enter', ['$event'])
   enter(ev: Event): void {
     if (!this.confirm.actual()) return;

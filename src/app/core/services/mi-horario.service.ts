@@ -7,8 +7,13 @@ import { environment } from '../../../environments/environment';
 /** Alumno (y docente): su horario y sus cursos (el usuario va en la cabecera X-Usuario-Id). */
 @Injectable({ providedIn: 'root' })
 export class MiHorarioService {
+  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
 
+  /**
+   * Pide al backend un registro por su id. Llama al backend: GET /api/mi-horario. Devuelve un
+   * Observable (los datos llegan al hacer subscribe).
+   */
   obtener(): Observable<MiHorario> {
     return this.http.get<MiHorario>(`${environment.apiUrl}/mi-horario`);
   }

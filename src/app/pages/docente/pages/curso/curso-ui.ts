@@ -10,14 +10,17 @@ import { iniciales } from '../../../../core/utils/texto';
 
 export type IconoTipo = 'doc' | 'texto' | 'enlace' | 'tarea' | 'cuestionario' | 'actividad' | 'examen';
 
+/** Modelo EstiloItem: describe la forma de los datos de «estilo item». */
 export interface EstiloItem { etiqueta: string; color: string; fondo: string; icono: IconoTipo; }
 
+/** Devuelve el estilo de material. */
 export function estiloMaterial(m: Material): EstiloItem {
   if (m.tipo === 'ARCHIVO' || (!m.tipo && m.archivo)) return { etiqueta: 'Documento', color: '#9333EA', fondo: '#F3E8FD', icono: 'doc' };
   if (m.tipo === 'ENLACE' || (!m.tipo && m.enlace)) return { etiqueta: 'Enlace', color: '#0891B2', fondo: '#E0F3F8', icono: 'enlace' };
   return { etiqueta: 'Texto', color: '#2563EB', fondo: '#E6EEFB', icono: 'texto' };
 }
 
+/** Devuelve el estilo de actividad. */
 export function estiloActividad(a: Actividad): EstiloItem {
   switch (a.tipo) {
     case 'CUESTIONARIO': return { etiqueta: 'Cuestionario', color: '#FFFFFF', fondo: '#F97316', icono: 'cuestionario' };
@@ -109,6 +112,7 @@ export function aFecha(iso: string): Date {
   return new Date(y, m - 1, d);
 }
 
+/** Convierte el valor a iso. */
 export function aIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }

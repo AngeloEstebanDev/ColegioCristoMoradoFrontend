@@ -16,8 +16,10 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { FiltroEntrada } from '../../../../shared/components/error-campo/filtro-entrada';
 import { Val, revisar, primerError, soloDigitos, limpiarTexto } from '../../../../core/utils/validadores';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
+/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'staff' | 'cuentas';
 
+/** Modelo Formulario: describe la forma de los datos de «formulario». */
 interface Formulario {
   tipoDocumento: TipoDocumento;
   numeroDocumento: string;
@@ -32,6 +34,7 @@ interface Formulario {
   confirmarPassword: string;
 }
 
+/** Constante VACIO: valor fijo (vacío) que se reutiliza en varias partes. */
 const VACIO: Formulario = {
   tipoDocumento: 'DNI', numeroDocumento: '', nombres: '', apellidoPaterno: '', apellidoMaterno: '',
   correo: '', telefono: '', fechaNacimiento: '', cargo: '', password: '', confirmarPassword: '',
@@ -50,10 +53,14 @@ const VACIO: Formulario = {
   templateUrl: './personal-staff.html',
 })
 export class PersonalStaff implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
+  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
+  /** Servicio PersonalService (inyectado por Angular). */
   private personalService = inject(PersonalService);
 
   readonly permisosDisponibles = PERMISOS;
@@ -68,15 +75,24 @@ export class PersonalStaff implements OnInit {
   private misPermisos = this.auth.obtenerUsuario()?.permisos ?? [];
   private miId = this.auth.obtenerUsuario()?.id ?? null;
 
+  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('staff');
+  /** Estado (signal): personal. */
   personal = signal<Personal[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): aviso. */
   aviso = signal<string | null>(null);
 
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
+  /** Estado (signal): por página. */
   porPagina = signal(20);
+  /** Estado (signal): página. */
   pagina = signal(1);
+  /** Estado (signal): menú abierto. */
   menuAbierto = signal<number | null>(null);
 
   // Detalle
@@ -84,13 +100,18 @@ export class PersonalStaff implements OnInit {
 
   // Crear / editar
   modalAbierto = signal(false);
+  /** Estado (signal): editando. */
   editando = signal<Personal | null>(null);
+  /** Estado (signal): f. */
   f = signal<Formulario>({ ...VACIO });
+  /** Estado (signal): guardando. */
   guardando = signal(false);
+  /** Estado (signal): error modal. */
   errorModal = signal<string | null>(null);
 
   // Combobox de cargo
   cargoAbierto = signal(false);
+  /** Estado (signal): cargo resaltado. */
   cargoResaltado = signal(-1);
   /** Filtra por lo escrito; si ya coincide con un cargo de la lista, la muestra completa. */
   cargosFiltrados = computed(() => {
@@ -101,9 +122,12 @@ export class PersonalStaff implements OnInit {
 
   // Permisos
   permisosDe = signal<Personal | null>(null);
+  /** Estado (signal): permisos marcados. */
   permisosMarcados = signal<string[]>([]);
+  /** Estado (signal): guardando permisos. */
   guardandoPermisos = signal(false);
 
+  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const t = this.busqueda().toLowerCase().trim();
     return this.personal().filter(p => !t
@@ -114,17 +138,21 @@ export class PersonalStaff implements OnInit {
       || (p.usuario ?? '').toLowerCase().includes(t));
   });
 
+  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtrados().length / this.porPagina())));
+  /** Valor calculado (computed): página datos. Se actualiza solo. */
   paginaDatos = computed(() => {
     const ini = (this.pagina() - 1) * this.porPagina();
     return this.filtrados().slice(ini, ini + this.porPagina());
   });
+  /** Valor calculado (computed): rango. Se actualiza solo. */
   rango = computed(() => {
     const total = this.filtrados().length;
     if (!total) return '0 de 0';
     const ini = (this.pagina() - 1) * this.porPagina() + 1;
     return `${ini} - ${Math.min(total, ini + this.porPagina() - 1)} de ${total}`;
   });
+  /** Valor calculado (computed): páginas. Se actualiza solo. */
   paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, i) => i + 1)
     .filter(n => n === 1 || n === this.totalPaginas() || Math.abs(n - this.pagina()) <= 1));
 
@@ -135,10 +163,18 @@ export class PersonalStaff implements OnInit {
     return Math.round(oblig.filter(v => v.trim()).length / oblig.length * 100);
   });
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargar();
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con personalService.listar() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.personalService.listar().subscribe({
@@ -147,28 +183,34 @@ export class PersonalStaff implements OnInit {
     });
   }
 
+  /** Indica si es yo (devuelve verdadero o falso). */
   esYo(p: Personal): boolean {
     return this.miId !== null && p.usuarioId === this.miId;
   }
 
+  /** Devuelve el nombre de tabla. */
   nombreTabla(p: Personal): string {
     const apellidos = [p.apellidoPaterno, p.apellidoMaterno].filter(Boolean).join(' ');
     return `${apellidos}, ${p.nombres}`;
   }
 
+  /** Devuelve el nombre de permiso. */
   nombrePermiso(valor: string): string {
     return PERMISOS.find(x => x.valor === valor)?.titulo ?? valor;
   }
 
+  /** Devuelve el nombre de formulario. */
   nombreFormulario(): string {
     const f = this.f();
     return [f.nombres, f.apellidoPaterno, f.apellidoMaterno].map(x => x.trim()).filter(Boolean).join(' ');
   }
 
+  /** Devuelve el texto de «usuario preview». */
   usuarioPreview(): string {
     return usuarioConDni(PREFIJO_USUARIO.DIRECTIVA, this.f().numeroDocumento);
   }
 
+  /** Cambia campo. */
   setCampo<K extends keyof Formulario>(campo: K, valor: Formulario[K]): void {
     this.f.update(f => ({ ...f, [campo]: valor }));
   }
@@ -180,11 +222,13 @@ export class PersonalStaff implements OnInit {
     this.menuAbierto.set(this.menuAbierto() === p.id ? null : p.id);
   }
 
+  /** Cierra menú. */
   @HostListener('document:click')
   cerrarMenu(): void {
     this.menuAbierto.set(null);
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     this.menuAbierto.set(null);
@@ -205,6 +249,7 @@ export class PersonalStaff implements OnInit {
     this.modalAbierto.set(true);
   }
 
+  /** Abre editar. */
   abrirEditar(p: Personal): void {
     this.menuAbierto.set(null);
     this.detalle.set(null);
@@ -222,6 +267,7 @@ export class PersonalStaff implements OnInit {
     this.modalAbierto.set(true);
   }
 
+  /** Cierra formulario. */
   cerrarFormulario(): void {
     this.cargoAbierto.set(false);
     this.modalAbierto.set(false);
@@ -235,11 +281,13 @@ export class PersonalStaff implements OnInit {
     this.cargoResaltado.set(-1);
   }
 
+  /** Elige cargo. */
   elegirCargo(c: string): void {
     this.setCampo('cargo', c);
     this.cargoAbierto.set(false);
   }
 
+  /** Muestra u oculta lista cargos. */
   alternarListaCargos(input: HTMLInputElement | null): void {
     if (this.cargoAbierto()) { this.cargoAbierto.set(false); return; }
     input?.focus();
@@ -266,6 +314,7 @@ export class PersonalStaff implements OnInit {
     }
   }
 
+  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     const f = this.f();
     const doc = limpiarDocumento(f.numeroDocumento);
@@ -351,6 +400,7 @@ export class PersonalStaff implements OnInit {
     return c.length > 0 && c.every(v => this.permisosMarcados().includes(v));
   }
 
+  /** Indica «alguno marcado» (devuelve verdadero o falso). */
   algunoMarcado(): boolean {
     return !this.todosMarcados() && this.permisosCambiables().some(v => this.permisosMarcados().includes(v));
   }
@@ -361,11 +411,13 @@ export class PersonalStaff implements OnInit {
     this.permisosMarcados.update(l => marcar ? [...new Set([...l, ...c])] : l.filter(x => !c.includes(x)));
   }
 
+  /** Muestra u oculta permiso. */
   alternarPermiso(valor: string, marcado: boolean): void {
     if (!this.puedoCambiarPermiso(valor)) return;
     this.permisosMarcados.update(l => marcado ? [...new Set([...l, valor])] : l.filter(x => x !== valor));
   }
 
+  /** Guarda permisos. Muestra un aviso (toast) con el resultado. */
   guardarPermisos(): void {
     const p = this.permisosDe();
     if (!p) return;
@@ -385,11 +437,13 @@ export class PersonalStaff implements OnInit {
     });
   }
 
+  /** Abre detalle. */
   abrirDetalle(p: Personal): void {
     this.menuAbierto.set(null);
     this.detalle.set(p);
   }
 
+  /** Navega a página. */
   irAPagina(n: number): void {
     if (n >= 1 && n <= this.totalPaginas()) this.pagina.set(n);
   }

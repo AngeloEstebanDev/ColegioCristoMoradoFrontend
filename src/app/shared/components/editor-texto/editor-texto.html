@@ -1,3 +1,10 @@
+<!--
+  Vista (HTML) de «editor texto», que se muestra en varias pantallas (componente compartido).
+  La lógica (datos, eventos y llamadas al backend) está en editor-texto.ts.
+  Cómo leerla: {{ valor }} muestra un dato; (click)="metodo()" ejecuta una acción;
+  [propiedad]="valor" pasa un dato a un elemento; @if muestra algo solo si se cumple una condición
+  y @for repite un bloque por cada elemento de una lista. Las clases (bg-..., text-..., p-4) son de Tailwind CSS.
+-->
 <div class="rounded-lg border border-[#E3D5C4] bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#4A1F52]/30">
   <div class="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[#E3D5C4] bg-[#FAF6EF]">
     @for (b of botones; track b.cmd) {

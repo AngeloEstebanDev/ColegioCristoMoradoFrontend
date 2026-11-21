@@ -4,12 +4,17 @@ import { ArchivoInfo, ArchivoNuevo } from '../models/aula.model';
 import { ToastService } from './toast.service';
 import { environment } from '../../../environments/environment';
 
+/**
+ * Constante ARCHIVO_MAX_BYTES: valor fijo (archivo max bytes) que se reutiliza en varias partes.
+ */
 export const ARCHIVO_MAX_BYTES = 10 * 1024 * 1024;
 
 /** Lee archivos del equipo (base64) y descarga los del servidor. */
 @Injectable({ providedIn: 'root' })
 export class ArchivoService {
+  /** Servicio HttpClient (inyectado por Angular). */
   private http = inject(HttpClient);
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
 
   /** Descarga con la cabecera X-Usuario-Id (la agrega el interceptor). */
@@ -37,6 +42,7 @@ export class ArchivoService {
   }
 }
 
+/** Guarda blob. */
 export function guardarBlob(blob: Blob, nombre: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

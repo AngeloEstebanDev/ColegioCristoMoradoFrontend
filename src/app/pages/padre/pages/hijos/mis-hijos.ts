@@ -14,8 +14,10 @@ import { iniciales } from '../../../../core/utils/texto';
 import { IconoCategoria } from '../../../../shared/components/icono-categoria/icono-categoria';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
 
+/** Constante DIAS_CORTOS: valor fijo (días cortos) que se reutiliza en varias partes. */
 const DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
 
+/** Modelo Cursos: describe la forma de los datos de «cursos». */
 interface Cursos { cargando: boolean; error: string | null; cursos: CursoAula[]; horario: MiHorario | null; }
 
 /**
@@ -29,24 +31,39 @@ interface Cursos { cargando: boolean; error: string | null; cursos: CursoAula[];
   templateUrl: './mis-hijos.html',
 })
 export class PadreMisHijos implements OnInit {
+  /** Servicio HijosService (inyectado por Angular). */
   private hijosService = inject(HijosService);
+  /** Servicio AulaService (inyectado por Angular). */
   private aula = inject(AulaService);
+  /** Servicio MiHorarioService (inyectado por Angular). */
   private miHorario = inject(MiHorarioService);
 
   readonly iniciales = iniciales;
 
+  /** Estado (signal): hijos. */
   hijos = signal<Hijo[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
+  /** Estado (signal): abiertos. */
   abiertos = signal<Set<number>>(new Set());
+  /** Estado (signal): datos. */
   datos = signal<Record<number, Cursos>>({});
 
+  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const t = this.busqueda().toLowerCase().trim();
     return t ? this.hijos().filter(h => h.nombre.toLowerCase().includes(t) || (h.salon ?? '').toLowerCase().includes(t)) : this.hijos();
   });
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales. Pide los datos al backend con hijosService.listar() y actualiza la pantalla
+   * cuando llega la respuesta.
+   */
   ngOnInit(): void {
     this.hijosService.listar().subscribe({
       next: (h) => {
@@ -60,8 +77,10 @@ export class PadreMisHijos implements OnInit {
     });
   }
 
+  /** Indica «abierto» (devuelve verdadero o falso). */
   abierto(id: number): boolean { return this.abiertos().has(id); }
 
+  /** Muestra u oculta los datos de esta pantalla. */
   alternar(id: number): void {
     const s = new Set(this.abiertos());
     if (s.has(id)) s.delete(id);
@@ -69,8 +88,10 @@ export class PadreMisHijos implements OnInit {
     this.abiertos.set(s);
   }
 
+  /** Devuelve «de». */
   de(id: number): Cursos | undefined { return this.datos()[id]; }
 
+  /** Carga los datos de esta pantalla. */
   private cargar(id: number): void {
     const actual = this.datos()[id];
     if (actual && !actual.error) return;
@@ -87,18 +108,22 @@ export class PadreMisHijos implements OnInit {
     });
   }
 
+  /** Devuelve el texto de «grado». */
   grado(h: Hijo): string {
     return h.grado ? `${h.grado}${h.seccion ? ' - ' + h.seccion : ''}` : 'Sin sección asignada';
   }
 
+  /** Devuelve el texto de «salon». */
   salon(c: CursoAula): string {
     return `${infoGrado(c.grado)?.titulo ?? c.grado} “${c.letra}”`;
   }
 
+  /** Devuelve el texto de «nivel». */
   nivel(c: CursoAula): string {
     return c.grado.includes('Secundaria') ? 'Secundaria' : 'Primaria';
   }
 
+  /** Devuelve «bloques». */
   private bloques(hijoId: number, c: CursoAula): BloqueHorario[] {
     return this.datos()[hijoId]?.horario?.cursos.find(x => x.id === c.seccionCursoId)?.bloques ?? [];
   }

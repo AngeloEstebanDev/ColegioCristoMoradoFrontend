@@ -15,8 +15,11 @@ import { haceCuanto, iniciales, textoPlano } from '../../../../core/utils/texto'
 import { EditorTexto } from '../../../../shared/components/editor-texto/editor-texto';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
 
+/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'comunicados' | 'mensajes';
+/** Tipo FiltroComunicado: describe la forma de los datos de «filtro comunicado». */
 type FiltroComunicado = 'TODOS' | 'LEIDOS' | 'NO_LEIDOS';
+/** Tipo Bandeja: describe la forma de los datos de «bandeja». */
 type Bandeja = 'RECIBIDOS' | 'ENVIADOS' | 'BORRADORES';
 
 /** Fila de la lista de mensajes (recibido, enviado o borrador). */
@@ -34,6 +37,7 @@ interface FilaMensaje {
   borrador?: Borrador;
 }
 
+/** Constante MESES: valor fijo (meses) que se reutiliza en varias partes. */
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 /**
@@ -49,13 +53,21 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
   templateUrl: './padre-comunicados.html',
 })
 export class PadreComunicados implements OnInit {
+  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
+  /** Servicio ActivatedRoute (inyectado por Angular). */
   private route = inject(ActivatedRoute);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
+  /** Servicio ComunicadoService (inyectado por Angular). */
   private comunicadoService = inject(ComunicadoService);
+  /** Servicio MensajeService (inyectado por Angular). */
   private mensajeService = inject(MensajeService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio NotificacionService (inyectado por Angular). */
   readonly notificaciones = inject(NotificacionService);
 
   readonly iniciales = iniciales;
@@ -63,18 +75,27 @@ export class PadreComunicados implements OnInit {
   readonly yo = this.auth.obtenerUsuario()?.id ?? 0;
   readonly anioActual = new Date().getFullYear();
 
+  /** Estado (signal): pestaña. */
   pestana = signal<Pestana>('comunicados');
 
   // ---------------- Comunicados ----------------
   comunicados = signal<Comunicado[]>([]);
+  /** Estado (signal): cargando comunicados. */
   cargandoComunicados = signal(true);
+  /** Estado (signal): error comunicados. */
   errorComunicados = signal<string | null>(null);
+  /** Estado (signal): buscar comunicado. */
   buscarComunicado = signal('');
+  /** Estado (signal): año comunicado. */
   anioComunicado = signal<number | 0>(this.anioActual);   // 0 = todos los años
+  /** Estado (signal): filtro comunicado. */
   filtroComunicado = signal<FiltroComunicado>('TODOS');
+  /** Estado (signal): detalle. */
   detalle = signal<Comunicado | null>(null);
 
+  /** Valor calculado (computed): anios comunicados. Se actualiza solo. */
   aniosComunicados = computed(() => this.anios(this.comunicados().map(c => c.fechaCreacion)));
+  /** Valor calculado (computed): comunicados filtrados. Se actualiza solo. */
   comunicadosFiltrados = computed(() => {
     const t = this.buscarComunicado().toLowerCase().trim();
     const anio = this.anioComunicado();
@@ -89,17 +110,27 @@ export class PadreComunicados implements OnInit {
 
   // ---------------- Mensajes ----------------
   recibidos = signal<Mensaje[]>([]);
+  /** Estado (signal): enviados. */
   enviados = signal<Mensaje[]>([]);
+  /** Estado (signal): borradores. */
   borradores = signal<Borrador[]>([]);
+  /** Estado (signal): contactos. */
   contactos = signal<Contacto[]>([]);
+  /** Estado (signal): cargando mensajes. */
   cargandoMensajes = signal(false);
   mensajesCargados = false;
+  /** Estado (signal): error mensajes. */
   errorMensajes = signal<string | null>(null);
+  /** Estado (signal): bandeja. */
   bandeja = signal<Bandeja>('RECIBIDOS');
+  /** Estado (signal): buscar mensaje. */
   buscarMensaje = signal('');
+  /** Estado (signal): año mensaje. */
   anioMensaje = signal<number | 0>(this.anioActual);
+  /** Estado (signal): leyendo. */
   leyendo = signal<Mensaje | null>(null);
 
+  /** Valor calculado (computed): anios mensajes. Se actualiza solo. */
   aniosMensajes = computed(() => this.anios([
     ...this.recibidos().map(m => m.fechaEnvio), ...this.enviados().map(m => m.fechaEnvio), ...this.borradores().map(b => b.fecha),
   ]));
@@ -131,19 +162,25 @@ export class PadreComunicados implements OnInit {
       .sort((x, y) => y.fecha.localeCompare(x.fecha));
   });
 
+  /** Valor calculado (computed): no leidos recibidos. Se actualiza solo. */
   noLeidosRecibidos = computed(() => this.recibidos().filter(m => !m.leido).length);
 
   // ---------------- Redactar ----------------
   redactando = signal(false);
+  /** Estado (signal): buscar destino. */
   buscarDestino = signal('');
+  /** Estado (signal): destino. */
   destino = signal<Contacto | null>(null);
   asuntoNuevo = '';
   contenidoNuevo = '';
   respuestaAId: number | null = null;
   borradorId: number | null = null;
+  /** Estado (signal): enviando. */
   enviando = signal(false);
+  /** Estado (signal): error redactar. */
   errorRedactar = signal<string | null>(null);
 
+  /** Valor calculado (computed): contactos filtrados. Se actualiza solo. */
   contactosFiltrados = computed(() => {
     const t = this.buscarDestino().toLowerCase().trim();
     return this.contactos()
@@ -151,6 +188,10 @@ export class PadreComunicados implements OnInit {
       .sort((a, b) => (a.rol === 'Docente' ? 0 : 1) - (b.rol === 'Docente' ? 0 : 1) || a.nombre.localeCompare(b.nombre));
   });
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales.
+   */
   ngOnInit(): void {
     this.cargarComunicados();
     this.route.queryParamMap.subscribe(q => {
@@ -164,11 +205,13 @@ export class PadreComunicados implements OnInit {
     this.notificaciones.refrescar();
   }
 
+  /** Cambia pestaña. Al terminar, lleva al usuario a otra página (router.navigate). */
   cambiarPestana(p: Pestana): void {
     if (p === 'mensajes') this.abrirMensajes(); else this.pestana.set(p);
     this.router.navigate([], { queryParams: { tab: p === 'comunicados' ? null : p, para: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
+  /** Abre mensajes. */
   private abrirMensajes(): void {
     this.pestana.set('mensajes');
     if (!this.mensajesCargados) this.cargarMensajes();
@@ -184,6 +227,10 @@ export class PadreComunicados implements OnInit {
     });
   }
 
+  /**
+   * Muestra comunicado. Pide los datos al backend con comunicadoService.marcarLeido() y actualiza la
+   * pantalla cuando llega la respuesta.
+   */
   verComunicado(c: Comunicado): void {
     this.detalle.set(c);
     if (!c.leido) {
@@ -204,8 +251,10 @@ export class PadreComunicados implements OnInit {
     return c.autorRol && c.autorRol !== 'Docente' ? `${nombre} (${c.autorRol})` : nombre;
   }
 
+  /** Devuelve el texto de «vista previa». */
   vistaPrevia(c: Comunicado): string { return textoPlano(c.contenido); }
 
+  /** Devuelve el texto de «dirigido a». */
   dirigidoA(c: Comunicado): string {
     const grupos = c.destinatarios.map(etiquetaGrupo).join(', ');
     return c.secciones.length ? `${grupos} – ${c.secciones.join(', ')}` : grupos;
@@ -236,6 +285,10 @@ export class PadreComunicados implements OnInit {
     });
   }
 
+  /**
+   * Carga contactos. Pide los datos al backend con mensajeService.contactos() y actualiza la pantalla
+   * cuando llega la respuesta.
+   */
   private cargarContactos(): Promise<void> {
     if (this.contactos().length) return Promise.resolve();
     return new Promise(res => this.mensajeService.contactos(this.yo).subscribe({
@@ -249,11 +302,16 @@ export class PadreComunicados implements OnInit {
     return !a || a === 'Chat' ? '(Sin asunto)' : a;
   }
 
+  /** Devuelve la etiqueta de rol. */
   etiquetaRol(rol: string | null | undefined): string {
     if (rol === 'Docente') return 'Profesor';
     return rol || '';
   }
 
+  /**
+   * Abre fila. Pide los datos al backend con mensajeService.marcarLeido() y actualiza la pantalla
+   * cuando llega la respuesta.
+   */
   abrirFila(f: FilaMensaje): void {
     if (f.borrador) { this.editarBorrador(f.borrador); return; }
     const m = f.mensaje!;
@@ -269,10 +327,14 @@ export class PadreComunicados implements OnInit {
     }
   }
 
+  /** Indica si puede responder (devuelve verdadero o falso). */
   puedeResponder(m: Mensaje | null | undefined): boolean {
     return !!m && m.bandeja === 'RECIBIDO' && !!m.remitente.usuarioId;
   }
 
+  /**
+   * Elimina fila. Muestra un aviso (toast) con el resultado. Antes pide confirmación al usuario.
+   */
   async eliminarFila(f: FilaMensaje, ev?: Event): Promise<void> {
     ev?.stopPropagation();
     const ok = await this.confirmar.pedir(
@@ -293,6 +355,7 @@ export class PadreComunicados implements OnInit {
     });
   }
 
+  /** Elimina leyendo. */
   eliminarLeyendo(): void {
     const m = this.leyendo();
     if (!m) return;
@@ -320,6 +383,7 @@ export class PadreComunicados implements OnInit {
     this.redactando.set(true);
   }
 
+  /** Responde los datos de esta pantalla. */
   async responder(m: Mensaje): Promise<void> {
     this.leyendo.set(null);
     this.limpiarRedaccion();
@@ -333,6 +397,7 @@ export class PadreComunicados implements OnInit {
     this.redactando.set(true);
   }
 
+  /** Edita borrador. */
   async editarBorrador(b: Borrador): Promise<void> {
     this.limpiarRedaccion();
     await this.cargarContactos();
@@ -347,6 +412,7 @@ export class PadreComunicados implements OnInit {
     this.redactando.set(true);
   }
 
+  /** Limpia redaccion. */
   private limpiarRedaccion(): void {
     this.destino.set(null);
     this.buscarDestino.set('');
@@ -357,10 +423,15 @@ export class PadreComunicados implements OnInit {
     this.errorRedactar.set(null);
   }
 
+  /** Indica si tiene contenido (devuelve verdadero o falso). */
   private tieneContenido(): boolean {
     return !!this.asuntoNuevo.trim() || !!textoPlano(this.contenidoNuevo).trim();
   }
 
+  /**
+   * Envía los datos de esta pantalla. Pide los datos al backend con mensajeService.eliminarBorrador()
+   * y actualiza la pantalla cuando llega la respuesta. Muestra un aviso (toast) con el resultado.
+   */
   enviar(): void {
     const d = this.destino();
     if (!d) { this.errorRedactar.set('Elige a quién le escribes.'); return; }
@@ -387,6 +458,7 @@ export class PadreComunicados implements OnInit {
     });
   }
 
+  /** Guarda borrador. Muestra un aviso (toast) con el resultado. */
   guardarBorrador(cerrar = true): void {
     if (!this.tieneContenido() && !this.destino()) { this.errorRedactar.set('Escribe algo antes de guardar el borrador.'); return; }
     this.enviando.set(true);
@@ -405,6 +477,7 @@ export class PadreComunicados implements OnInit {
     });
   }
 
+  /** Cancela redaccion. Antes pide confirmación al usuario. */
   async cancelarRedaccion(): Promise<void> {
     if (this.tieneContenido()) {
       const guardar = await this.confirmar.pedir('¿Quieres guardar lo que escribiste como borrador?',
@@ -423,6 +496,7 @@ export class PadreComunicados implements OnInit {
     return [...s].sort((a, b) => b - a);
   }
 
+  /** Se ejecuta al presionar la tecla Esc: cierra la ventana o el menú que esté abierto. */
   @HostListener('document:keydown.escape')
   escape(): void {
     if (this.redactando()) return;      // el borrador se cierra con sus botones

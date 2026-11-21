@@ -16,36 +16,57 @@ import { ConfirmService } from '../../../../core/services/confirm.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { FotoUsuario } from '../../../../shared/components/foto-usuario/foto-usuario';
 
+/** Tipo Pestana: describe la forma de los datos de «pestaña». */
 type Pestana = 'general' | 'padres' | 'historial';
 
+/**
+ * Componente «students» del panel de Administración (administrador y directiva). Se usa en el HTML con
+ * la etiqueta <app-students>. Su vista está en students.html; aquí (en el .ts) va la lógica: los datos
+ * que se muestran, lo que pasa al hacer clic y las llamadas a los servicios.
+ */
 @Component({
   imports: [FotoUsuario, CommonModule, ReactiveFormsModule, FormsModule, CampoPassword, ErrorCampo, FiltroEntrada],
   selector: 'app-students',
   templateUrl: './students.html',
 })
 export class Students implements OnInit {
+  /** Servicio ToastService (inyectado por Angular). */
   private toast = inject(ToastService);
+  /** Servicio ConfirmService (inyectado por Angular). */
   private confirmar = inject(ConfirmService);
 
   estadosPosibles = ESTADOS_ESTUDIANTE;
 
+  /** Estado (signal): estudiantes. */
   estudiantes = signal<Estudiante[]>([]);
+  /** Estado (signal): padres disponibles. */
   padresDisponibles = signal<PadreFamilia[]>([]);
+  /** Estado (signal): cargando. */
   cargando = signal(true);
+  /** Estado (signal): error. */
   error = signal<string | null>(null);
+  /** Estado (signal): guardando. */
   guardando = signal(false);
 
+  /** Estado (signal): búsqueda. */
   busqueda = signal('');
+  /** Estado (signal): filtro estado. */
   filtroEstado = signal('');
 
+  /** Estado (signal): página actual. */
   paginaActual = signal(1);
   porPagina = 10;
 
+  /** Estado (signal): panel ver abierto. */
   panelVerAbierto = signal(false);
+  /** Estado (signal): panel editar abierto. */
   panelEditarAbierto = signal(false);
+  /** Estado (signal): estudiante seleccionado. */
   estudianteSeleccionado = signal<Estudiante | null>(null);
+  /** Estado (signal): pestaña activa. */
   pestanaActiva = signal<Pestana>('general');
 
+  /** Valor calculado (computed): filtrados. Se actualiza solo. */
   filtrados = computed(() => {
     const texto = this.busqueda().toLowerCase().trim();
     return this.estudiantes().filter(e => {
@@ -59,8 +80,10 @@ export class Students implements OnInit {
     });
   });
 
+  /** Valor calculado (computed): total páginas. Se actualiza solo. */
   totalPaginas = computed(() => Math.max(1, Math.ceil(this.filtrados().length / this.porPagina)));
 
+  /** Valor calculado (computed): página datos. Se actualiza solo. */
   paginaDatos = computed(() => {
     const inicio = (this.paginaActual() - 1) * this.porPagina;
     return this.filtrados().slice(inicio, inicio + this.porPagina);
@@ -68,6 +91,7 @@ export class Students implements OnInit {
 
   form!: ReturnType<FormBuilder['group']>;
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor(
     private fb: FormBuilder,
     private estudianteService: EstudianteService,
@@ -107,10 +131,12 @@ export class Students implements OnInit {
     return this.form.errors?.['documento'] ?? null;
   }
 
+  /** Devuelve la etiqueta de doc. */
   etiquetaDoc(tipo: string | null | undefined): string {
     return infoDocumento(tipo).corto;
   }
 
+  /** Devuelve el nombre de doc. */
   nombreDoc(tipo: string | null | undefined): string {
     return infoDocumento(tipo).nombre;
   }
@@ -125,16 +151,26 @@ export class Students implements OnInit {
     return !!this.estudianteSeleccionado()?.usuarioId;
   }
 
+  /** Indica «campo inválido» (devuelve verdadero o falso). */
   campoInvalido(nombre: string): boolean {
     const c = this.form.get(nombre);
     return !!c && c.invalid && (c.touched || c.dirty);
   }
 
+  /**
+   * Se ejecuta una sola vez al abrir la pantalla (cuando Angular crea el componente): aquí se cargan
+   * los datos iniciales. Pide los datos al backend con padreService.listar() y actualiza la pantalla
+   * cuando llega la respuesta.
+   */
   ngOnInit(): void {
     this.cargar();
     this.padreService.listar().subscribe({ next: (p) => this.padresDisponibles.set(p) });
   }
 
+  /**
+   * Carga los datos de esta pantalla. Pide los datos al backend con estudianteService.listar() y
+   * actualiza la pantalla cuando llega la respuesta.
+   */
   cargar(): void {
     this.cargando.set(true);
     this.estudianteService.listar().subscribe({
@@ -143,10 +179,12 @@ export class Students implements OnInit {
     });
   }
 
+  /** Devuelve las iniciales de los datos de esta pantalla. */
   iniciales(nombre: string): string {
     return nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p.charAt(0)).join('').toUpperCase();
   }
 
+  /** Calcula «edad» (devuelve un número). */
   edad(fechaNacimiento: string | null): number | null {
     if (!fechaNacimiento) return null;
     const nacimiento = new Date(fechaNacimiento);
@@ -157,6 +195,7 @@ export class Students implements OnInit {
     return edad;
   }
 
+  /** Devuelve las clases CSS de estado. */
   claseEstado(estado: string): string {
     switch (estado) {
       case 'Activo': return 'bg-[#E7F3EA] text-[#1E7A3B]';
@@ -166,6 +205,7 @@ export class Students implements OnInit {
     }
   }
 
+  /** Abre crear. */
   abrirCrear(): void {
     this.estudianteSeleccionado.set(null);
     this.form.reset({
@@ -177,12 +217,14 @@ export class Students implements OnInit {
     this.panelEditarAbierto.set(true);
   }
 
+  /** Abre ver. */
   abrirVer(e: Estudiante): void {
     this.estudianteSeleccionado.set(e);
     this.pestanaActiva.set('general');
     this.panelVerAbierto.set(true);
   }
 
+  /** Abre editar desde vista. */
   abrirEditarDesdeVista(): void {
     const e = this.estudianteSeleccionado();
     if (!e) return;
@@ -198,11 +240,13 @@ export class Students implements OnInit {
     this.panelEditarAbierto.set(true);
   }
 
+  /** Cierra paneles. */
   cerrarPaneles(): void {
     this.panelVerAbierto.set(false);
     this.panelEditarAbierto.set(false);
   }
 
+  /** Guarda los datos de esta pantalla. Muestra un aviso (toast) con el resultado. */
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -255,6 +299,7 @@ export class Students implements OnInit {
     });
   }
 
+  /** Navega a página. */
   irAPagina(n: number): void {
     if (n < 1 || n > this.totalPaginas()) return;
     this.paginaActual.set(n);

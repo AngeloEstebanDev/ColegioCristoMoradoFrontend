@@ -25,20 +25,28 @@ export class CampoPassword implements ControlValueAccessor {
   /** Clases de tamaño/estilo del input (para igualar el diseño de cada pantalla). */
   @Input() claseInput = 'px-3 py-2.5 text-[13.5px] rounded-lg bg-white';
 
+  /** Estado (signal): visible. */
   visible = signal(false);
+  /** Estado (signal): valor. */
   valor = signal('');
+  /** Estado (signal): deshabilitado. */
   deshabilitado = signal(false);
 
   private onChange: (v: string) => void = () => {};
   onTouched: () => void = () => {};
 
+  /** Escribe los datos de esta pantalla. */
   escribir(v: string): void {
     this.valor.set(v);
     this.onChange(v);
   }
 
+  /** Recibe el valor que viene del formulario (ControlValueAccessor). */
   writeValue(v: string | null): void { this.valor.set(v ?? ''); }
+  /** Registra la función que avisa al formulario cuando cambia el valor. */
   registerOnChange(fn: (v: string) => void): void { this.onChange = fn; }
+  /** Registra la función que avisa al formulario cuando el campo fue tocado. */
   registerOnTouched(fn: () => void): void { this.onTouched = fn; }
+  /** Habilita o deshabilita el campo. */
   setDisabledState(d: boolean): void { this.deshabilitado.set(d); }
 }

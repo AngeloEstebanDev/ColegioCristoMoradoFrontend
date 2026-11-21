@@ -24,6 +24,7 @@ export function textoPlano(html: string | null | undefined): string {
   return (div.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+/** Devuelve las iniciales de los datos de esta pantalla. */
 export function iniciales(nombre: string | null | undefined): string {
   return (nombre ?? '?').split(' ').filter(Boolean).slice(0, 2).map(p => p.charAt(0)).join('').toUpperCase() || '?';
 }
@@ -47,7 +48,9 @@ export function fechaLarga(fecha: string | null | undefined): string {
   return `${dia}, ${hora}`;
 }
 
+/** Constante MESES_CORTOS: valor fijo (meses cortos) que se reutiliza en varias partes. */
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+/** Constante DIAS_CORTOS: valor fijo (días cortos) que se reutiliza en varias partes. */
 const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
 /** "2026-10-06" (fecha local de hoy). */

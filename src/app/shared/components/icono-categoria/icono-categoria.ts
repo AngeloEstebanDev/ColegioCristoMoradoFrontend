@@ -26,10 +26,14 @@ import { categoriaDe } from '../../../core/models/curso.model';
   `,
 })
 export class IconoCategoria {
+  /** Dato de entrada «categoría» que envía el componente padre. */
   categoria = input<string | null | undefined>(null);
+  /** Dato de entrada «tam» que envía el componente padre. */
   tam = input(32);
+  /** Dato de entrada «sin fondo» que envía el componente padre. */
   sinFondo = input(false);
   /** Color del ícono (opcional, p. ej. blanco sobre la portada del curso). */
   color = input<string | null>(null);
+  /** Valor calculado (computed): info. Se actualiza solo. */
   info = computed(() => categoriaDe(this.categoria()));
 }

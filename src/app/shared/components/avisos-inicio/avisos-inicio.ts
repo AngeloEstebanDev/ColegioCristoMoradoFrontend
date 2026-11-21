@@ -32,21 +32,31 @@ interface Novedad {
   templateUrl: './avisos-inicio.html',
 })
 export class AvisosInicio {
+  /** Servicio AuthService (inyectado por Angular). */
   private auth = inject(AuthService);
+  /** Servicio ComunicadoService (inyectado por Angular). */
   private comunicados = inject(ComunicadoService);
+  /** Servicio MensajeService (inyectado por Angular). */
   private mensajes = inject(MensajeService);
+  /** Servicio NotificacionService (inyectado por Angular). */
   private notificaciones = inject(NotificacionService);
+  /** Servicio Router (inyectado por Angular). */
   private router = inject(Router);
 
   readonly haceCuanto = haceCuanto;
   readonly fechaLarga = fechaLarga;
 
+  /** Estado (signal): novedades. */
   novedades = signal<Novedad[]>([]);
+  /** Estado (signal): indice. */
   indice = signal(0);
+  /** Estado (signal): abierto. */
   abierto = signal(false);
+  /** Valor calculado (computed): actual. Se actualiza solo. */
   actual = computed(() => this.novedades()[this.indice()] ?? null);
   private vistas = new Set<string>();
 
+  /** Constructor: Angular le entrega (inyecta) los servicios que usa. */
   constructor() {
     const u = this.auth.obtenerUsuario();
     if (!u) return;
@@ -72,6 +82,7 @@ export class AvisosInicio {
     });
   }
 
+  /** Navega a los datos de esta pantalla. */
   ir(i: number): void {
     const n = this.novedades();
     if (i < 0 || i >= n.length) return;
@@ -103,6 +114,7 @@ export class AvisosInicio {
     this.router.navigate([base + '/comunicados'], n?.tipo === 'AVISO' ? { queryParams: { tab: 'mensajes' } } : {});
   }
 
+  /** Realiza la acción «teclado» de esta pantalla. */
   @HostListener('document:keydown', ['$event'])
   teclado(e: KeyboardEvent): void {
     if (!this.abierto()) return;

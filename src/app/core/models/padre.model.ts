@@ -1,5 +1,10 @@
 import { TipoDocumento } from './documento.model';
 
+/**
+ * Modelo EstudianteResumen: describe la forma de los datos de «estudiante resumen». Es lo que viaja en
+ * JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un
+ * campo.
+ */
 export interface EstudianteResumen {
   id: number;
   nombreCompleto: string;
@@ -9,6 +14,10 @@ export interface EstudianteResumen {
   parentesco: string;
 }
 
+/**
+ * Modelo PadreFamilia: describe la forma de los datos de «padre familia». Es lo que viaja en JSON
+ * entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa mal un campo.
+ */
 export interface PadreFamilia {
   id: number;
   nombreCompleto: string;
@@ -30,6 +39,11 @@ export interface PadreFamilia {
   cuentaActiva: boolean | null;
 }
 
+/**
+ * Modelo PadreFamiliaRequest: describe la forma de los datos de «padre familia request». Es lo que
+ * viaja en JSON entre el backend y el frontend; TypeScript usa esta descripción para avisar si se usa
+ * mal un campo.
+ */
 export interface PadreFamiliaRequest {
   nombreCompleto: string;
   tipoDocumento: TipoDocumento;
@@ -43,5 +57,7 @@ export interface PadreFamiliaRequest {
   password?: string | null;
 }
 
+/** Constante PARENTESCOS: valor fijo (parentescos) que se reutiliza en varias partes. */
 export const PARENTESCOS = ['Padre', 'Madre', 'Apoderado', 'Tutor', 'Otro familiar'];
+/** Constante ESTADOS_PADRE: valor fijo (estados padre) que se reutiliza en varias partes. */
 export const ESTADOS_PADRE = ['Activo', 'En proceso', 'Inactivo'];
